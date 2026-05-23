@@ -32,8 +32,8 @@ model Category {
   name  String
   image String?
 
-  products Product[]
-  banners  Banner[]
+  products        Product[]
+  categoryBanners CategoryBanner[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -154,35 +154,76 @@ model OrderItem {
   createdAt DateTime @default(now())
 }
 
-model Banner {
-  id    String  @id @default(cuid())
-  title String?
-  image String
-  link  String?
+model CarouselBanner {
+  id          String  @id @default(cuid())
+  image       String
+  title       String // e.g. "25% OFF", "SPECIAL"
+  subtitle    String // e.g. "VEGETABLES", "OFFER"
+  description String // e.g. "Fresh vegetables delivered fast..."
+  badge       String // e.g. "Weekend Special", "Flash Deal"
+  bgFrom      String // gradient start class (e.g. "from-green-500")
+  bgVia       String? // gradient middle class (e.g. "via-emerald-600")
+  bgTo        String // gradient end class (e.g. "to-green-800")
+  link        String?
+  position    Int     @default(0)
 
-  type     BannerType @default(MAIN)
-  position Int        @default(0)
-
-  // Optional category relation (used when type = CATEGORY)
-  categoryId String?
-  category   Category? @relation(fields: [categoryId], references: [id])
-
-  status BannerStatus @default(ACTIVE)
+  status CarouselBannerStatus @default(ACTIVE)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([type, status])
-  @@index([categoryId])
+  @@index([status, position])
 }
 
-enum BannerType {
-  MAIN
-  SUB
-  CATEGORY
+enum CarouselBannerStatus {
+  ACTIVE
+  INACTIVE
 }
 
-enum BannerStatus {
+model CategoryBanner {
+  id          String  @id @default(cuid())
+  image       String
+  label       String // e.g. "SALE", "MEGA DEAL"
+  heading     String // e.g. "FLASH SALE", "TECH FEST"
+  discount    String // e.g. "40%", "50%"
+  description String
+  link        String?
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  status CategoryBannerStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId, status])
+}
+
+enum CategoryBannerStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model TopBanner {
+  id          String @id @default(cuid())
+  icon        String // icon name (e.g. "Tag", "Gift", "Percent", "Sparkles")
+  badge       String // e.g. "MEGA SALE", "FLASH DEAL"
+  discount    String // e.g. "70% OFF", "Buy 2 Get 1"
+  description String // e.g. "on all products"
+  tag         String // e.g. "Limited Time Only", "Today Only"
+  tagIcon     String // icon name (e.g. "Sparkles", "Zap", "TrendingUp")
+  position    Int    @default(0)
+
+  status TopBannerStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, position])
+}
+
+enum TopBannerStatus {
   ACTIVE
   INACTIVE
 }
