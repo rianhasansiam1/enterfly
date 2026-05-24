@@ -2,6 +2,8 @@
 
 import { Mail, User } from "lucide-react";
 
+import { FIELD_LIMITS } from "@/lib/auth/policy";
+
 import FloatField from "./FloatField";
 import { SocialButtons, SocialDivider } from "./SocialButtons";
 import type { FieldUpdater, RegisterForm } from "./types";
@@ -25,6 +27,7 @@ export default function AccountStep({
         value={form.name}
         onChange={(value) => onFieldChange("name", value)}
         autoComplete="name"
+        maxLength={FIELD_LIMITS.NAME_MAX}
       />
 
       <FloatField
@@ -34,6 +37,7 @@ export default function AccountStep({
         onChange={(value) => onFieldChange("email", value)}
         type="email"
         autoComplete="email"
+        maxLength={FIELD_LIMITS.EMAIL_MAX}
         valid={form.email.length > 0 ? emailValid : null}
       />
 

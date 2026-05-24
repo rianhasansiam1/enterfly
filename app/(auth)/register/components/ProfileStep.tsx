@@ -2,6 +2,8 @@
 
 import { MapPin, Phone } from "lucide-react";
 
+import { FIELD_LIMITS } from "@/lib/auth/policy";
+
 import FloatField from "./FloatField";
 import TermsCheckbox from "./TermsCheckbox";
 import type { FieldUpdater, RegisterForm } from "./types";
@@ -21,6 +23,7 @@ export default function ProfileStep({ form, onFieldChange }: ProfileStepProps) {
         onChange={(value) => onFieldChange("phone", value)}
         type="tel"
         autoComplete="tel"
+        maxLength={FIELD_LIMITS.PHONE_MAX}
       />
 
       <FloatField
@@ -29,6 +32,7 @@ export default function ProfileStep({ form, onFieldChange }: ProfileStepProps) {
         value={form.city}
         onChange={(value) => onFieldChange("city", value)}
         autoComplete="address-level2"
+        maxLength={FIELD_LIMITS.CITY_MAX}
       />
 
       <TermsCheckbox

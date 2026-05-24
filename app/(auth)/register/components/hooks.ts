@@ -3,10 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 
 import {
-  PASSWORD_COLOR_CLASSES,
-  PASSWORD_LABELS,
-} from "./constants";
-import { getPasswordScore, isValidEmail } from "./helpers";
+  EMAIL_REGEX,
+  FIELD_LIMITS,
+  PHONE_REGEX,
+  meetsPasswordPolicy,
+} from "@/lib/auth/policy";
+
+import { PASSWORD_COLOR_CLASSES, PASSWORD_LABELS } from "./constants";
+import { getPasswordScore } from "./helpers";
 import type { RegisterForm, RegisterStep } from "./types";
 
 export function useAutoRotatingIndex(total: number, intervalMs: number) {
@@ -25,27 +29,45 @@ export function useAutoRotatingIndex(total: number, intervalMs: number) {
   return [index, setIndex] as const;
 }
 
+/**
+ * Mirrors the backend Zod rules in `lib/auth/schemas.ts`. If the server
+ * tightens its rules, update `lib/auth/policy.ts` and both stay in sync.
+ */
 export function useRegisterValidation(
   form: RegisterForm,
   currentStep: RegisterStep,
 ) {
-  const emailValid = useMemo(() => isValidEmail(form.email), [form.email]);
+  const emailValid = useMemo(
+    () =>
+      EMAIL_REGEX.test(form.email) &&
+      form.email.length <= FIELD_LIMITS.EMAIL_MAX,
+    [form.email],
+  );
 
   const passwordScore = useMemo(
     () => getPasswordScore(form.password),
     [form.password],
   );
 
-  const accountStepValid = form.name.trim().length >= 2 && emailValid;
+  const passwordValid = meetsPasswordPolicy(form.password);
+
+  const accountStepValid =
+    form.name.trim().length >= FIELD_LIMITS.NAME_MIN &&
+    form.name.trim().length <= FIELD_LIMITS.NAME_MAX &&
+    emailValid;
 
   const securityStepValid =
-    passwordScore >= 2 &&
-    form.password.length > 0 &&
-    form.password === form.confirmPassword;
+    passwordValid && form.password === form.confirmPassword;
+
+  const phoneTrimmed = form.phone.trim();
+  const cityTrimmed = form.city.trim();
 
   const profileStepValid =
-    form.phone.trim().length >= 6 &&
-    form.city.trim().length >= 2 &&
+    phoneTrimmed.length >= FIELD_LIMITS.PHONE_MIN &&
+    phoneTrimmed.length <= FIELD_LIMITS.PHONE_MAX &&
+    PHONE_REGEX.test(phoneTrimmed) &&
+    cityTrimmed.length >= FIELD_LIMITS.CITY_MIN &&
+    cityTrimmed.length <= FIELD_LIMITS.CITY_MAX &&
     form.agreeToTerms;
 
   const canContinue =
@@ -58,6 +80,7 @@ export function useRegisterValidation(
   return {
     emailValid,
     passwordScore,
+    passwordValid,
     passwordLabel: PASSWORD_LABELS[passwordScore],
     passwordColorClass: PASSWORD_COLOR_CLASSES[passwordScore],
     accountStepValid,

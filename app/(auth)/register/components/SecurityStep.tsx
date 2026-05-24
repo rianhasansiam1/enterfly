@@ -2,6 +2,8 @@
 
 import { Lock } from "lucide-react";
 
+import { FIELD_LIMITS } from "@/lib/auth/policy";
+
 import FloatField from "./FloatField";
 import PasswordStrengthMeter from "./PasswordStrengthMeter";
 import PasswordVisibilityButton from "./PasswordVisibilityButton";
@@ -43,6 +45,7 @@ export default function SecurityStep({
         onChange={(value) => onFieldChange("password", value)}
         type={showPassword ? "text" : "password"}
         autoComplete="new-password"
+        maxLength={FIELD_LIMITS.PASSWORD_MAX}
         trailing={
           <PasswordVisibilityButton
             visible={showPassword}
@@ -65,6 +68,7 @@ export default function SecurityStep({
         onChange={(value) => onFieldChange("confirmPassword", value)}
         type={showConfirmPassword ? "text" : "password"}
         autoComplete="new-password"
+        maxLength={FIELD_LIMITS.PASSWORD_MAX}
         valid={
           form.confirmPassword.length === 0
             ? null

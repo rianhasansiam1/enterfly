@@ -4,10 +4,10 @@ import Link from "next/link";
 import { ArrowRight, Loader2, Lock, LogIn, Mail, ShieldAlert } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { FIELD_LIMITS } from "@/lib/auth/policy";
 
 import FloatField from "./FloatField";
 import PasswordVisibilityButton from "./PasswordVisibilityButton";
-import RememberMeCheckbox from "./RememberMeCheckbox";
 import { SocialButtons, SocialDivider } from "./SocialButtons";
 import type { LoginFieldUpdater, LoginForm, LoginStatus } from "./types";
 
@@ -66,6 +66,7 @@ export default function LoginFormView({
         onChange={(value) => onFieldChange("email", value)}
         type="email"
         autoComplete="email"
+        maxLength={FIELD_LIMITS.EMAIL_MAX}
         valid={form.email.length > 0 ? emailValid : null}
       />
 
@@ -76,6 +77,7 @@ export default function LoginFormView({
         onChange={(value) => onFieldChange("password", value)}
         type={showPassword ? "text" : "password"}
         autoComplete="current-password"
+        maxLength={FIELD_LIMITS.PASSWORD_MAX}
         trailing={
           <PasswordVisibilityButton
             visible={showPassword}
@@ -84,12 +86,7 @@ export default function LoginFormView({
         }
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-        <RememberMeCheckbox
-          checked={form.rememberMe}
-          onChange={(checked) => onFieldChange("rememberMe", checked)}
-        />
-
+      <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
         <Link
           href="/login"
           className="text-xs font-semibold text-violet-700 underline-offset-2 hover:underline"
@@ -101,6 +98,7 @@ export default function LoginFormView({
       <button
         type="submit"
         disabled={!canSubmit || isSubmitting}
+        aria-busy={isSubmitting}
         className="group relative mt-2 inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-linear-to-r from-violet-600 to-purple-600 px-7 py-3 text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:from-violet-700 hover:to-purple-700 hover:shadow-lg disabled:cursor-not-allowed disabled:from-gray-300 disabled:to-gray-300 disabled:shadow-none disabled:hover:translate-y-0"
       >
         <span className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />

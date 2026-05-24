@@ -12,6 +12,7 @@ type FloatFieldProps = {
   onChange: (value: string) => void;
   type?: string;
   autoComplete?: string;
+  maxLength?: number;
   trailing?: ReactNode;
   valid?: boolean | null;
 };
@@ -23,6 +24,7 @@ export default function FloatField({
   onChange,
   type = "text",
   autoComplete,
+  maxLength,
   trailing,
   valid = null,
 }: FloatFieldProps) {
@@ -63,6 +65,7 @@ export default function FloatField({
         type={type}
         value={value}
         autoComplete={autoComplete}
+        maxLength={maxLength}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         onChange={(event) => onChange(event.target.value)}

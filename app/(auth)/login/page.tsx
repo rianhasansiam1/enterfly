@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 import BackgroundFX from "./components/BackgroundFX";
 import BrandPanel from "./components/BrandPanel";
@@ -8,27 +10,26 @@ import LocalAnimationStyles from "./components/LocalAnimationStyles";
 import LoginFormView from "./components/LoginForm";
 import LoginHeader from "./components/LoginHeader";
 import SuccessState from "./components/SuccessState";
-import {
-  BRAND_PERKS,
-  DEMO_FORM,
-  DEMO_SUBMIT_DELAY_MS,
-  INITIAL_FORM,
-} from "./components/constants";
+import { BRAND_PERKS, INITIAL_FORM } from "./components/constants";
 import { useAutoRotatingIndex, useLoginValidation } from "./components/hooks";
 import type { LoginForm, LoginStatus } from "./components/types";
 
-/**
- * Login page — DEMO MODE.
- *
- * No real APIs are wired up yet. The submit handler simulates a network
- * delay then flips to the success state. Look for the `TODO(api)` markers
- * below to see exactly where to plug in your auth endpoint later.
- */
+const DEFAULT_REDIRECT = "/";
+const GENERIC_LOGIN_ERROR = "Invalid email or password. Please try again.";
+
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") ?? DEFAULT_REDIRECT;
+
   const [form, setForm] = useState<LoginForm>(INITIAL_FORM);
   const [status, setStatus] = useState<LoginStatus>("idle");
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Synchronous guard: React state updates are async, so a fast double-click
+  // can fire two requests in the same tick. A ref flips immediately.
+  const inFlightRef = useRef(false);
 
   const [activePerkIndex, setActivePerkIndex] = useAutoRotatingIndex(
     BRAND_PERKS.length,
@@ -44,55 +45,45 @@ export default function LoginPage() {
     value: LoginForm[Field],
   ) => {
     setForm((previousForm) => ({ ...previousForm, [field]: value }));
-
-    // Clear error feedback as soon as the user edits anything.
     if (status === "error") {
       setStatus("idle");
       setErrorMessage(null);
     }
   };
 
-  const fillWithDemoData = () => {
-    setForm(DEMO_FORM);
-    setStatus("idle");
-    setErrorMessage(null);
-  };
-
   const handleSubmit = async () => {
-    if (!validation.canSubmit || isSubmitting) return;
+    if (inFlightRef.current) return;
+    if (!validation.canSubmit) return;
 
+    inFlightRef.current = true;
     setStatus("submitting");
     setErrorMessage(null);
 
-    // TODO(api): replace this fake delay with a real sign-in request.
-    //
-    // try {
-    //   const response = await fetch("/api/auth/login", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({
-    //       email: form.email,
-    //       password: form.password,
-    //       rememberMe: form.rememberMe,
-    //     }),
-    //   });
-    //
-    //   if (!response.ok) {
-    //     setStatus("error");
-    //     setErrorMessage("Invalid email or password. Please try again.");
-    //     return;
-    //   }
-    //
-    //   setStatus("success");
-    // } catch (error) {
-    //   console.error(error);
-    //   setStatus("error");
-    //   setErrorMessage("Something went wrong. Please try again.");
-    // }
+    try {
+      const response = await signIn("credentials", {
+        email: form.email,
+        password: form.password,
+        redirect: false,
+      });
 
-    window.setTimeout(() => {
+      if (!response || response.error) {
+        // Always show the same generic message regardless of the underlying
+        // failure (wrong password, no such user, rate-limited).
+        setStatus("error");
+        setErrorMessage(GENERIC_LOGIN_ERROR);
+        return;
+      }
+
       setStatus("success");
-    }, DEMO_SUBMIT_DELAY_MS);
+      router.refresh();
+      router.push(callbackUrl);
+    } catch (error) {
+      console.error("Login failed", error);
+      setStatus("error");
+      setErrorMessage(GENERIC_LOGIN_ERROR);
+    } finally {
+      inFlightRef.current = false;
+    }
   };
 
   return (
@@ -109,11 +100,7 @@ export default function LoginPage() {
           <div className="relative overflow-hidden rounded-3xl bg-white p-6 shadow-xl ring-1 ring-violet-100 sm:p-9">
             <div className="pointer-events-none absolute -top-px left-0 h-1 w-full bg-linear-to-r from-violet-500 via-purple-500 to-indigo-500" />
 
-            <LoginHeader
-              onUseDemoData={
-                isSuccess || isSubmitting ? undefined : fillWithDemoData
-              }
-            />
+            <LoginHeader />
 
             {isSuccess ? (
               <div className="mt-6">
@@ -124,7 +111,7 @@ export default function LoginPage() {
                 form={form}
                 status={status}
                 emailValid={validation.emailValid}
-                canSubmit={validation.canSubmit}
+                canSubmit={validation.canSubmit && !isSubmitting}
                 showPassword={showPassword}
                 errorMessage={errorMessage}
                 onFieldChange={updateField}

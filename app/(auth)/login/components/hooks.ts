@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { FIELD_LIMITS } from "@/lib/auth/policy";
+
 import { isValidEmail } from "./helpers";
 import type { LoginForm } from "./types";
 
@@ -24,7 +26,10 @@ export function useAutoRotatingIndex(total: number, intervalMs: number) {
 export function useLoginValidation(form: LoginForm) {
   const emailValid = useMemo(() => isValidEmail(form.email), [form.email]);
 
-  const canSubmit = emailValid && form.password.length >= 1;
+  const canSubmit =
+    emailValid &&
+    form.password.length >= 1 &&
+    form.password.length <= FIELD_LIMITS.PASSWORD_MAX;
 
   return { emailValid, canSubmit };
 }

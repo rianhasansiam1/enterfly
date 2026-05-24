@@ -5,21 +5,7 @@ import type { LoginForm } from "./types";
 export const INITIAL_FORM: LoginForm = {
   email: "",
   password: "",
-  rememberMe: false,
 };
-
-/**
- * Demo data used by the "Use demo data" button.
- * Remove this (and the button) once real APIs are wired up.
- */
-export const DEMO_FORM: LoginForm = {
-  email: "aarav.demo@enterfly.com",
-  password: "Demo@1234",
-  rememberMe: true,
-};
-
-/** Simulated network delay for the demo submit. */
-export const DEMO_SUBMIT_DELAY_MS = 1200;
 
 export const BRAND_PERKS = [
   {

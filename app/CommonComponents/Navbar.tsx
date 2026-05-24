@@ -18,8 +18,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 
 import { Input } from "@/app/CommonComponents/ui/input";
 import {
@@ -37,13 +38,6 @@ import {
 } from "@/app/CommonComponents/ui/sheet";
 import { cn } from "@/lib/utils";
 
-type NavUser = {
-  name?: string;
-  email?: string;
-  image?: string;
-  username?: string;
-};
-
 const MENU_ITEMS = [
   { href: "/allProducts", label: "All Products", icon: Store },
   { href: "/about", label: "About", icon: Info },
@@ -51,16 +45,44 @@ const MENU_ITEMS = [
   { href: "/admin", label: "Admin", icon: Info },
 ] as const;
 
+/** Grace period (ms) so the cursor can travel from trigger to dropdown content. */
+const HOVER_CLOSE_DELAY_MS = 120;
+
 export default function Navbar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const user = session?.user ?? null;
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
 
-  // Placeholder user for UI only (no auth yet)
-  const user = null as NavUser | null;
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleLogout = async () => {
-    /* TODO: wire to auth */
+  const cancelClose = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimerRef.current = setTimeout(() => {
+      setProfileMenuOpen(false);
+      closeTimerRef.current = null;
+    }, HOVER_CLOSE_DELAY_MS);
+  };
+
+  const openProfileMenu = () => {
+    cancelClose();
+    setProfileMenuOpen(true);
+  };
+
+  const handleLogout = () => {
+    setProfileMenuOpen(false);
+    setMobileMenuOpen(false);
+    void signOut({ callbackUrl: "/" });
   };
 
   return (
@@ -166,6 +188,7 @@ export default function Navbar() {
             <Link
               href="/profile"
               className="rounded-full p-2 transition-colors duration-200 hover:bg-white/40 lg:hidden"
+              aria-label="My profile"
             >
               <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-2 border-violet-400 bg-violet-100">
                 {user.image ? (
@@ -202,29 +225,45 @@ export default function Navbar() {
           {/* DESKTOP: PROFILE / AUTH */}
           <div className="relative hidden lg:block">
             {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="group hidden items-center gap-2 rounded-full p-1.5 transition-colors duration-200 hover:bg-white/40 sm:flex"
-                  >
-                    <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-violet-400 bg-violet-100 transition-transform duration-300 group-hover:scale-105">
-                      {user.image ? (
-                        <Image
-                          src={user.image}
-                          alt={user.name || "User"}
-                          width={32}
-                          height={32}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <User className="h-4 w-4 text-violet-600" />
-                      )}
-                    </div>
-                    <ChevronDown className="h-4 w-4 text-gray-600 transition-transform duration-300 group-data-[state=open]:rotate-180" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64 p-0">
+              <DropdownMenu
+                open={profileMenuOpen}
+                onOpenChange={setProfileMenuOpen}
+              >
+                <div
+                  onMouseEnter={openProfileMenu}
+                  onMouseLeave={scheduleClose}
+                >
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      onFocus={openProfileMenu}
+                      className="group hidden items-center gap-2 rounded-full p-1.5 transition-colors duration-200 hover:bg-white/40 sm:flex"
+                      aria-label="Open profile menu"
+                    >
+                      <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-violet-400 bg-violet-100 transition-transform duration-300 group-hover:scale-105">
+                        {user.image ? (
+                          <Image
+                            src={user.image}
+                            alt={user.name || "User"}
+                            width={32}
+                            height={32}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <User className="h-4 w-4 text-violet-600" />
+                        )}
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-gray-600 transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                    </button>
+                  </DropdownMenuTrigger>
+                </div>
+
+                <DropdownMenuContent
+                  align="end"
+                  className="w-64 p-0"
+                  onMouseEnter={cancelClose}
+                  onMouseLeave={scheduleClose}
+                >
                   <div className="border-b border-gray-100 bg-linear-to-r from-violet-50 to-indigo-50 p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-violet-400 bg-violet-100">
@@ -240,11 +279,15 @@ export default function Navbar() {
                           <User className="h-6 w-6 text-violet-600" />
                         )}
                       </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">
-                          {user.name || user.username || "User"}
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-gray-900">
+                          {user.name || "User"}
                         </p>
-                        <p className="text-xs text-violet-600">{user.email}</p>
+                        {user.email && (
+                          <p className="truncate text-xs text-violet-600">
+                            {user.email}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -271,7 +314,10 @@ export default function Navbar() {
                   <DropdownMenuSeparator className="my-0" />
                   <div className="p-1.5">
                     <DropdownMenuItem
-                      onSelect={handleLogout}
+                      onSelect={(event) => {
+                        event.preventDefault();
+                        handleLogout();
+                      }}
                       className="text-red-600 focus:bg-red-50 focus:text-red-700"
                     >
                       <LogOut className="h-4 w-4" />
@@ -373,10 +419,7 @@ export default function Navbar() {
                   </Link>
                   <button
                     type="button"
-                    onClick={() => {
-                      handleLogout();
-                      setMobileMenuOpen(false);
-                    }}
+                    onClick={handleLogout}
                     className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-base font-semibold text-red-600 transition-all duration-200 hover:translate-x-1 hover:bg-red-50"
                   >
                     <LogOut className="h-5 w-5" />

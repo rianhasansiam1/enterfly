@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 import AccountStep from "./components/AccountStep";
 import BackgroundFX from "./components/BackgroundFX";
@@ -14,8 +16,6 @@ import StepPanel from "./components/StepPanel";
 import SuccessState from "./components/SuccessState";
 import {
   BRAND_PERKS,
-  DEMO_FORM,
-  DEMO_SUBMIT_DELAY_MS,
   INITIAL_FORM,
   REGISTER_STEPS,
 } from "./components/constants";
@@ -30,13 +30,26 @@ import type {
   RegisterStep,
 } from "./components/types";
 
+type RegisterApiError = {
+  error?: string;
+  fieldErrors?: Record<string, string[]>;
+};
+
+const GENERIC_REGISTER_ERROR =
+  "We couldn't create your account. Please try again.";
 
 export default function RegisterPage() {
+  const router = useRouter();
+
   const [currentStep, setCurrentStep] = useState<RegisterStep>(0);
   const [status, setStatus] = useState<RegisterStatus>("idle");
   const [form, setForm] = useState<RegisterForm>(INITIAL_FORM);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [visiblePasswordField, setVisiblePasswordField] =
     useState<PasswordField | null>(null);
+
+  // Synchronous guard against double-submits.
+  const inFlightRef = useRef(false);
 
   const [activePerkIndex, setActivePerkIndex] = useAutoRotatingIndex(
     BRAND_PERKS.length,
@@ -53,12 +66,7 @@ export default function RegisterPage() {
     value: RegisterForm[Field],
   ) => {
     setForm((previousForm) => ({ ...previousForm, [field]: value }));
-  };
-
-  const fillWithDemoData = () => {
-    setForm(DEMO_FORM);
-    setCurrentStep(0);
-    setStatus("idle");
+    if (errorMessage) setErrorMessage(null);
   };
 
   const goToPreviousStep = () => {
@@ -76,34 +84,51 @@ export default function RegisterPage() {
   };
 
   const handleSubmit = async () => {
+    if (inFlightRef.current) return;
+
+    inFlightRef.current = true;
     setStatus("submitting");
+    setErrorMessage(null);
 
-    // TODO(api): replace this fake delay with a real registration request.
-    //
-    // try {
-    //   const response = await fetch("/api/auth/register", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({
-    //       name: form.name,
-    //       email: form.email,
-    //       password: form.password,
-    //       phone: form.phone,
-    //       city: form.city,
-    //     }),
-    //   });
-    //
-    //   if (!response.ok) throw new Error("Registration failed");
-    //
-    //   setStatus("success");
-    // } catch (error) {
-    //   console.error(error);
-    //   setStatus("idle");
-    // }
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-    window.setTimeout(() => {
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as
+          | RegisterApiError
+          | null;
+
+        const firstFieldError = data?.fieldErrors
+          ? Object.values(data.fieldErrors).flat().filter(Boolean)[0]
+          : undefined;
+
+        setErrorMessage(
+          firstFieldError ?? data?.error ?? GENERIC_REGISTER_ERROR,
+        );
+        setStatus("idle");
+        return;
+      }
+
+      // Auto sign-in so the success screen reflects a real session.
+      await signIn("credentials", {
+        email: form.email,
+        password: form.password,
+        redirect: false,
+      });
+
+      router.refresh();
       setStatus("success");
-    }, DEMO_SUBMIT_DELAY_MS);
+    } catch (error) {
+      console.error("Registration failed", error);
+      setErrorMessage(GENERIC_REGISTER_ERROR);
+      setStatus("idle");
+    } finally {
+      inFlightRef.current = false;
+    }
   };
 
   const handleNextAction = () => {
@@ -131,20 +156,22 @@ export default function RegisterPage() {
           <div className="relative overflow-hidden rounded-3xl bg-white p-6 shadow-xl ring-1 ring-violet-100 sm:p-9">
             <div className="pointer-events-none absolute -top-px left-0 h-1 w-full bg-linear-to-r from-violet-500 via-purple-500 to-indigo-500" />
 
-            <RegisterHeader
-              currentStep={currentStep}
-              onUseDemoData={
-                status === "success" || isSubmitting
-                  ? undefined
-                  : fillWithDemoData
-              }
-            />
+            <RegisterHeader currentStep={currentStep} />
 
             <div className="mt-7">
               {status === "success" ? (
                 <SuccessState name={form.name} />
               ) : (
                 <div className="relative">
+                  {errorMessage && (
+                    <div
+                      role="alert"
+                      className="mb-4 rounded-xl border border-red-200 bg-red-50/70 p-3 text-xs text-red-700"
+                    >
+                      {errorMessage}
+                    </div>
+                  )}
+
                   <StepPanel active={currentStep === 0}>
                     <AccountStep
                       form={form}
@@ -176,7 +203,7 @@ export default function RegisterPage() {
               <RegisterFooter
                 currentStep={currentStep}
                 status={status}
-                canContinue={validation.canContinue}
+                canContinue={validation.canContinue && !isSubmitting}
                 onBack={goToPreviousStep}
                 onNext={handleNextAction}
               />

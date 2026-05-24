@@ -12,20 +12,6 @@ export const INITIAL_FORM: RegisterForm = {
   agreeToTerms: false,
 };
 
-/**
- * Demo data used by the "Use demo data" button.
- * Remove this (and the button) once real APIs are wired up.
- */
-export const DEMO_FORM: RegisterForm = {
-  name: "Aarav Sharma",
-  email: "aarav.demo@enterfly.com",
-  password: "Demo@1234",
-  confirmPassword: "Demo@1234",
-  phone: "+91 98765 43210",
-  city: "Mumbai",
-  agreeToTerms: true,
-};
-
 export const REGISTER_STEPS = [
   { label: "Account", hint: "Who are you" },
   { label: "Security", hint: "Lock it down" },
@@ -71,6 +57,3 @@ export const PASSWORD_COLOR_CLASSES = [
   "bg-emerald-400",
   "bg-emerald-500",
 ] as const;
-
-/** Simulated network delay for the demo submit. */
-export const DEMO_SUBMIT_DELAY_MS = 1400;

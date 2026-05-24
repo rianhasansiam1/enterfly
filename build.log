@@ -1,0 +1,20 @@
+
+> enterfly@0.1.0 build
+> next build
+
+▲ Next.js 16.2.6 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 6.1s
+  Running TypeScript ...
+  Finished TypeScript in 8.5s ...
+  Collecting page data using 7 workers ...
+Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+    at <unknown> (E:\RunningProject\enterfly\.next\server\chunks\[root-of-the-server]__0_09q60._.js:62:92702)
+
+> Build error occurred
+Error: Failed to collect page data for /api/auth/[...nextauth]
+    at ignore-listed frames {
+  type: 'Error'
+}
