@@ -48,6 +48,7 @@ const MENU_ITEMS = [
   { href: "/allProducts", label: "All Products", icon: Store },
   { href: "/about", label: "About", icon: Info },
   { href: "/contact", label: "Contact", icon: Info },
+  { href: "/admin", label: "Admin", icon: Info },
 ] as const;
 
 export default function Navbar() {

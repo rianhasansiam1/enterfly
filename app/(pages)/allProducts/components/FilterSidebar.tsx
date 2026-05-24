@@ -92,9 +92,9 @@ export default function FilterSidebar({ filters, onChange, onReset }: Props) {
       <FilterGroup title="Price Range">
         <div className="px-1">
           <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
-            <span>₹{filters.priceRange[0]}</span>
+            <span>BDT {filters.priceRange[0]}</span>
             <span className="font-semibold text-violet-700">
-              ₹{filters.priceRange[1].toLocaleString()}
+              BDT {filters.priceRange[1].toLocaleString()}
             </span>
           </div>
           <input
@@ -108,7 +108,7 @@ export default function FilterSidebar({ filters, onChange, onReset }: Props) {
           />
           <div className="flex items-center justify-between text-[10px] text-gray-400 mt-1">
             <span>Min</span>
-            <span>Max ₹{PRICE_BOUNDS[1].toLocaleString()}</span>
+            <span>Max BDT {PRICE_BOUNDS[1].toLocaleString()}</span>
           </div>
         </div>
       </FilterGroup>

@@ -10,9 +10,14 @@ model User {
   id       String  @id @default(cuid())
   name     String
   email    String  @unique
-  password String?
+  password String? // nullable to support OAuth (e.g. Google) sign-in
   phone    String
+  city     String
   role     Role    @default(USER)
+
+  // Captured when the user accepts the Terms & Privacy at registration.
+  // Null means the user has not (yet) accepted the latest terms.
+  termsAcceptedAt DateTime?
 
   orders    Order[]
   cartItems CartItem[]

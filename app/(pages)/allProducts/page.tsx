@@ -46,9 +46,9 @@ export default function AllProductsPage() {
 
 
 
-  const sentinelRef = useRef(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-const getFinalPrice = (product:any) =>
+const getFinalPrice = (product: Product) =>
   product.discountPrice ?? product.price;
 
 const filtered = useMemo(() => {

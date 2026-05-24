@@ -194,12 +194,12 @@ function ListItem({ product }: { product: Product }) {
         <div className="mt-auto flex items-end justify-between gap-2">
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className="text-base sm:text-lg font-bold text-violet-700">
-              ₹{finalPrice.toLocaleString()}
+              BDT {finalPrice.toLocaleString()}
             </span>
             {hasDiscount && (
               <>
                 <span className="text-xs text-gray-400 line-through">
-                  ₹{product.price.toLocaleString()}
+                  BDT {product.price.toLocaleString()}
                 </span>
                 <span className="text-[10px] sm:text-xs font-bold text-green-600">
                   {discount}% off
