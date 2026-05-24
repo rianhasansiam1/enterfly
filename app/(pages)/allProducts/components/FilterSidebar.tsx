@@ -1,8 +1,8 @@
 "use client";
 
 import { Star, RotateCcw } from "lucide-react";
-import type { Filters } from "./types";
 import { BRANDS, CATEGORIES, PRICE_BOUNDS } from "./data";
+import type { Filters } from "./data";
 
 type Props = {
   filters: Filters;
@@ -11,7 +11,10 @@ type Props = {
 };
 
 export default function FilterSidebar({ filters, onChange, onReset }: Props) {
+
+
   const toggleCategory = (cat: string) => {
+
     const exists = filters.categories.includes(cat);
     onChange({
       ...filters,
@@ -20,6 +23,11 @@ export default function FilterSidebar({ filters, onChange, onReset }: Props) {
         : [...filters.categories, cat],
     });
   };
+
+
+
+
+
 
   const toggleBrand = (brand: string) => {
     const exists = filters.brands.includes(brand);

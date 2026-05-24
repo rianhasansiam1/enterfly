@@ -7,7 +7,7 @@ import {
   SheetTitle,
 } from "@/app/CommonComponents/ui/sheet";
 import FilterSidebar from "./FilterSidebar";
-import type { Filters } from "./types";
+import type { Filters } from "./data";
 
 type Props = {
   open: boolean;

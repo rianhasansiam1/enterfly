@@ -4,17 +4,13 @@ import ProductCard from "@/app/CommonComponents/Cards";
 import { Heart, ShoppingCart, Star, PackageX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import type { Product, ViewMode } from "./types";
+import type { Product, ViewMode } from "./data";
 
 type Props = {
   products: Product[];
   viewMode: ViewMode;
   onClearFilters: () => void;
   wide?: boolean;
-  /**
-   * Index from which newly-appended items should fade in. Items before this
-   * index render without animation so they don't re-animate on each load.
-   */
   animateFrom?: number;
 };
 
@@ -25,7 +21,12 @@ export default function ProductsGrid({
   wide,
   animateFrom = 0,
 }: Props) {
+
+
+
   if (products.length === 0) {
+
+
     return (
       <div className="flex flex-col items-center justify-center py-16 px-6 bg-white rounded-2xl border border-violet-100 shadow-sm text-center">
         <div className="w-20 h-20 rounded-full bg-violet-100 flex items-center justify-center mb-4">
@@ -69,6 +70,8 @@ export default function ProductsGrid({
     );
   }
 
+
+//main part
   return (
     <div
       className={`grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-3 transition-[grid-template-columns] duration-300 ease-in-out ${
@@ -105,7 +108,15 @@ export default function ProductsGrid({
   );
 }
 
+
+
+
+
+
+
+
 function ListItem({ product }: { product: Product }) {
+
   const finalPrice = product.discountPrice ?? product.price;
   const hasDiscount = product.discountPrice != null;
   const discount = hasDiscount
@@ -208,6 +219,12 @@ function ListItem({ product }: { product: Product }) {
           )}
         </div>
       </div>
+
+
+
     </div>
   );
+
+
+
 }

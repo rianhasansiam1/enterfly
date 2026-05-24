@@ -13,6 +13,13 @@ export default function Pagination({
   totalPages,
   onPageChange,
 }: Props) {
+
+
+
+
+
+
+
   if (totalPages <= 1) return null;
 
   const pages = getPageList(currentPage, totalPages);
@@ -65,6 +72,14 @@ export default function Pagination({
     </nav>
   );
 }
+
+
+
+
+
+
+
+
 
 function getPageList(current: number, total: number): (number | "…")[] {
   if (total <= 7) {

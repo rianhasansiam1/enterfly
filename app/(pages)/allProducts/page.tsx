@@ -7,7 +7,7 @@ import MobileFilterDrawer from "./components/MobileFilterDrawer";
 import ProductsGrid from "./components/ProductsGrid";
 import ProductToolbar from "./components/ProductToolbar";
 import { allProductsData, PRICE_BOUNDS } from "./components/data";
-import type { Filters, SortOption, ViewMode } from "./components/types";
+import type { Filters, Product, SortOption, ViewMode } from "./components/data";
 
 const DEFAULT_FILTERS: Filters = {
   categories: [],
@@ -16,10 +16,17 @@ const DEFAULT_FILTERS: Filters = {
   minRating: 0,
   inStockOnly: false,
 };
-
 const PAGE_SIZE = 12;
 
+
+
+
 export default function AllProductsPage() {
+
+
+
+
+
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<SortOption>("popular");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -31,51 +38,82 @@ export default function AllProductsPage() {
   // Index from which the latest batch starts; used to fade in only new items.
   const [animateFrom, setAnimateFrom] = useState(0);
 
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  const filtered = useMemo(() => {
-    let list = allProductsData.filter((p) => {
-      const finalPrice = p.discountPrice ?? p.price;
-      if (
-        filters.categories.length > 0 &&
-        !filters.categories.includes(p.category)
-      )
-        return false;
-      if (
-        filters.brands.length > 0 &&
-        (!p.brand || !filters.brands.includes(p.brand))
-      )
-        return false;
-      if (
-        finalPrice < filters.priceRange[0] ||
-        finalPrice > filters.priceRange[1]
-      )
-        return false;
-      if (filters.minRating > 0 && p.rating < filters.minRating) return false;
-      if (filters.inStockOnly && !p.inStock) return false;
-      return true;
-    });
 
-    list = [...list].sort((a, b) => {
-      const aPrice = a.discountPrice ?? a.price;
-      const bPrice = b.discountPrice ?? b.price;
-      switch (sort) {
-        case "price-low":
-          return aPrice - bPrice;
-        case "price-high":
-          return bPrice - aPrice;
-        case "rating":
-          return b.rating - a.rating;
-        case "newest":
-          return b.id.localeCompare(a.id);
-        case "popular":
-        default:
-          return b.reviewCount - a.reviewCount;
-      }
-    });
 
-    return list;
-  }, [filters, sort]);
+
+
+
+
+
+  const sentinelRef = useRef(null);
+
+const getFinalPrice = (product:any) =>
+  product.discountPrice ?? product.price;
+
+const filtered = useMemo(() => {
+  const list = allProductsData.filter((product) => {
+    const finalPrice = getFinalPrice(product);
+
+    const matchCategory =
+      filters.categories.length === 0 ||
+      filters.categories.includes(product.category);
+
+    const matchBrand =
+      filters.brands.length === 0 ||
+      (product.brand && filters.brands.includes(product.brand));
+
+    const matchPrice =
+      finalPrice >= filters.priceRange[0] &&
+      finalPrice <= filters.priceRange[1];
+
+    const matchRating =
+      filters.minRating === 0 || product.rating >= filters.minRating;
+
+    const matchStock =
+      !filters.inStockOnly || product.inStock;
+
+    return (
+      matchCategory &&
+      matchBrand &&
+      matchPrice &&
+      matchRating &&
+      matchStock
+    );
+  });
+
+  return [...list].sort((a, b) => {
+    const aPrice = getFinalPrice(a);
+    const bPrice = getFinalPrice(b);
+
+    switch (sort) {
+      case "price-low":
+        return aPrice - bPrice;
+
+      case "price-high":
+        return bPrice - aPrice;
+
+      case "rating":
+        return b.rating - a.rating;
+
+      case "newest":
+        return b.id.localeCompare(a.id);
+
+      case "popular":
+      default:
+        return b.reviewCount - a.reviewCount;
+    }
+  });
+}, [filters, sort]);
+
+
+
+
+
+
+
+
+
 
   // Reset the visible window when filters/sort change.
   // Uses the "adjust state during render" pattern so we don't trigger a
@@ -90,6 +128,10 @@ export default function AllProductsPage() {
 
   const pageItems = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
+
+
+
+
 
   // IntersectionObserver: load more when sentinel scrolls into view
   useEffect(() => {
@@ -114,6 +156,12 @@ export default function AllProductsPage() {
     return () => observer.disconnect();
   }, [hasMore, filtered.length]);
 
+
+
+
+
+
+
   const handleFiltersChange = (next: Filters) => {
     setFilters(next);
   };
@@ -121,6 +169,11 @@ export default function AllProductsPage() {
   const resetFilters = () => {
     setFilters(DEFAULT_FILTERS);
   };
+
+
+
+
+
 
   return (
     <div className="min-h-screen bg-linear-to-b from-[#F5F3FF] via-white to-white">

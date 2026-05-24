@@ -10,7 +10,7 @@ import {
 } from "@/app/CommonComponents/ui/dropdown-menu";
 import { Button } from "@/app/CommonComponents/ui/button";
 import { cn } from "@/lib/utils";
-import type { SortOption, ViewMode } from "./types";
+import type { SortOption, ViewMode } from "./data";
 
 type Props = {
   resultsCount: number;
@@ -45,6 +45,16 @@ export default function ProductToolbar({
   sidebarOpen,
   onToggleSidebar,
 }: Props) {
+
+
+
+
+
+
+
+
+
+
   return (
     <div className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-violet-100 bg-white px-3 py-2.5 shadow-sm transition-shadow duration-300 hover:shadow-md sm:px-4">
       {/* Left: count + filter toggles */}
