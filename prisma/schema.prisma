@@ -118,16 +118,18 @@ model Wishlist {
 }
 
 model Order {
-  id String @id @default(cuid())
+  id          String @id @default(cuid())
+  orderNumber String @unique // human-readable receipt id, e.g. "ORD-260525-A1B2C3D4"
 
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
   items OrderItem[]
 
-  totalAmount    Float
+  subtotal       Float
   deliveryCharge Float @default(0)
   discountAmount Float @default(0)
+  totalAmount    Float
 
   customerName    String
   customerPhone   String
@@ -139,6 +141,10 @@ model Order {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@index([paymentStatus, createdAt])
 }
 
 enum OrderStatus {

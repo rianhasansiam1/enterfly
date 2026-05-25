@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth/auth";
 import { jsonError } from "@/lib/auth/responses";
 
 /**
- * Centralized admin gate for protected routes.
+ * Centralized auth gates for protected routes.
  *
  * Returning a discriminated union (instead of throwing) keeps the route
  * handler in normal control flow: caller checks `result.ok` and either
@@ -16,9 +16,14 @@ import { jsonError } from "@/lib/auth/responses";
  *   if (!guard.ok) return guard.response;
  *   // ...do admin work, guard.session.user.id is available
  */
-export type AdminGuard =| { ok: true; session: Session } | { ok: false; response: Response };
+export type AuthGuard =
+  | { ok: true; session: Session }
+  | { ok: false; response: Response };
 
-export async function requireAdmin(): Promise<AdminGuard> {
+/** @deprecated alias retained for older imports. Prefer `AuthGuard`. */
+export type AdminGuard = AuthGuard;
+
+export async function requireAdmin(): Promise<AuthGuard> {
   // NextAuth's `auth()` is overloaded; the no-arg form returns the session.
   const session = (await auth()) as Session | null;
 
@@ -28,6 +33,17 @@ export async function requireAdmin(): Promise<AdminGuard> {
 
   if (session.user.role !== "ADMIN") {
     return { ok: false, response: jsonError(403, "Admin access only.") };
+  }
+
+  return { ok: true, session };
+}
+
+/** Logged-in users only — no role check. */
+export async function requireUser(): Promise<AuthGuard> {
+  const session = (await auth()) as Session | null;
+
+  if (!session?.user?.id) {
+    return { ok: false, response: jsonError(401, "Authentication required.") };
   }
 
   return { ok: true, session };

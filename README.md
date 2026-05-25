@@ -47,3 +47,8 @@ npx prisma migrate dev --name init
 npx prisma generate
 
 npx prisma studio
+
+
+Never calculate order price from frontend-submitted price.
+Frontend can send productId and quantity only.
+Backend must fetch product price from database and calculate total securely.
