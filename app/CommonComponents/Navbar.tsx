@@ -38,11 +38,18 @@ import {
 } from "@/app/CommonComponents/ui/sheet";
 import { cn } from "@/lib/utils";
 
-const MENU_ITEMS = [
+type MenuItem = {
+  href: string;
+  label: string;
+  icon: typeof Store;
+  adminOnly?: boolean;
+};
+
+const MENU_ITEMS: readonly MenuItem[] = [
   { href: "/allProducts", label: "All Products", icon: Store },
   { href: "/about", label: "About", icon: Info },
   { href: "/contact", label: "Contact", icon: Info },
-  { href: "/admin", label: "Admin", icon: Info },
+  { href: "/admin", label: "Admin", icon: Info, adminOnly: true },
 ] as const;
 
 /** Grace period (ms) so the cursor can travel from trigger to dropdown content. */
@@ -52,6 +59,11 @@ export default function Navbar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const user = session?.user ?? null;
+  const isAdmin = user?.role === "ADMIN";
+
+  const visibleMenuItems = MENU_ITEMS.filter(
+    (item) => !item.adminOnly || isAdmin,
+  );
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -119,7 +131,7 @@ export default function Navbar() {
 
         {/* DESKTOP MENU */}
         <nav className="hidden items-center gap-2 lg:flex">
-          {MENU_ITEMS.map((item) => {
+          {visibleMenuItems.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
             return (
@@ -396,7 +408,7 @@ export default function Navbar() {
           </div>
 
           <nav className="flex flex-col gap-1 p-3">
-            {MENU_ITEMS.map((item) => {
+            {visibleMenuItems.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.href;
               return (

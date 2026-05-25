@@ -2,7 +2,7 @@ import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 
-import { authConfig } from "@/auth.config";
+import { authConfig } from "@/lib/auth/auth.config";
 import { FIELD_LIMITS } from "@/lib/auth/policy";
 import { verifyPassword } from "@/lib/auth/passwords";
 import { rateLimit } from "@/lib/auth/rate-limit";
