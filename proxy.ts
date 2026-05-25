@@ -15,6 +15,12 @@ function startsWithAny(pathname: string, prefixes: string[]) {
   );
 }
 
+/**
+ * Next.js 16 renamed the `middleware` file convention to `proxy`. The
+ * exported function must be named `proxy` (or be the default export) and
+ * always runs on the Node.js runtime — the `edge` runtime is not supported
+ * in `proxy`. See `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`.
+ */
 export default auth((request) => {
   const { nextUrl } = request;
   const session = request.auth;

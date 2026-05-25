@@ -14,6 +14,9 @@ import { adminOrderQuerySchema } from "@/lib/validations/order.validation";
  * filter by order status and payment status, newest first. Each row
  * carries the user's basic info and the count of items.
  */
+
+
+
 export async function GET(request: NextRequest) {
   const guard = await requireAdmin();
   if (!guard.ok) return guard.response;
