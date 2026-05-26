@@ -1,9 +1,13 @@
 import type { NextRequest } from "next/server";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
 import { requireAdmin } from "@/lib/auth-check";
 import { jsonError, created, ok } from "@/lib/api-response";
-import { createProduct, listProducts,} from "@/lib/services/product.service";
+import {
+  createProduct,
+  listProductsCached,
+} from "@/lib/services/product.service";
 import {createProductSchema, productQuerySchema,} from "@/lib/validations/product.validation";
 
 /**
@@ -28,7 +32,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { items, meta } = await listProducts(parsed.data);
+    const { items, meta } = await listProductsCached(parsed.data);
     return ok(items, meta);
   } catch (error) {
     console.error("[products.GET] failed", error);
@@ -78,6 +82,8 @@ export async function POST(request: NextRequest) {
 
   try {
     const product = await createProduct(parsed.data);
+    revalidateTag("products", "max");
+    revalidateTag("home-categories", "max");
     return created(product);
   } catch (error) {
     console.error("[products.POST] failed", error);

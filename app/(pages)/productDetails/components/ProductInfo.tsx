@@ -20,7 +20,40 @@ import {
   Settings,
   LucideIcon
 } from 'lucide-react'
-import type { ProductInfoProps, IconName } from '../types'
+
+type ProductSpec = {
+  id: string
+  icon: string
+  label: string
+  value: string
+}
+
+type ProductInfoProps = {
+  name: string
+  price: number
+  originalPrice: number
+  discount: number
+  specs: ProductSpec[]
+  deliveryTime?: string
+}
+
+type IconName =
+  | 'Battery'
+  | 'Bluetooth'
+  | 'Headphones'
+  | 'Mic'
+  | 'Armchair'
+  | 'Lightbulb'
+  | 'SlidersHorizontal'
+  | 'Monitor'
+  | 'Cpu'
+  | 'Camera'
+  | 'HardDrive'
+  | 'Smartphone'
+  | 'Keyboard'
+  | 'Usb'
+  | 'Square'
+  | 'Settings'
 
 // Icon mapping for dynamic rendering
 const iconMap: Record<IconName, LucideIcon> = {

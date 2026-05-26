@@ -24,10 +24,21 @@ export const addToCartSchema = z.object({
   quantity: quantity.default(1),
 });
 
+const syncCartItemSchema = z.object({
+  productId,
+  quantity,
+});
+
+/** Body for `PUT /api/cart`. */
+export const syncCartSchema = z.object({
+  items: z.array(syncCartItemSchema).max(200, "Too many cart items."),
+});
+
 /** Body for `PATCH /api/cart/[id]`. */
 export const updateCartItemSchema = z.object({
   quantity,
 });
 
 export type AddToCartInput = z.infer<typeof addToCartSchema>;
+export type SyncCartInput = z.infer<typeof syncCartSchema>;
 export type UpdateCartItemInput = z.infer<typeof updateCartItemSchema>;

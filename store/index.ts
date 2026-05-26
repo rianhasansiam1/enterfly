@@ -5,16 +5,53 @@
 // Replace with real data fetching (DB / API) when ready.
 // =============================================================================
 
-import type {
-  DealBanner,
-  IconName,
-  PromoBanner,
-  ProductSpec,
-} from '@/app/(pages)/productDetails/types'
-
 // -----------------------------------------------------------------------------
 // Types
 // -----------------------------------------------------------------------------
+
+export type ProductSpec = {
+  id: string
+  icon: string
+  label: string
+  value: string
+}
+
+export type IconName =
+  | 'Battery'
+  | 'Bluetooth'
+  | 'Headphones'
+  | 'Mic'
+  | 'Armchair'
+  | 'Lightbulb'
+  | 'SlidersHorizontal'
+  | 'Monitor'
+  | 'Cpu'
+  | 'Camera'
+  | 'HardDrive'
+  | 'Smartphone'
+  | 'Keyboard'
+  | 'Usb'
+  | 'Square'
+  | 'Settings'
+
+export type DealBanner = {
+  id: number
+  image: string
+  title: string
+  subtitle: string
+  bgClass: string
+  link: string
+}
+
+export type PromoBanner = {
+  id: number
+  image: string
+  title: string
+  subtitle: string
+  discount: string
+  bgClass: string
+  link: string
+}
 
 export interface ProductPricing {
   price: number

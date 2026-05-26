@@ -10,7 +10,15 @@ import {
 } from "@/app/CommonComponents/ui/dropdown-menu";
 import { Button } from "@/app/CommonComponents/ui/button";
 import { cn } from "@/lib/utils";
-import type { SortOption, ViewMode } from "./data";
+
+type SortOption =
+  | "popular"
+  | "price-low"
+  | "price-high"
+  | "rating"
+  | "newest";
+
+type ViewMode = "grid" | "list";
 
 type Props = {
   resultsCount: number;
@@ -45,26 +53,15 @@ export default function ProductToolbar({
   sidebarOpen,
   onToggleSidebar,
 }: Props) {
-
-
-
-
-
-
-
-
-
-
   return (
     <div className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-violet-100 bg-white px-3 py-2.5 shadow-sm transition-shadow duration-300 hover:shadow-md sm:px-4">
-      {/* Left: count + filter toggles */}
       <div className="flex items-center gap-2">
         <Button
           type="button"
           onClick={onOpenMobileFilter}
           variant="secondary"
           size="sm"
-          className="lg:hidden bg-violet-50 text-violet-700 hover:bg-violet-100 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
+          className="bg-violet-50 text-violet-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-violet-100 active:translate-y-0 lg:hidden"
         >
           <SlidersHorizontal className="size-4" />
           Filters
@@ -77,7 +74,7 @@ export default function ProductToolbar({
           size="sm"
           aria-label={sidebarOpen ? "Hide filters" : "Show filters"}
           aria-pressed={sidebarOpen}
-          className="hidden lg:flex bg-violet-50 text-violet-700 hover:bg-violet-100 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
+          className="hidden bg-violet-50 text-violet-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-violet-100 active:translate-y-0 lg:flex"
         >
           <SlidersHorizontal
             className={cn(
@@ -102,7 +99,6 @@ export default function ProductToolbar({
         </p>
       </div>
 
-      {/* Right: sort + view toggle */}
       <div className="flex items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -172,7 +168,7 @@ function ViewToggle({
       className={cn(
         "rounded-md p-1.5 transition-all duration-200",
         active
-          ? "bg-white text-violet-700 shadow-sm scale-100"
+          ? "scale-100 bg-white text-violet-700 shadow-sm"
           : "text-gray-500 hover:scale-105 hover:text-violet-600",
       )}
     >

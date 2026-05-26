@@ -1,139 +1,337 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+
 import FilterSidebar from "./components/FilterSidebar";
 import MobileFilterDrawer from "./components/MobileFilterDrawer";
 import ProductsGrid from "./components/ProductsGrid";
 import ProductToolbar from "./components/ProductToolbar";
-import { allProductsData, PRICE_BOUNDS } from "./components/data";
-import type { Filters, Product, SortOption, ViewMode } from "./components/data";
+import {
+  setAllProducts,
+  setAllProductsError,
+  setAllProductsLoading,
+} from "@/app/redux/features/allProductsSlice";
+import type { AppDispatch, RootState } from "@/app/redux/store/store";
 
-const DEFAULT_FILTERS: Filters = {
-  categories: [],
-  brands: [],
-  priceRange: PRICE_BOUNDS,
-  minRating: 0,
-  inStockOnly: false,
+type Product = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  discountPrice: number | null;
+  image: string;
+  images: string[];
+  rating: number;
+  reviewCount: number;
+  badge: string | null;
+  categoryId: string;
+  category: string;
+  categoryImage: string | null;
+  brand?: string;
+  stock: number;
+  inStock: boolean;
+  createdAt: string;
 };
-const PAGE_SIZE = 12;
 
+type SortOption =
+  | "popular"
+  | "price-low"
+  | "price-high"
+  | "rating"
+  | "newest";
 
+type ViewMode = "grid" | "list";
 
+type Filters = {
+  categories: string[];
+  brands: string[];
+  priceRange: [number, number];
+  minRating: number;
+  inStockOnly: boolean;
+};
+
+type ApiProduct = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  discountPrice: number | null;
+  image: string | null;
+  images: string[];
+  rating: number;
+  reviewCount: number;
+  badge: string | null;
+  status: "ACTIVE" | "INACTIVE";
+  stock: number;
+  createdAt: string;
+  categoryId: string;
+  category: {
+    id: string;
+    name: string;
+    image: string | null;
+  };
+};
+
+type ApiMeta = {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+};
+
+type ApiResponse<T> = {
+  success: boolean;
+  data: T;
+  meta?: ApiMeta;
+};
+
+const FALLBACK_PRODUCT_IMAGE =
+  "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400";
+const INITIAL_PRICE_BOUNDS: [number, number] = [0, 5000];
+const DEFAULT_PAGE_SIZE = 12;
+const API_PAGE_SIZE = 100;
+
+function mapApiProduct(item: ApiProduct): Product {
+  return {
+    id: item.id,
+    name: item.name,
+    description: item.description,
+    price: item.price,
+    discountPrice: item.discountPrice,
+    image: item.image ?? FALLBACK_PRODUCT_IMAGE,
+    images: item.images,
+    rating: item.rating,
+    reviewCount: item.reviewCount,
+    badge: item.badge,
+    categoryId: item.categoryId,
+    category: item.category.name,
+    categoryImage: item.category.image,
+    stock: item.stock,
+    inStock: item.stock > 0 && item.status === "ACTIVE",
+    createdAt: item.createdAt,
+  };
+}
+
+async function fetchAllActiveProductsFromApi(): Promise<Product[]> {
+  let page = 1;
+  let totalPages = 1;
+  const merged: Product[] = [];
+
+  while (page <= totalPages) {
+    const params = new URLSearchParams({
+      status: "ACTIVE",
+      page: String(page),
+      pageSize: String(API_PAGE_SIZE),
+      sort: "latest",
+    });
+
+    const response = await fetch(`/api/products?${params.toString()}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch products. HTTP ${response.status}`);
+    }
+
+    const payload = (await response.json()) as ApiResponse<ApiProduct[]>;
+    if (!payload.success || !Array.isArray(payload.data)) {
+      throw new Error("Products API returned an unexpected response.");
+    }
+
+    merged.push(...payload.data.map(mapApiProduct));
+    totalPages = payload.meta?.totalPages ?? 1;
+    page += 1;
+  }
+
+  return merged;
+}
 
 export default function AllProductsPage() {
+  const dispatch = useDispatch<AppDispatch>();
+  const productsFromStore = useSelector(
+    (state: RootState) => state.allProducts.items,
+  );
+  const isLoadingFromStore = useSelector(
+    (state: RootState) => state.allProducts.isLoading,
+  );
+  const isHydrated = useSelector((state: RootState) => state.allProducts.isHydrated);
+  const errorFromStore = useSelector((state: RootState) => state.allProducts.error);
 
-
-
-
-
-  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState<Filters>({
+    categories: [],
+    brands: [],
+    priceRange: INITIAL_PRICE_BOUNDS,
+    minRating: 0,
+    inStockOnly: false,
+  });
   const [sort, setSort] = useState<SortOption>("popular");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  // Infinite-scroll state
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  // Index from which the latest batch starts; used to fade in only new items.
+  const [visibleCount, setVisibleCount] = useState(DEFAULT_PAGE_SIZE);
   const [animateFrom, setAnimateFrom] = useState(0);
-
-
-
-
-
-
-
-
-
+  const [appliedPriceBoundsKey, setAppliedPriceBoundsKey] = useState(
+    `${INITIAL_PRICE_BOUNDS[0]}-${INITIAL_PRICE_BOUNDS[1]}`,
+  );
+  const [prevResetKey, setPrevResetKey] = useState("");
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-const getFinalPrice = (product: Product) =>
-  product.discountPrice ?? product.price;
+  useEffect(() => {
+    let ignore = false;
 
-const filtered = useMemo(() => {
-  const list = allProductsData.filter((product) => {
-    const finalPrice = getFinalPrice(product);
-
-    const matchCategory =
-      filters.categories.length === 0 ||
-      filters.categories.includes(product.category);
-
-    const matchBrand =
-      filters.brands.length === 0 ||
-      (product.brand && filters.brands.includes(product.brand));
-
-    const matchPrice =
-      finalPrice >= filters.priceRange[0] &&
-      finalPrice <= filters.priceRange[1];
-
-    const matchRating =
-      filters.minRating === 0 || product.rating >= filters.minRating;
-
-    const matchStock =
-      !filters.inStockOnly || product.inStock;
-
-    return (
-      matchCategory &&
-      matchBrand &&
-      matchPrice &&
-      matchRating &&
-      matchStock
-    );
-  });
-
-  return [...list].sort((a, b) => {
-    const aPrice = getFinalPrice(a);
-    const bPrice = getFinalPrice(b);
-
-    switch (sort) {
-      case "price-low":
-        return aPrice - bPrice;
-
-      case "price-high":
-        return bPrice - aPrice;
-
-      case "rating":
-        return b.rating - a.rating;
-
-      case "newest":
-        return b.id.localeCompare(a.id);
-
-      case "popular":
-      default:
-        return b.reviewCount - a.reviewCount;
+    if (isHydrated || productsFromStore.length > 0) {
+      return;
     }
-  });
-}, [filters, sort]);
 
+    const loadProducts = async () => {
+      dispatch(setAllProductsLoading(true));
+      dispatch(setAllProductsError(null));
+      try {
+        const items = await fetchAllActiveProductsFromApi();
+        if (ignore) return;
+        dispatch(setAllProducts(items));
+      } catch (error) {
+        if (ignore) return;
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to load products from API.";
+        dispatch(setAllProductsError(message));
+      } finally {
+        if (!ignore) {
+          dispatch(setAllProductsLoading(false));
+        }
+      }
+    };
 
+    void loadProducts();
 
+    return () => {
+      ignore = true;
+    };
+  }, [dispatch, isHydrated, productsFromStore.length]);
 
+  const products = productsFromStore;
 
+  const categories = useMemo(() => {
+    return Array.from(new Set(products.map((product) => product.category))).sort();
+  }, [products]);
 
+  const brands = useMemo(() => {
+    return Array.from(
+      new Set(
+        products
+          .map((product) => product.brand)
+          .filter((brand): brand is string => Boolean(brand)),
+      ),
+    ).sort();
+  }, [products]);
 
+  const priceBounds = useMemo<[number, number]>(() => {
+    if (products.length === 0) return INITIAL_PRICE_BOUNDS;
 
+    const maxFinalPrice = Math.max(
+      ...products.map((product) => product.discountPrice ?? product.price),
+    );
 
+    const normalizedMax = Math.max(500, Math.ceil(maxFinalPrice / 50) * 50);
+    return [0, normalizedMax];
+  }, [products]);
 
-  // Reset the visible window when filters/sort change.
-  // Uses the "adjust state during render" pattern so we don't trigger a
-  // cascading effect.
-  const resetKey = `${filtered.length}|${sort}|${JSON.stringify(filters)}`;
-  const [prevKey, setPrevKey] = useState(resetKey);
-  if (prevKey !== resetKey) {
-    setPrevKey(resetKey);
-    setVisibleCount(PAGE_SIZE);
+  const priceBoundsKey = `${priceBounds[0]}-${priceBounds[1]}`;
+  if (products.length > 0 && appliedPriceBoundsKey !== priceBoundsKey) {
+    setAppliedPriceBoundsKey(priceBoundsKey);
+    setFilters((prev) => {
+      const untouched =
+        prev.categories.length === 0 &&
+        prev.brands.length === 0 &&
+        prev.minRating === 0 &&
+        !prev.inStockOnly &&
+        prev.priceRange[0] === INITIAL_PRICE_BOUNDS[0] &&
+        prev.priceRange[1] === INITIAL_PRICE_BOUNDS[1];
+
+      if (untouched) {
+        return { ...prev, priceRange: priceBounds };
+      }
+
+      if (prev.priceRange[1] > priceBounds[1]) {
+        return { ...prev, priceRange: [prev.priceRange[0], priceBounds[1]] };
+      }
+
+      return prev;
+    });
+  }
+
+  const getFinalPrice = (product: Product) => product.discountPrice ?? product.price;
+
+  const filtered = useMemo(() => {
+    const list = products.filter((product) => {
+      const finalPrice = getFinalPrice(product);
+
+      const matchCategory =
+        filters.categories.length === 0 ||
+        filters.categories.includes(product.category);
+
+      const matchBrand =
+        filters.brands.length === 0 ||
+        (product.brand && filters.brands.includes(product.brand));
+
+      const matchPrice =
+        finalPrice >= filters.priceRange[0] &&
+        finalPrice <= filters.priceRange[1];
+
+      const matchRating =
+        filters.minRating === 0 || product.rating >= filters.minRating;
+
+      const matchStock = !filters.inStockOnly || product.inStock;
+
+      return (
+        matchCategory &&
+        matchBrand &&
+        matchPrice &&
+        matchRating &&
+        matchStock
+      );
+    });
+
+    return [...list].sort((a, b) => {
+      const aPrice = getFinalPrice(a);
+      const bPrice = getFinalPrice(b);
+
+      switch (sort) {
+        case "price-low":
+          return aPrice - bPrice;
+        case "price-high":
+          return bPrice - aPrice;
+        case "rating":
+          return b.rating - a.rating;
+        case "newest":
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case "popular":
+        default:
+          return b.reviewCount - a.reviewCount;
+      }
+    });
+  }, [filters, products, sort]);
+
+  const resetKey = [
+    sort,
+    filters.categories.join("|"),
+    filters.brands.join("|"),
+    filters.minRating,
+    filters.inStockOnly ? "1" : "0",
+    `${filters.priceRange[0]}-${filters.priceRange[1]}`,
+    filtered.length,
+  ].join("::");
+
+  if (prevResetKey !== resetKey) {
+    setPrevResetKey(resetKey);
+    setVisibleCount(DEFAULT_PAGE_SIZE);
     setAnimateFrom(0);
   }
 
   const pageItems = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
 
-
-
-
-
-  // IntersectionObserver: load more when sentinel scrolls into view
   useEffect(() => {
     if (!hasMore) return;
     const node = sentinelRef.current;
@@ -145,44 +343,38 @@ const filtered = useMemo(() => {
           setVisibleCount((current) => {
             if (current >= filtered.length) return current;
             setAnimateFrom(current);
-            return Math.min(current + PAGE_SIZE, filtered.length);
+            return Math.min(current + DEFAULT_PAGE_SIZE, filtered.length);
           });
         }
       },
-      { rootMargin: "300px 0px" }
+      { rootMargin: "300px 0px" },
     );
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [hasMore, filtered.length]);
-
-
-
-
-
-
+  }, [filtered.length, hasMore]);
 
   const handleFiltersChange = (next: Filters) => {
     setFilters(next);
   };
 
   const resetFilters = () => {
-    setFilters(DEFAULT_FILTERS);
+    setFilters({
+      categories: [],
+      brands: [],
+      priceRange: priceBounds,
+      minRating: 0,
+      inStockOnly: false,
+    });
   };
-
-
-
-
-
 
   return (
     <div className="min-h-screen bg-linear-to-b from-[#F5F3FF] via-white to-white">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
+      <div className="mx-auto max-w-7xl px-3 py-4 sm:px-4 sm:py-6 lg:px-6">
         <div className="flex gap-5">
-          {/* Desktop Sidebar (collapsible) */}
           <div
-            className={`hidden lg:block shrink-0 overflow-hidden transition-[width,opacity,margin] duration-300 ease-in-out ${
-              sidebarOpen ? "w-64 opacity-100" : "w-0 opacity-0 -ml-5"
+            className={`hidden shrink-0 overflow-hidden transition-[width,opacity,margin] duration-300 ease-in-out lg:block ${
+              sidebarOpen ? "w-64 opacity-100" : "-ml-5 w-0 opacity-0"
             }`}
             aria-hidden={!sidebarOpen}
           >
@@ -191,50 +383,64 @@ const filtered = useMemo(() => {
                 filters={filters}
                 onChange={handleFiltersChange}
                 onReset={resetFilters}
+                categories={categories}
+                brands={brands}
+                priceBounds={priceBounds}
               />
             </div>
           </div>
 
-          {/* Main Content */}
-          <main className="flex-1 min-w-0">
+          <main className="min-w-0 flex-1">
             <ProductToolbar
               resultsCount={filtered.length}
-              totalCount={allProductsData.length}
+              totalCount={products.length}
               sort={sort}
               onSortChange={setSort}
               viewMode={viewMode}
               onViewModeChange={setViewMode}
               onOpenMobileFilter={() => setMobileFilterOpen(true)}
               sidebarOpen={sidebarOpen}
-              onToggleSidebar={() => setSidebarOpen((o) => !o)}
+              onToggleSidebar={() => setSidebarOpen((open) => !open)}
             />
 
-            <ProductsGrid
-              products={pageItems}
-              viewMode={viewMode}
-              onClearFilters={resetFilters}
-              wide={!sidebarOpen}
-              animateFrom={animateFrom}
-            />
+            {isLoadingFromStore && products.length === 0 ? (
+              <div className="mt-10 flex items-center justify-center gap-2 text-sm text-violet-700">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Loading products from server...</span>
+              </div>
+            ) : errorFromStore && products.length === 0 ? (
+              <div className="mt-10 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                {errorFromStore}
+              </div>
+            ) : (
+              <>
+                <ProductsGrid
+                  products={pageItems}
+                  viewMode={viewMode}
+                  onClearFilters={resetFilters}
+                  wide={!sidebarOpen}
+                  animateFrom={animateFrom}
+                />
 
-            {/* Sentinel + status row */}
-            <div className="mt-8 flex flex-col items-center justify-center gap-2 min-h-12">
-              {hasMore ? (
-                <>
-                  <div ref={sentinelRef} aria-hidden className="h-1 w-full" />
-                  <div className="flex items-center gap-2 text-sm text-violet-700">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Loading more products…</span>
-                  </div>
-                </>
-              ) : (
-                filtered.length > PAGE_SIZE && (
-                  <p className="text-sm text-gray-500">
-                    You&apos;ve reached the end · {filtered.length} products
-                  </p>
-                )
-              )}
-            </div>
+                <div className="mt-8 flex min-h-12 flex-col items-center justify-center gap-2">
+                  {hasMore ? (
+                    <>
+                      <div ref={sentinelRef} aria-hidden className="h-1 w-full" />
+                      <div className="flex items-center gap-2 text-sm text-violet-700">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Loading more products...</span>
+                      </div>
+                    </>
+                  ) : (
+                    filtered.length > DEFAULT_PAGE_SIZE && (
+                      <p className="text-sm text-gray-500">
+                        You&apos;ve reached the end - {filtered.length} products
+                      </p>
+                    )
+                  )}
+                </div>
+              </>
+            )}
           </main>
         </div>
       </div>
@@ -245,6 +451,9 @@ const filtered = useMemo(() => {
         filters={filters}
         onChange={handleFiltersChange}
         onReset={resetFilters}
+        categories={categories}
+        brands={brands}
+        priceBounds={priceBounds}
       />
     </div>
   );

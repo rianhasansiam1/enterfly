@@ -12,7 +12,21 @@ import Image from "next/image";
 import Link from "next/link";
 
 import QuantityStepper from "./QuantityStepper";
-import type { CartItem } from "./types";
+
+type CartItem = {
+  id: string;
+  name: string;
+  brand: string;
+  image: string;
+  price: number;
+  originalPrice?: number;
+  quantity: number;
+  maxQuantity: number;
+  variant?: string;
+  inStock: boolean;
+  deliveryDays?: number;
+  perks?: string[];
+};
 
 type CartItemCardProps = {
   item: CartItem;
@@ -39,7 +53,7 @@ export default function CartItemCard({
     <article className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 shadow-sm transition-all duration-300 hover:border-violet-200 hover:shadow-md sm:p-4">
       <div className="flex gap-3 sm:gap-4">
         <Link
-          href={`/product/${item.id}`}
+          href={`/productDetails/${item.id}`}
           className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-xl bg-gray-50 sm:w-32"
         >
           <Image
@@ -68,7 +82,7 @@ export default function CartItemCard({
                 {item.brand}
               </p>
               <Link
-                href={`/product/${item.id}`}
+                href={`/productDetails/${item.id}`}
                 className="mt-0.5 line-clamp-2 text-sm font-semibold text-gray-900 hover:text-violet-700 sm:text-base"
               >
                 {item.name}

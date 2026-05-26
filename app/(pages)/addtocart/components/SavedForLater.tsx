@@ -4,7 +4,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { SavedItem } from "./types";
+
+type SavedItem = {
+  id: string;
+  productId: string;
+  name: string;
+  brand: string;
+  image: string;
+  price: number;
+  originalPrice?: number;
+  inStock: boolean;
+};
 
 type SavedForLaterProps = {
   items: SavedItem[];
@@ -40,7 +50,7 @@ export default function SavedForLater({
             className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md"
           >
             <Link
-              href={`/product/${item.id}`}
+              href={`/productDetails/${item.productId}`}
               className="relative block aspect-square overflow-hidden bg-gray-50"
             >
               <Image
@@ -74,7 +84,7 @@ export default function SavedForLater({
                 {item.brand}
               </p>
               <Link
-                href={`/product/${item.id}`}
+                href={`/productDetails/${item.productId}`}
                 className="mt-0.5 line-clamp-1 text-xs font-semibold text-gray-900 hover:text-violet-700"
               >
                 {item.name}

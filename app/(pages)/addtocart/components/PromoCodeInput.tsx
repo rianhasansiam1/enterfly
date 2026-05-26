@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { Tag, Check, X, AlertCircle } from "lucide-react";
 import { Input } from "@/app/CommonComponents/ui/input";
-import type { AppliedPromo } from "./types";
+
+type AppliedPromo = {
+  code: string;
+  discount: number;
+  description: string;
+};
 
 type PromoCodeInputProps = {
   applied: AppliedPromo | null;

@@ -11,7 +11,15 @@ import {
 } from "lucide-react";
 import { Input } from "@/app/CommonComponents/ui/input";
 import { cn } from "@/lib/utils";
-import type { WishlistSort, WishlistView } from "./types";
+
+type WishlistView = "grid" | "list";
+
+type WishlistSort =
+  | "recent"
+  | "oldest"
+  | "price-asc"
+  | "price-desc"
+  | "rating";
 
 type WishlistToolbarProps = {
   query: string;

@@ -1,10 +1,12 @@
 import "server-only";
 
 import { Prisma } from "@prisma/client";
+import { unstable_cache } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
 import type {
   AddToCartInput,
+  SyncCartInput,
   UpdateCartItemInput,
 } from "@/lib/validations/cart.validation";
 
@@ -179,6 +181,87 @@ export async function getMyCart(userId: string) {
   });
 
   return summarize(rows);
+}
+
+const getCachedMyCart = unstable_cache(
+  async (userId: string) => getMyCart(userId),
+  ["cart-by-user"],
+  { revalidate: 120, tags: ["cart"] },
+);
+
+export function getMyCartCached(userId: string) {
+  return getCachedMyCart(userId);
+}
+
+export async function syncCartItems(userId: string, input: SyncCartInput) {
+  if (input.items.length === 0) {
+    return getMyCart(userId);
+  }
+
+  const merged = new Map<string, number>();
+  for (const item of input.items) {
+    const current = merged.get(item.productId) ?? 0;
+    merged.set(item.productId, current + item.quantity);
+  }
+
+  const requested = Array.from(merged.entries()).map(([productId, quantity]) => ({
+    productId,
+    quantity,
+  }));
+
+  const productIds = requested.map((item) => item.productId);
+  const products = await prisma.product.findMany({
+    where: {
+      id: { in: productIds },
+      status: "ACTIVE",
+    },
+    select: {
+      id: true,
+      stock: true,
+    },
+  });
+
+  const existingRows = await prisma.cartItem.findMany({
+    where: {
+      userId,
+      productId: { in: productIds },
+    },
+    select: {
+      productId: true,
+      quantity: true,
+    },
+  });
+
+  const stockByProductId = new Map(products.map((product) => [product.id, product.stock]));
+  const existingQuantityByProductId = new Map(
+    existingRows.map((row) => [row.productId, row.quantity]),
+  );
+
+  const writes = requested.flatMap((item) => {
+    const stock = stockByProductId.get(item.productId);
+    if (stock == null || stock <= 0) return [];
+
+    const existingQuantity = existingQuantityByProductId.get(item.productId) ?? 0;
+    const remaining = Math.max(0, stock - existingQuantity);
+    if (remaining <= 0) return [];
+
+    const quantity = Math.min(item.quantity, remaining);
+    return prisma.cartItem.upsert({
+      where: { userId_productId: { userId, productId: item.productId } },
+      create: { userId, productId: item.productId, quantity },
+      update: {
+        quantity: {
+          increment: quantity,
+        },
+      },
+    });
+  });
+
+  if (writes.length > 0) {
+    await prisma.$transaction(writes);
+  }
+
+  return getMyCart(userId);
 }
 
 /* -------------------------------------------------------------------------- */

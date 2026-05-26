@@ -3,7 +3,20 @@
 import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import type { PromoBannersProps } from '../types'
+
+type PromoBanner = {
+  id: number
+  image: string
+  title: string
+  subtitle: string
+  discount: string
+  bgClass: string
+  link: string
+}
+
+type PromoBannersProps = {
+  banners: PromoBanner[]
+}
 
 const PromoBanners: React.FC<PromoBannersProps> = ({ banners }) => {
   if (!banners || banners.length === 0) {

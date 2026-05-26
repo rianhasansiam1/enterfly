@@ -84,11 +84,7 @@ export default function AdminLayout({
         />
 
         <main className="min-w-0 flex-1">
-          <AdminHeader
-            title={meta.title}
-            subtitle={meta.subtitle}
-            onOpenSidebar={() => setSidebarOpen(true)}
-          />
+         
           {children}
         </main>
       </div>

@@ -4,7 +4,20 @@ import React, { useState, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ShoppingBag, Loader2 } from 'lucide-react'
-import type { RelatedProductsProps } from '../types'
+
+type RecentProductItem = {
+  id: number
+  name: string
+  image: string
+  price: number
+  originalPrice: number
+  discount: number
+}
+
+type RelatedProductsProps = {
+  products: RecentProductItem[]
+  title?: string
+}
 
 const ITEMS_PER_PAGE = 12
 const ITEMS_PER_LOAD = 8

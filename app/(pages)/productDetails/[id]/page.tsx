@@ -10,10 +10,8 @@ import DealsCarousel from '../components/DealsCarousel'
 import PromoBanners from '../components/PromoBanners'
 import { 
   products,
-  getProductById,
   getRecentProducts,
   getRelatedProducts,
-  toProductCard,
   dealBanners,
   promoBanners,
   type ProductDetails

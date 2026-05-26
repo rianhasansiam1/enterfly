@@ -4,7 +4,20 @@ import React, { useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import type { DealsCarouselProps, DealBanner } from '../types'
+
+type DealBanner = {
+  id: number
+  image: string
+  title: string
+  subtitle: string
+  bgClass: string
+  link: string
+}
+
+type DealsCarouselProps = {
+  deals: DealBanner[]
+  title?: string
+}
 
 const DealsCarousel: React.FC<DealsCarouselProps> = ({ 
   deals, 

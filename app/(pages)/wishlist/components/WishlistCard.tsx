@@ -12,7 +12,24 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import type { WishlistItem, WishlistView } from "./types";
+
+type WishlistItem = {
+  id: string;
+  name: string;
+  brand: string;
+  image: string;
+  price: number;
+  originalPrice?: number;
+  rating: number;
+  reviewCount: number;
+  category: string;
+  inStock: boolean;
+  addedAt: string;
+  priceDropFromAdded?: number;
+  badge?: string;
+};
+
+type WishlistView = "grid" | "list";
 
 type WishlistCardProps = {
   item: WishlistItem;
@@ -66,7 +83,7 @@ export default function WishlistCard({
         />
 
         <Link
-          href={`/product/${item.id}`}
+          href={`/productDetails/${item.id}`}
           className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-xl bg-gray-50 sm:w-32"
         >
           <Image
@@ -90,7 +107,7 @@ export default function WishlistCard({
                 {item.brand} • {item.category}
               </p>
               <Link
-                href={`/product/${item.id}`}
+                href={`/productDetails/${item.id}`}
                 className="mt-0.5 line-clamp-2 text-sm font-semibold text-gray-900 hover:text-violet-700 sm:text-base"
               >
                 {item.name}
@@ -132,7 +149,7 @@ export default function WishlistCard({
     >
       {/* Image */}
       <div className="relative aspect-4/5 overflow-hidden bg-gray-50">
-        <Link href={`/product/${item.id}`}>
+        <Link href={`/productDetails/${item.id}`}>
           <Image
             src={item.image}
             alt={item.name}
@@ -203,7 +220,7 @@ export default function WishlistCard({
         <p className="text-[10px] font-semibold uppercase tracking-wider text-violet-600">
           {item.brand} • {item.category}
         </p>
-        <Link href={`/product/${item.id}`}>
+        <Link href={`/productDetails/${item.id}`}>
           <h3 className="mt-1 line-clamp-2 min-h-10 text-sm font-semibold leading-tight text-gray-900 transition-colors hover:text-violet-700">
             {item.name}
           </h3>

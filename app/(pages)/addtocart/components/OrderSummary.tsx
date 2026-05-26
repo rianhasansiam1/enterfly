@@ -7,7 +7,12 @@ import {
   ChevronRight,
 } from "lucide-react";
 import PromoCodeInput from "./PromoCodeInput";
-import type { AppliedPromo } from "./types";
+
+type AppliedPromo = {
+  code: string;
+  discount: number;
+  description: string;
+};
 
 type OrderSummaryProps = {
   subtotal: number;

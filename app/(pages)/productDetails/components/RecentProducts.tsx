@@ -3,7 +3,20 @@
 import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import type { RecentProductsProps } from '../types'
+
+type RecentProductItem = {
+  id: number
+  name: string
+  image: string
+  price: number
+  originalPrice: number
+  discount: number
+}
+
+type RecentProductsProps = {
+  products: RecentProductItem[]
+  title?: string
+}
 
 const RecentProducts: React.FC<RecentProductsProps> = ({ 
   products, 

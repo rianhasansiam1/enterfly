@@ -7,7 +7,14 @@ import {
   SheetTitle,
 } from "@/app/CommonComponents/ui/sheet";
 import FilterSidebar from "./FilterSidebar";
-import type { Filters } from "./data";
+
+type Filters = {
+  categories: string[];
+  brands: string[];
+  priceRange: [number, number];
+  minRating: number;
+  inStockOnly: boolean;
+};
 
 type Props = {
   open: boolean;
@@ -15,6 +22,9 @@ type Props = {
   filters: Filters;
   onChange: (next: Filters) => void;
   onReset: () => void;
+  categories: string[];
+  brands: string[];
+  priceBounds: [number, number];
 };
 
 export default function MobileFilterDrawer({
@@ -23,6 +33,9 @@ export default function MobileFilterDrawer({
   filters,
   onChange,
   onReset,
+  categories,
+  brands,
+  priceBounds,
 }: Props) {
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
@@ -41,6 +54,9 @@ export default function MobileFilterDrawer({
             filters={filters}
             onChange={onChange}
             onReset={onReset}
+            categories={categories}
+            brands={brands}
+            priceBounds={priceBounds}
           />
         </div>
       </SheetContent>

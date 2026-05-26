@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { Prisma } from "@prisma/client";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
 import { requireAdmin } from "@/lib/auth-check";
@@ -87,6 +88,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   try {
     const product = await updateProduct(id, parsed.data);
+    revalidateTag("products", "max");
+    revalidateTag("home-categories", "max");
     return ok(product);
   } catch (error) {
     if (
@@ -130,6 +133,8 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
 
   try {
     const product = await softDeleteProduct(id);
+    revalidateTag("products", "max");
+    revalidateTag("home-categories", "max");
     return ok(product);
   } catch (error) {
     if (

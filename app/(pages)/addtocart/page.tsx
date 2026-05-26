@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Lock } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useDispatch, useSelector } from "react-redux";
 
 import CartHeader from "./components/CartHeader";
 import CartItemCard from "./components/CartItemCard";
@@ -11,30 +13,474 @@ import FreeShippingBar from "./components/FreeShippingBar";
 import OrderSummary from "./components/OrderSummary";
 import SavedForLater from "./components/SavedForLater";
 import {
-  FREE_SHIPPING_THRESHOLD,
-  MOCK_CART,
-  MOCK_SAVED,
-  STANDARD_SHIPPING_FEE,
-  TAX_RATE,
-  VALID_PROMO_CODES,
-} from "./components/mockData";
-import type { AppliedPromo, CartItem, SavedItem } from "./components/types";
+  setCartData,
+  setCartError,
+  setCartLoading,
+  setCartMode,
+} from "@/app/redux/features/cartSlice";
+import type { AppDispatch, RootState } from "@/app/redux/store/store";
+
+type CartStatus = "ACTIVE" | "INACTIVE";
+
+type CartItem = {
+  id: string;
+  productId: string;
+  name: string;
+  image: string | null;
+  quantity: number;
+  unitPrice: number;
+  originalPrice: number;
+  lineTotal: number;
+  stock: number;
+  status: CartStatus;
+};
+
+type CartSummary = {
+  totalItems: number;
+  subtotal: number;
+  totalDiscount: number;
+  finalTotal: number;
+};
+
+type SavedItem = {
+  id: string;
+  productId: string;
+  name: string;
+  brand: string;
+  image: string;
+  price: number;
+  originalPrice?: number;
+  inStock: boolean;
+};
+
+type AppliedPromo = {
+  code: string;
+  discount: number;
+  description: string;
+};
+
+type ApiResponse<T> = {
+  success: boolean;
+  data: T;
+};
+
+const FALLBACK_PRODUCT_IMAGE =
+  "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400";
+const CART_LOCAL_STORAGE_KEY = "enterfly:cart:v1";
+const SAVED_LOCAL_STORAGE_KEY = "enterfly:saved-for-later:v1";
+
+const FREE_SHIPPING_THRESHOLD = 50000;
+const STANDARD_SHIPPING_FEE = 120;
+const TAX_RATE = 0.05;
+
+const VALID_PROMO_CODES: Record<string, { discount: number; description: string }> = {
+  ENTERFLY10: { discount: 1500, description: "10% off your first order" },
+  WELCOME500: { discount: 500, description: "BDT 500 welcome gift" },
+  FLYHIGH: { discount: 2500, description: "BDT 2500 off - flash deal" },
+};
+
+function canUseServerCart(role: string | undefined, status: string): boolean {
+  return status === "authenticated" && (role === "USER" || role === "ADMIN");
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") return null;
+  return value as Record<string, unknown>;
+}
+
+function normalizeCartItem(raw: unknown): CartItem | null {
+  const entry = asRecord(raw);
+  if (!entry) return null;
+
+  const id = typeof entry.id === "string" ? entry.id : "";
+  const productIdFromEntry = typeof entry.productId === "string" ? entry.productId : "";
+  const productId = productIdFromEntry || id;
+  const name = typeof entry.name === "string" ? entry.name : "";
+
+  if (!productId || !name) return null;
+
+  const quantityRaw =
+    typeof entry.quantity === "number" && Number.isFinite(entry.quantity)
+      ? entry.quantity
+      : 1;
+  const quantity = Math.max(1, Math.round(quantityRaw));
+
+  const unitPriceRaw =
+    typeof entry.unitPrice === "number" && Number.isFinite(entry.unitPrice)
+      ? entry.unitPrice
+      : typeof entry.price === "number" && Number.isFinite(entry.price)
+        ? entry.price
+        : 0;
+
+  const originalPriceRaw =
+    typeof entry.originalPrice === "number" && Number.isFinite(entry.originalPrice)
+      ? entry.originalPrice
+      : unitPriceRaw;
+
+  const stockRaw =
+    typeof entry.stock === "number" && Number.isFinite(entry.stock)
+      ? entry.stock
+      : typeof entry.maxQuantity === "number" && Number.isFinite(entry.maxQuantity)
+        ? entry.maxQuantity
+        : 10;
+  const stock = Math.max(0, Math.round(stockRaw));
+
+  const status: CartStatus = entry.status === "INACTIVE" ? "INACTIVE" : "ACTIVE";
+
+  return {
+    id: id || `local:${productId}`,
+    productId,
+    name,
+    image: typeof entry.image === "string" && entry.image ? entry.image : null,
+    quantity,
+    unitPrice: unitPriceRaw,
+    originalPrice: originalPriceRaw,
+    lineTotal: unitPriceRaw * quantity,
+    stock,
+    status,
+  };
+}
+
+function normalizeSavedItem(raw: unknown): SavedItem | null {
+  const entry = asRecord(raw);
+  if (!entry) return null;
+
+  const id = typeof entry.id === "string" ? entry.id : "";
+  const productIdFromEntry = typeof entry.productId === "string" ? entry.productId : "";
+  const productId = productIdFromEntry || id;
+  const name = typeof entry.name === "string" ? entry.name : "";
+  const image = typeof entry.image === "string" ? entry.image : "";
+
+  if (!productId || !name) return null;
+
+  const price =
+    typeof entry.price === "number" && Number.isFinite(entry.price) ? entry.price : 0;
+
+  const originalPrice =
+    typeof entry.originalPrice === "number" && Number.isFinite(entry.originalPrice)
+      ? entry.originalPrice
+      : undefined;
+
+  return {
+    id: id || `saved:${productId}`,
+    productId,
+    name,
+    brand: typeof entry.brand === "string" && entry.brand ? entry.brand : "EnterFly",
+    image: image || FALLBACK_PRODUCT_IMAGE,
+    price,
+    originalPrice,
+    inStock: typeof entry.inStock === "boolean" ? entry.inStock : true,
+  };
+}
+
+function readLocalCart(): CartItem[] {
+  if (typeof window === "undefined") return [];
+
+  const raw = window.localStorage.getItem(CART_LOCAL_STORAGE_KEY);
+  if (!raw) return [];
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+
+    const items = parsed
+      .map(normalizeCartItem)
+      .filter((item): item is CartItem => item !== null);
+
+    const deduped = new Map<string, CartItem>();
+    for (const item of items) {
+      const existing = deduped.get(item.productId);
+      if (!existing) {
+        deduped.set(item.productId, item);
+        continue;
+      }
+      const quantity = Math.max(1, existing.quantity + item.quantity);
+      deduped.set(item.productId, {
+        ...existing,
+        quantity,
+        lineTotal: existing.unitPrice * quantity,
+      });
+    }
+
+    return Array.from(deduped.values());
+  } catch {
+    return [];
+  }
+}
+
+function writeLocalCart(items: CartItem[]) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(CART_LOCAL_STORAGE_KEY, JSON.stringify(items));
+}
+
+function readLocalSaved(): SavedItem[] {
+  if (typeof window === "undefined") return [];
+
+  const raw = window.localStorage.getItem(SAVED_LOCAL_STORAGE_KEY);
+  if (!raw) return [];
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .map(normalizeSavedItem)
+      .filter((item): item is SavedItem => item !== null);
+  } catch {
+    return [];
+  }
+}
+
+function writeLocalSaved(items: SavedItem[]) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(SAVED_LOCAL_STORAGE_KEY, JSON.stringify(items));
+}
+
+function computeCartSummary(items: CartItem[]): CartSummary {
+  let totalItems = 0;
+  let subtotal = 0;
+  let totalDiscount = 0;
+
+  for (const item of items) {
+    if (item.status !== "ACTIVE") continue;
+    totalItems += item.quantity;
+    subtotal += item.unitPrice * item.quantity;
+    totalDiscount += Math.max(0, (item.originalPrice - item.unitPrice) * item.quantity);
+  }
+
+  subtotal = Math.round(subtotal * 100) / 100;
+  totalDiscount = Math.round(totalDiscount * 100) / 100;
+
+  return {
+    totalItems,
+    subtotal,
+    totalDiscount,
+    finalTotal: subtotal,
+  };
+}
+
+function readApiError(payload: unknown, fallback: string): string {
+  const record = asRecord(payload);
+  if (!record) return fallback;
+
+  if (typeof record.message === "string" && record.message.trim()) {
+    return record.message;
+  }
+
+  if (typeof record.error === "string" && record.error.trim()) {
+    return record.error;
+  }
+
+  return fallback;
+}
+
+async function readApiData<T>(response: Response, fallbackError: string): Promise<T> {
+  let payload: unknown;
+  try {
+    payload = (await response.json()) as unknown;
+  } catch {
+    throw new Error(fallbackError);
+  }
+
+  const envelope = payload as ApiResponse<T>;
+  if (!response.ok || !envelope?.success) {
+    throw new Error(readApiError(payload, fallbackError));
+  }
+
+  return envelope.data;
+}
+
+async function syncCartToServer(
+  localItems: CartItem[],
+): Promise<{ items: CartItem[]; summary: CartSummary }> {
+  const response = await fetch("/api/cart", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      items: localItems.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+      })),
+    }),
+    cache: "no-store",
+  });
+
+  return readApiData<{ items: CartItem[]; summary: CartSummary }>(
+    response,
+    "Failed to sync cart with server.",
+  );
+}
+
+async function fetchServerCartSnapshot(): Promise<{
+  items: CartItem[];
+  summary: CartSummary;
+}> {
+  const response = await fetch("/api/cart", {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  return readApiData<{ items: CartItem[]; summary: CartSummary }>(
+    response,
+    "Failed to load authoritative cart from server.",
+  );
+}
+
+async function updateCartItemOnServer(itemId: string, quantity: number): Promise<CartItem> {
+  const response = await fetch(`/api/cart/${itemId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ quantity }),
+    cache: "no-store",
+  });
+
+  return readApiData<CartItem>(response, "Failed to update cart item.");
+}
+
+async function removeCartItemOnServer(itemId: string): Promise<void> {
+  const response = await fetch(`/api/cart/${itemId}`, {
+    method: "DELETE",
+    cache: "no-store",
+  });
+
+  await readApiData<{ id: string }>(response, "Failed to remove cart item.");
+}
+
+async function addToCartOnServer(productId: string, quantity: number): Promise<CartItem> {
+  const response = await fetch("/api/cart", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ productId, quantity }),
+    cache: "no-store",
+  });
+
+  return readApiData<CartItem>(response, "Failed to add item to cart.");
+}
+
+function toSavedItem(item: CartItem): SavedItem {
+  return {
+    id: `saved:${item.productId}`,
+    productId: item.productId,
+    name: item.name,
+    brand: "EnterFly",
+    image: item.image ?? FALLBACK_PRODUCT_IMAGE,
+    price: item.unitPrice,
+    originalPrice: item.originalPrice > item.unitPrice ? item.originalPrice : undefined,
+    inStock: item.status === "ACTIVE" && item.stock > 0,
+  };
+}
+
+function toCartViewModel(item: CartItem) {
+  return {
+    id: item.id,
+    name: item.name,
+    brand: "EnterFly",
+    image: item.image ?? FALLBACK_PRODUCT_IMAGE,
+    price: item.unitPrice,
+    originalPrice: item.originalPrice > item.unitPrice ? item.originalPrice : undefined,
+    quantity: item.quantity,
+    maxQuantity: Math.max(1, item.stock),
+    inStock: item.status === "ACTIVE" && item.stock > 0,
+    deliveryDays: 4,
+    perks: ["Free returns"],
+  };
+}
 
 export default function CartPage() {
-  const [items, setItems] = useState<CartItem[]>(MOCK_CART);
-  const [saved, setSaved] = useState<SavedItem[]>(MOCK_SAVED);
+  const dispatch = useDispatch<AppDispatch>();
+  const { data: session, status } = useSession();
+
+  const items = useSelector((state: RootState) => state.cart.items);
+  const summary = useSelector((state: RootState) => state.cart.summary);
+  const mode = useSelector((state: RootState) => state.cart.mode);
+  const isLoading = useSelector((state: RootState) => state.cart.isLoading);
+  const error = useSelector((state: RootState) => state.cart.error);
+
+  const [saved, setSaved] = useState<SavedItem[]>([]);
   const [promo, setPromo] = useState<AppliedPromo | null>(null);
 
+  const canUseServer = canUseServerCart(session?.user?.role, status);
+
+  useEffect(() => {
+    if (status === "loading") return;
+
+    let ignore = false;
+
+    const hydrate = async () => {
+      const localItems = readLocalCart();
+      const localSaved = readLocalSaved();
+
+      if (!ignore) {
+        setSaved(localSaved);
+      }
+
+      dispatch(setCartError(null));
+      dispatch(setCartLoading(true));
+
+      if (!canUseServer) {
+        dispatch(setCartMode("local"));
+        dispatch(
+          setCartData({
+            items: localItems,
+            summary: computeCartSummary(localItems),
+          }),
+        );
+        dispatch(setCartLoading(false));
+        return;
+      }
+
+      dispatch(setCartMode("server"));
+
+      try {
+        const serverCart = await syncCartToServer(localItems);
+        if (ignore) return;
+
+        dispatch(setCartData(serverCart));
+        writeLocalCart(serverCart.items);
+      } catch (err) {
+        if (ignore) return;
+        const message =
+          err instanceof Error ? err.message : "Failed to load cart from server.";
+
+        dispatch(setCartError(message));
+        dispatch(setCartMode("local"));
+        dispatch(
+          setCartData({
+            items: localItems,
+            summary: computeCartSummary(localItems),
+          }),
+        );
+      } finally {
+        if (!ignore) {
+          dispatch(setCartLoading(false));
+        }
+      }
+    };
+
+    void hydrate();
+
+    return () => {
+      ignore = true;
+    };
+  }, [canUseServer, dispatch, status]);
+
   const totals = useMemo(() => {
-    const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
-    const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-    const totalSavings = items.reduce((sum, i) => {
-      if (typeof i.originalPrice !== "number") return sum;
-      return sum + Math.max(0, (i.originalPrice - i.price) * i.quantity);
-    }, 0);
-    const discount = promo
-      ? Math.min(promo.discount, subtotal) // never discount past free
-      : 0;
+    const localItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+    const localSubtotal = items.reduce(
+      (sum, item) => sum + item.unitPrice * item.quantity,
+      0,
+    );
+    const localSavings = items.reduce(
+      (sum, item) =>
+        sum + Math.max(0, (item.originalPrice - item.unitPrice) * item.quantity),
+      0,
+    );
+
+    const itemCount = mode === "server" ? summary.totalItems : localItemCount;
+    const subtotal = mode === "server" ? summary.subtotal : localSubtotal;
+    const totalSavings = mode === "server" ? summary.totalDiscount : localSavings;
+
+    const discount = promo ? Math.min(promo.discount, subtotal) : 0;
     const afterDiscount = Math.max(0, subtotal - discount);
     const shipping =
       subtotal === 0
@@ -44,6 +490,7 @@ export default function CartPage() {
           : STANDARD_SHIPPING_FEE;
     const tax = Math.round(afterDiscount * TAX_RATE);
     const total = afterDiscount + shipping + tax;
+
     return {
       itemCount,
       subtotal,
@@ -53,76 +500,160 @@ export default function CartPage() {
       total,
       totalSavings,
     };
-  }, [items, promo]);
+  }, [items, mode, promo, summary]);
 
-  const handleQuantityChange = (id: string, quantity: number) => {
-    setItems((prev) =>
-      prev.map((i) =>
-        i.id === id
-          ? {
-              ...i,
-              quantity: Math.max(1, Math.min(i.maxQuantity, quantity)),
-            }
-          : i,
-      ),
-    );
-  };
-
-  const handleRemove = (id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
-  };
-
-  const handleSaveForLater = (id: string) => {
-    const target = items.find((i) => i.id === id);
+  const handleQuantityChange = async (id: string, quantity: number) => {
+    const target = items.find((item) => item.id === id);
     if (!target) return;
-    setItems((prev) => prev.filter((i) => i.id !== id));
-    setSaved((prev) => [
-      {
-        id: target.id,
-        name: target.name,
-        brand: target.brand,
-        image: target.image,
-        price: target.price,
-        originalPrice: target.originalPrice,
-        inStock: target.inStock,
-      },
-      ...prev,
-    ]);
+
+    const safeQuantity = Math.max(1, Math.min(target.stock || 1, quantity));
+    dispatch(setCartError(null));
+
+    if (canUseServer) {
+      try {
+        await updateCartItemOnServer(id, safeQuantity);
+        const snapshot = await fetchServerCartSnapshot();
+        dispatch(setCartData(snapshot));
+        writeLocalCart(snapshot.items);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to update cart quantity.";
+        dispatch(setCartError(message));
+      }
+      return;
+    }
+
+    const optimistic: CartItem = {
+      ...target,
+      quantity: safeQuantity,
+      lineTotal: target.unitPrice * safeQuantity,
+    };
+
+    const localAfterOptimistic = readLocalCart().map((entry) =>
+      entry.productId === optimistic.productId ? optimistic : entry,
+    );
+    writeLocalCart(localAfterOptimistic);
+    const localItems = readLocalCart();
+    dispatch(setCartData({ items: localItems, summary: computeCartSummary(localItems) }));
+  };
+
+  const handleRemove = async (id: string) => {
+    const target = items.find((item) => item.id === id);
+    if (!target) return;
+
+    dispatch(setCartError(null));
+
+    if (canUseServer) {
+      try {
+        await removeCartItemOnServer(id);
+        const snapshot = await fetchServerCartSnapshot();
+        dispatch(setCartData(snapshot));
+        writeLocalCart(snapshot.items);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to remove item from cart.";
+        dispatch(setCartError(message));
+      }
+      return;
+    }
+
+    const next = items.filter((item) => item.id !== id);
+    writeLocalCart(next);
+    dispatch(setCartData({ items: next, summary: computeCartSummary(next) }));
+  };
+
+  const handleSaveForLater = async (id: string) => {
+    const target = items.find((item) => item.id === id);
+    if (!target) return;
+
+    const savedItem = toSavedItem(target);
+    const nextSaved = [savedItem, ...saved.filter((item) => item.productId !== target.productId)];
+    setSaved(nextSaved);
+    writeLocalSaved(nextSaved);
+
+    await handleRemove(id);
   };
 
   const handleSavedRemove = (id: string) => {
-    setSaved((prev) => prev.filter((i) => i.id !== id));
+    const nextSaved = saved.filter((item) => item.id !== id);
+    setSaved(nextSaved);
+    writeLocalSaved(nextSaved);
   };
 
-  const handleSavedMoveToCart = (id: string) => {
-    const target = saved.find((i) => i.id === id);
+  const handleSavedMoveToCart = async (id: string) => {
+    const target = saved.find((item) => item.id === id);
     if (!target || !target.inStock) return;
-    setSaved((prev) => prev.filter((i) => i.id !== id));
-    setItems((prev) => [
-      ...prev,
-      {
-        id: target.id,
-        name: target.name,
-        brand: target.brand,
-        image: target.image,
-        price: target.price,
-        originalPrice: target.originalPrice,
-        quantity: 1,
-        maxQuantity: 10,
-        inStock: target.inStock,
-        deliveryDays: 4,
-      },
-    ]);
+
+    if (canUseServer) {
+      dispatch(setCartError(null));
+
+      try {
+        await addToCartOnServer(target.productId, 1);
+        const snapshot = await fetchServerCartSnapshot();
+        dispatch(setCartData(snapshot));
+        writeLocalCart(snapshot.items);
+
+        const nextSaved = saved.filter((item) => item.id !== id);
+        setSaved(nextSaved);
+        writeLocalSaved(nextSaved);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to move saved item to cart.";
+        dispatch(setCartError(message));
+      }
+      return;
+    }
+
+    const localCartBefore = readLocalCart();
+    const existing = localCartBefore.find((item) => item.productId === target.productId);
+    const nextItem: CartItem = existing
+      ? {
+          ...existing,
+          quantity: existing.quantity + 1,
+          lineTotal: existing.unitPrice * (existing.quantity + 1),
+        }
+      : {
+          id: `local:${target.productId}`,
+          productId: target.productId,
+          name: target.name,
+          image: target.image,
+          quantity: 1,
+          unitPrice: target.price,
+          originalPrice: target.originalPrice ?? target.price,
+          lineTotal: target.price,
+          stock: 10,
+          status: "ACTIVE",
+        };
+
+    const localCartAfter = existing
+      ? localCartBefore.map((item) =>
+          item.productId === nextItem.productId ? nextItem : item,
+        )
+      : [nextItem, ...localCartBefore];
+
+    writeLocalCart(localCartAfter);
+    dispatch(
+      setCartData({
+        items: localCartAfter,
+        summary: computeCartSummary(localCartAfter),
+      }),
+    );
+
+    const nextSaved = saved.filter((item) => item.id !== id);
+    setSaved(nextSaved);
+    writeLocalSaved(nextSaved);
   };
 
   const handleApplyPromo = (code: string) => {
     const match = VALID_PROMO_CODES[code];
     if (!match) return null;
+
     const next: AppliedPromo = {
       code,
       discount: match.discount,
       description: match.description,
     };
+
     setPromo(next);
     return next;
   };
@@ -130,22 +661,36 @@ export default function CartPage() {
   const handleRemovePromo = () => setPromo(null);
 
   const handleCheckout = () => {
-    // Hook into your checkout flow here.
     console.info("Proceed to checkout", { items, promo, totals });
   };
 
-  const isEmpty = items.length === 0;
+  const itemCards = items.map(toCartViewModel);
+  const isEmpty = itemCards.length === 0;
 
   return (
     <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <CartHeader itemCount={totals.itemCount} />
 
-        {isEmpty ? (
+        <div className="mt-2 flex items-center justify-between px-1 text-xs text-gray-500">
+          <span>Storage mode: {mode === "server" ? "Server + Local" : "Local only"}</span>
+          {isLoading && <span>Syncing cart...</span>}
+        </div>
+
+        {error && (
+          <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        {isLoading && isEmpty ? (
+          <div className="mt-6 rounded-2xl border border-violet-100 bg-white p-6 text-center text-sm text-violet-700">
+            Loading cart...
+          </div>
+        ) : isEmpty ? (
           <EmptyCart />
         ) : (
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-8">
-            {/* LEFT: items */}
             <div className="flex min-w-0 flex-col gap-4">
               <FreeShippingBar
                 subtotal={totals.subtotal - totals.discount}
@@ -153,7 +698,7 @@ export default function CartPage() {
               />
 
               <div className="flex flex-col gap-3">
-                {items.map((item) => (
+                {itemCards.map((item) => (
                   <CartItemCard
                     key={item.id}
                     item={item}
@@ -165,14 +710,12 @@ export default function CartPage() {
               </div>
 
               <div className="flex items-center justify-between rounded-2xl border border-dashed border-violet-200 bg-white/60 px-4 py-3 text-sm">
-                <p className="text-gray-600">
-                  Looking for something else?
-                </p>
+                <p className="text-gray-600">Looking for something else?</p>
                 <Link
                   href="/allProducts"
                   className="font-semibold text-violet-700 hover:underline"
                 >
-                  Continue shopping →
+                  Continue shopping {"->"}
                 </Link>
               </div>
 
@@ -183,7 +726,6 @@ export default function CartPage() {
               />
             </div>
 
-            {/* RIGHT: summary */}
             <div className="hidden lg:block">
               <OrderSummary
                 subtotal={totals.subtotal}
@@ -200,7 +742,6 @@ export default function CartPage() {
               />
             </div>
 
-            {/* MOBILE: full summary above sticky bar */}
             <div className="lg:hidden">
               <OrderSummary
                 subtotal={totals.subtotal}
@@ -219,18 +760,15 @@ export default function CartPage() {
           </div>
         )}
 
-        {/* Spacer so sticky mobile bar doesn't overlap content */}
         {!isEmpty && <div className="h-24 lg:hidden" />}
       </div>
 
-      {/* Sticky mobile checkout bar */}
       {!isEmpty && (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-violet-100 bg-white/95 px-4 py-3 backdrop-blur-lg shadow-[0_-8px_24px_-12px_rgba(124,58,237,0.25)] lg:hidden">
           <div className="mx-auto flex max-w-2xl items-center gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-[11px] font-medium text-gray-500">
-                Total ({totals.itemCount}{" "}
-                {totals.itemCount === 1 ? "item" : "items"})
+                Total ({totals.itemCount} {totals.itemCount === 1 ? "item" : "items"})
               </p>
               <p className="text-lg font-extrabold text-violet-700">
                 BDT {totals.total.toLocaleString()}

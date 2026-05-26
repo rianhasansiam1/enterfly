@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/auth-check";
@@ -12,6 +13,10 @@ import { updateCartItemSchema } from "@/lib/validations/cart.validation";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
+function hasCartDbAccess(role: string | undefined): boolean {
+  return role === "USER" || role === "ADMIN";
+}
+
 /**
  * PATCH /api/cart/[id]
  *
@@ -22,6 +27,9 @@ type RouteContext = { params: Promise<{ id: string }> };
 export async function PATCH(request: NextRequest, context: RouteContext) {
   const guard = await requireUser();
   if (!guard.ok) return guard.response;
+  if (!hasCartDbAccess(guard.session.user.role)) {
+    return jsonError(403, "Cart API is only available for USER/ADMIN.");
+  }
 
   const { id } = await context.params;
 
@@ -46,6 +54,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   try {
     const item = await updateCartItem(id, guard.session.user.id, parsed.data);
+    revalidateTag("cart", "max");
     return ok(item);
   } catch (error) {
     return handleCartError("cart/[id].PATCH", error);
@@ -60,11 +69,15 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 export async function DELETE(_request: NextRequest, context: RouteContext) {
   const guard = await requireUser();
   if (!guard.ok) return guard.response;
+  if (!hasCartDbAccess(guard.session.user.role)) {
+    return jsonError(403, "Cart API is only available for USER/ADMIN.");
+  }
 
   const { id } = await context.params;
 
   try {
     const result = await removeCartItem(id, guard.session.user.id);
+    revalidateTag("cart", "max");
     return ok(result);
   } catch (error) {
     return handleCartError("cart/[id].DELETE", error);

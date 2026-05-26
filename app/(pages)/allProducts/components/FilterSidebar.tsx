@@ -1,20 +1,33 @@
 "use client";
 
 import { Star, RotateCcw } from "lucide-react";
-import { BRANDS, CATEGORIES, PRICE_BOUNDS } from "./data";
-import type { Filters } from "./data";
+
+type Filters = {
+  categories: string[];
+  brands: string[];
+  priceRange: [number, number];
+  minRating: number;
+  inStockOnly: boolean;
+};
 
 type Props = {
   filters: Filters;
   onChange: (next: Filters) => void;
   onReset: () => void;
+  categories: string[];
+  brands: string[];
+  priceBounds: [number, number];
 };
 
-export default function FilterSidebar({ filters, onChange, onReset }: Props) {
-
-
+export default function FilterSidebar({
+  filters,
+  onChange,
+  onReset,
+  categories,
+  brands,
+  priceBounds,
+}: Props) {
   const toggleCategory = (cat: string) => {
-
     const exists = filters.categories.includes(cat);
     onChange({
       ...filters,
@@ -23,11 +36,6 @@ export default function FilterSidebar({ filters, onChange, onReset }: Props) {
         : [...filters.categories, cat],
     });
   };
-
-
-
-
-
 
   const toggleBrand = (brand: string) => {
     const exists = filters.brands.includes(brand);
@@ -53,7 +61,6 @@ export default function FilterSidebar({ filters, onChange, onReset }: Props) {
 
   return (
     <aside className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-2xl border border-violet-100 bg-white p-5 shadow-sm transition-shadow duration-300 hover:shadow-md">
-      {/* Header */}
       <div className="mb-4 flex items-center justify-between border-b border-gray-100 pb-3">
         <h2 className="text-base font-bold text-gray-900">Filters</h2>
         <button
@@ -66,14 +73,10 @@ export default function FilterSidebar({ filters, onChange, onReset }: Props) {
         </button>
       </div>
 
-      {/* Categories */}
       <FilterGroup title="Category">
         <div className="space-y-1.5">
-          {CATEGORIES.map((cat) => (
-            <label
-              key={cat}
-              className="flex items-center gap-2 cursor-pointer group"
-            >
+          {categories.map((cat) => (
+            <label key={cat} className="group flex cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
                 checked={filters.categories.includes(cat)}
@@ -88,10 +91,9 @@ export default function FilterSidebar({ filters, onChange, onReset }: Props) {
         </div>
       </FilterGroup>
 
-      {/* Price Range */}
       <FilterGroup title="Price Range">
         <div className="px-1">
-          <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
+          <div className="mb-2 flex items-center justify-between text-xs text-gray-600">
             <span>BDT {filters.priceRange[0]}</span>
             <span className="font-semibold text-violet-700">
               BDT {filters.priceRange[1].toLocaleString()}
@@ -99,21 +101,20 @@ export default function FilterSidebar({ filters, onChange, onReset }: Props) {
           </div>
           <input
             type="range"
-            min={PRICE_BOUNDS[0]}
-            max={PRICE_BOUNDS[1]}
+            min={priceBounds[0]}
+            max={priceBounds[1]}
             step={50}
             value={filters.priceRange[1]}
             onChange={(e) => setMaxPrice(Number(e.target.value))}
-            className="w-full accent-violet-600 cursor-pointer"
+            className="w-full cursor-pointer accent-violet-600"
           />
-          <div className="flex items-center justify-between text-[10px] text-gray-400 mt-1">
+          <div className="mt-1 flex items-center justify-between text-[10px] text-gray-400">
             <span>Min</span>
-            <span>Max BDT {PRICE_BOUNDS[1].toLocaleString()}</span>
+            <span>Max BDT {priceBounds[1].toLocaleString()}</span>
           </div>
         </div>
       </FilterGroup>
 
-      {/* Rating */}
       <FilterGroup title="Customer Rating">
         <div className="space-y-1.5">
           {[4, 3, 2, 1].map((r) => (
@@ -131,10 +132,8 @@ export default function FilterSidebar({ filters, onChange, onReset }: Props) {
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-3.5 h-3.5 ${
-                      i < r
-                        ? "fill-amber-400 text-amber-400"
-                        : "text-gray-300"
+                    className={`h-3.5 w-3.5 ${
+                      i < r ? "fill-amber-400 text-amber-400" : "text-gray-300"
                     }`}
                   />
                 ))}
@@ -145,31 +144,28 @@ export default function FilterSidebar({ filters, onChange, onReset }: Props) {
         </div>
       </FilterGroup>
 
-      {/* Brands */}
-      <FilterGroup title="Brand">
-        <div className="space-y-1.5">
-          {BRANDS.map((brand) => (
-            <label
-              key={brand}
-              className="flex items-center gap-2 cursor-pointer group"
-            >
-              <input
-                type="checkbox"
-                checked={filters.brands.includes(brand)}
-                onChange={() => toggleBrand(brand)}
-                className="h-4 w-4 cursor-pointer accent-violet-600 transition-transform duration-150 active:scale-90"
-              />
-              <span className="text-sm text-gray-700 transition-colors duration-200 group-hover:text-violet-700">
-                {brand}
-              </span>
-            </label>
-          ))}
-        </div>
-      </FilterGroup>
+      {brands.length > 0 && (
+        <FilterGroup title="Brand">
+          <div className="space-y-1.5">
+            {brands.map((brand) => (
+              <label key={brand} className="group flex cursor-pointer items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={filters.brands.includes(brand)}
+                  onChange={() => toggleBrand(brand)}
+                  className="h-4 w-4 cursor-pointer accent-violet-600 transition-transform duration-150 active:scale-90"
+                />
+                <span className="text-sm text-gray-700 transition-colors duration-200 group-hover:text-violet-700">
+                  {brand}
+                </span>
+              </label>
+            ))}
+          </div>
+        </FilterGroup>
+      )}
 
-      {/* Availability */}
       <FilterGroup title="Availability" last>
-        <label className="flex items-center gap-2 cursor-pointer group">
+        <label className="group flex cursor-pointer items-center gap-2">
           <input
             type="checkbox"
             checked={filters.inStockOnly}
@@ -196,7 +192,7 @@ function FilterGroup({
 }) {
   return (
     <div className={`py-4 ${last ? "" : "border-b border-gray-100"}`}>
-      <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wide mb-3">
+      <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-gray-900">
         {title}
       </h3>
       {children}
