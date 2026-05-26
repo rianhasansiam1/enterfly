@@ -34,7 +34,7 @@ export default function SuccessState({ name }: SuccessStateProps) {
 
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <Link
-          href="/allProducts"
+          href="/products"
           className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-violet-600 to-purple-600 px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:-translate-y-0.5 hover:from-violet-700 hover:to-purple-700 hover:shadow-lg"
         >
           Start shopping

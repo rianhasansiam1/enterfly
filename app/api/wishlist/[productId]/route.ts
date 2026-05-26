@@ -1,13 +1,10 @@
-import { requireUser } from "@/lib/auth-check";
-import { jsonError, ok } from "@/lib/api-response";
-import { handleWishlistError } from "@/lib/services/wishlist-errors";
+import { requireUser } from "@/lib/api/guards";
+import { hasUserOrAdminAccess } from "@/lib/auth/access";
+import { jsonError, ok } from "@/lib/api/response";
+import { handleServiceError } from "@/lib/services/service-error";
 import { removeWishlistItemByProduct } from "@/lib/services/wishlist.service";
 
 type RouteContext = { params: Promise<{ productId: string }> };
-
-function hasWishlistDbAccess(role: string | undefined): boolean {
-  return role === "USER" || role === "ADMIN";
-}
 
 /**
  * DELETE /api/wishlist/[productId]
@@ -17,7 +14,7 @@ function hasWishlistDbAccess(role: string | undefined): boolean {
 export async function DELETE(_request: Request, context: RouteContext) {
   const guard = await requireUser();
   if (!guard.ok) return guard.response;
-  if (!hasWishlistDbAccess(guard.session.user.role)) {
+  if (!hasUserOrAdminAccess(guard.session.user.role)) {
     return jsonError(403, "Wishlist API is only available for USER/ADMIN.");
   }
 
@@ -27,7 +24,6 @@ export async function DELETE(_request: Request, context: RouteContext) {
     const result = await removeWishlistItemByProduct(guard.session.user.id, productId);
     return ok(result);
   } catch (error) {
-    return handleWishlistError("wishlist/[productId].DELETE", error);
+    return handleServiceError("wishlist/[productId].DELETE", error);
   }
 }
-

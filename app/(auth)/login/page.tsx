@@ -1,17 +1,19 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 
-import BackgroundFX from "./components/BackgroundFX";
-import BrandPanel from "./components/BrandPanel";
-import LocalAnimationStyles from "./components/LocalAnimationStyles";
+import AuthAnimations from "@/app/(auth)/_components/AuthAnimations";
+import AuthBackground from "@/app/(auth)/_components/AuthBackground";
+import BrandPanel from "@/app/(auth)/_components/BrandPanel";
+import { useAutoRotatingIndex } from "@/app/(auth)/_components/useAutoRotatingIndex";
+import { FIELD_LIMITS, EMAIL_REGEX } from "@/lib/auth/policy";
+
 import LoginFormView from "./components/LoginForm";
 import LoginHeader from "./components/LoginHeader";
 import SuccessState from "./components/SuccessState";
-import { BRAND_PERKS, INITIAL_FORM } from "./components/constants";
-import { useAutoRotatingIndex, useLoginValidation } from "./components/hooks";
+import { BRAND_PERKS, BRAND_STATS, INITIAL_FORM } from "./components/constants";
 
 export type LoginStatus = "idle" | "submitting" | "error" | "success";
 
@@ -28,7 +30,21 @@ export type LoginFieldUpdater = <Field extends keyof LoginForm>(
 const DEFAULT_REDIRECT = "/";
 const GENERIC_LOGIN_ERROR = "Invalid email or password. Please try again.";
 
+/**
+ * The page is wrapped in Suspense because `useSearchParams` opts the route
+ * out of static prerendering unless its consumer sits inside a Suspense
+ * boundary (Next 16 strict bailout). The fallback is intentionally empty —
+ * it shows for one frame on the client only, since this route is dynamic.
+ */
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageInner />
+    </Suspense>
+  );
+}
+
+function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? DEFAULT_REDIRECT;
@@ -47,7 +63,15 @@ export default function LoginPage() {
     3500,
   );
 
-  const validation = useLoginValidation(form);
+  const emailValid = useMemo(
+    () => EMAIL_REGEX.test(form.email),
+    [form.email],
+  );
+  const canSubmit =
+    emailValid &&
+    form.password.length >= 1 &&
+    form.password.length <= FIELD_LIMITS.PASSWORD_MAX;
+
   const isSubmitting = status === "submitting";
   const isSuccess = status === "success";
 
@@ -64,7 +88,7 @@ export default function LoginPage() {
 
   const handleSubmit = async () => {
     if (inFlightRef.current) return;
-    if (!validation.canSubmit) return;
+    if (!canSubmit) return;
 
     inFlightRef.current = true;
     setStatus("submitting");
@@ -99,10 +123,16 @@ export default function LoginPage() {
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#E6E6FA]">
-      <BackgroundFX />
+      <AuthBackground />
 
       <section className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 gap-6 px-4 py-8 sm:px-6 lg:grid-cols-12 lg:gap-8 lg:py-12">
         <BrandPanel
+          badgeText="EnterFly · Sign in"
+          headlineLead="Welcome back to"
+          headlineEmphasis="EnterFly."
+          subheading="Sign in to keep shopping where you left off, with deals from premium stores in your neighborhood."
+          perks={BRAND_PERKS}
+          stats={BRAND_STATS}
           activePerkIndex={activePerkIndex}
           onSelectPerk={setActivePerkIndex}
         />
@@ -121,10 +151,11 @@ export default function LoginPage() {
               <LoginFormView
                 form={form}
                 status={status}
-                emailValid={validation.emailValid}
-                canSubmit={validation.canSubmit && !isSubmitting}
+                emailValid={emailValid}
+                canSubmit={canSubmit && !isSubmitting}
                 showPassword={showPassword}
                 errorMessage={errorMessage}
+                callbackUrl={callbackUrl}
                 onFieldChange={updateField}
                 onTogglePassword={() => setShowPassword((value) => !value)}
                 onSubmit={handleSubmit}
@@ -134,7 +165,7 @@ export default function LoginPage() {
         </section>
       </section>
 
-      <LocalAnimationStyles />
+      <AuthAnimations />
     </main>
   );
 }

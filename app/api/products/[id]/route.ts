@@ -3,8 +3,8 @@ import { Prisma } from "@prisma/client";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
-import { requireAdmin } from "@/lib/auth-check";
-import { jsonError, ok } from "@/lib/api-response";
+import { requireAdmin } from "@/lib/api/guards";
+import { jsonError, ok } from "@/lib/api/response";
 import {getProductById,softDeleteProduct,updateProduct,} from "@/lib/services/product.service";
 import { updateProductSchema } from "@/lib/validations/product.validation";
 

@@ -4,9 +4,10 @@ import { Lock } from "lucide-react";
 
 import { FIELD_LIMITS } from "@/lib/auth/policy";
 
-import FloatField from "./FloatField";
+import FloatField from "@/app/(auth)/_components/FloatField";
+import PasswordVisibilityButton from "@/app/(auth)/_components/PasswordVisibilityButton";
+
 import PasswordStrengthMeter from "./PasswordStrengthMeter";
-import PasswordVisibilityButton from "./PasswordVisibilityButton";
 import type {
   FieldUpdater,
   PasswordField,

@@ -1,10 +1,10 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
-import { requireUser } from "@/lib/auth-check";
-import { created, jsonError } from "@/lib/api-response";
+import { requireUser } from "@/lib/api/guards";
+import { created, jsonError } from "@/lib/api/response";
 import { createOrder } from "@/lib/services/order.service";
-import { handleOrderError } from "@/lib/services/order-errors";
+import { handleServiceError } from "@/lib/services/service-error";
 import { createOrderSchema } from "@/lib/validations/order.validation";
 
 /**
@@ -42,6 +42,6 @@ export async function POST(request: NextRequest) {
     const order = await createOrder(guard.session.user.id, parsed.data);
     return created(order);
   } catch (error) {
-    return handleOrderError("orders.POST", error);
+    return handleServiceError("orders.POST", error);
   }
 }

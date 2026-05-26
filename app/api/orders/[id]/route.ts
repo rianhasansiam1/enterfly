@@ -1,12 +1,12 @@
 import type { NextRequest } from "next/server";
 
-import { requireUser } from "@/lib/auth-check";
-import { jsonError, ok } from "@/lib/api-response";
+import { requireUser } from "@/lib/api/guards";
+import { jsonError, ok } from "@/lib/api/response";
 import {
   getOrderForAdmin,
   getOrderForUser,
 } from "@/lib/services/order.service";
-import { handleOrderError } from "@/lib/services/order-errors";
+import { handleServiceError } from "@/lib/services/service-error";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -32,6 +32,6 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     if (!order) return jsonError(404, "Order not found.");
     return ok(order);
   } catch (error) {
-    return handleOrderError("orders/[id].GET", error);
+    return handleServiceError("orders/[id].GET", error);
   }
 }

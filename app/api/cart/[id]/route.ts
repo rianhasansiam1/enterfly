@@ -2,20 +2,17 @@ import type { NextRequest } from "next/server";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
-import { requireUser } from "@/lib/auth-check";
-import { jsonError, ok } from "@/lib/api-response";
+import { requireUser } from "@/lib/api/guards";
+import { hasUserOrAdminAccess } from "@/lib/auth/access";
+import { jsonError, ok } from "@/lib/api/response";
 import {
   removeCartItem,
   updateCartItem,
 } from "@/lib/services/cart.service";
-import { handleCartError } from "@/lib/services/cart-errors";
+import { handleServiceError } from "@/lib/services/service-error";
 import { updateCartItemSchema } from "@/lib/validations/cart.validation";
 
 type RouteContext = { params: Promise<{ id: string }> };
-
-function hasCartDbAccess(role: string | undefined): boolean {
-  return role === "USER" || role === "ADMIN";
-}
 
 /**
  * PATCH /api/cart/[id]
@@ -27,7 +24,7 @@ function hasCartDbAccess(role: string | undefined): boolean {
 export async function PATCH(request: NextRequest, context: RouteContext) {
   const guard = await requireUser();
   if (!guard.ok) return guard.response;
-  if (!hasCartDbAccess(guard.session.user.role)) {
+  if (!hasUserOrAdminAccess(guard.session.user.role)) {
     return jsonError(403, "Cart API is only available for USER/ADMIN.");
   }
 
@@ -57,7 +54,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     revalidateTag("cart", "max");
     return ok(item);
   } catch (error) {
-    return handleCartError("cart/[id].PATCH", error);
+    return handleServiceError("cart/[id].PATCH", error);
   }
 }
 
@@ -69,7 +66,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 export async function DELETE(_request: NextRequest, context: RouteContext) {
   const guard = await requireUser();
   if (!guard.ok) return guard.response;
-  if (!hasCartDbAccess(guard.session.user.role)) {
+  if (!hasUserOrAdminAccess(guard.session.user.role)) {
     return jsonError(403, "Cart API is only available for USER/ADMIN.");
   }
 
@@ -80,6 +77,6 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
     revalidateTag("cart", "max");
     return ok(result);
   } catch (error) {
-    return handleCartError("cart/[id].DELETE", error);
+    return handleServiceError("cart/[id].DELETE", error);
   }
 }

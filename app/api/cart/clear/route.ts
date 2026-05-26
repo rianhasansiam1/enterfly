@@ -1,13 +1,10 @@
 import { revalidateTag } from "next/cache";
 
-import { requireUser } from "@/lib/auth-check";
-import { jsonError, ok } from "@/lib/api-response";
+import { requireUser } from "@/lib/api/guards";
+import { hasUserOrAdminAccess } from "@/lib/auth/access";
+import { jsonError, ok } from "@/lib/api/response";
 import { clearMyCart } from "@/lib/services/cart.service";
-import { handleCartError } from "@/lib/services/cart-errors";
-
-function hasCartDbAccess(role: string | undefined): boolean {
-  return role === "USER" || role === "ADMIN";
-}
+import { handleServiceError } from "@/lib/services/service-error";
 
 /**
  * DELETE /api/cart/clear
@@ -18,7 +15,7 @@ function hasCartDbAccess(role: string | undefined): boolean {
 export async function DELETE() {
   const guard = await requireUser();
   if (!guard.ok) return guard.response;
-  if (!hasCartDbAccess(guard.session.user.role)) {
+  if (!hasUserOrAdminAccess(guard.session.user.role)) {
     return jsonError(403, "Cart API is only available for USER/ADMIN.");
   }
 
@@ -27,6 +24,6 @@ export async function DELETE() {
     revalidateTag("cart", "max");
     return ok(result);
   } catch (error) {
-    return handleCartError("cart.clear.DELETE", error);
+    return handleServiceError("cart.clear.DELETE", error);
   }
 }

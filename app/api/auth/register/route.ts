@@ -5,8 +5,8 @@ import { z } from "zod";
 import { isAllowedOrigin } from "@/lib/auth/origin";
 import { hashPassword } from "@/lib/auth/passwords";
 import { getClientIp, rateLimit } from "@/lib/auth/rate-limit";
-import { jsonError, tooManyRequests } from "@/lib/auth/responses";
-import { registerSchema } from "@/lib/auth/schemas";
+import { jsonError, tooManyRequests } from "@/lib/api/response";
+import { registerSchema } from "@/lib/validations/auth.validation";
 import { prisma } from "@/lib/prisma";
 
 /**

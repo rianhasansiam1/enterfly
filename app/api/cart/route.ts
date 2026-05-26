@@ -2,22 +2,19 @@ import type { NextRequest } from "next/server";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
-import { requireUser } from "@/lib/auth-check";
-import { created, jsonError, ok } from "@/lib/api-response";
+import { requireUser } from "@/lib/api/guards";
+import { hasUserOrAdminAccess } from "@/lib/auth/access";
+import { created, jsonError, ok } from "@/lib/api/response";
 import {
   addToCart,
   getMyCartCached,
   syncCartItems,
 } from "@/lib/services/cart.service";
-import { handleCartError } from "@/lib/services/cart-errors";
+import { handleServiceError } from "@/lib/services/service-error";
 import {
   addToCartSchema,
   syncCartSchema,
 } from "@/lib/validations/cart.validation";
-
-function hasCartDbAccess(role: string | undefined): boolean {
-  return role === "USER" || role === "ADMIN";
-}
 
 /**
  * GET /api/cart
@@ -28,7 +25,7 @@ function hasCartDbAccess(role: string | undefined): boolean {
 export async function GET() {
   const guard = await requireUser();
   if (!guard.ok) return guard.response;
-  if (!hasCartDbAccess(guard.session.user.role)) {
+  if (!hasUserOrAdminAccess(guard.session.user.role)) {
     return jsonError(403, "Cart API is only available for USER/ADMIN.");
   }
 
@@ -36,7 +33,7 @@ export async function GET() {
     const { items, summary } = await getMyCartCached(guard.session.user.id);
     return ok({ items, summary });
   } catch (error) {
-    return handleCartError("cart.GET", error);
+    return handleServiceError("cart.GET", error);
   }
 }
 
@@ -50,7 +47,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const guard = await requireUser();
   if (!guard.ok) return guard.response;
-  if (!hasCartDbAccess(guard.session.user.role)) {
+  if (!hasUserOrAdminAccess(guard.session.user.role)) {
     return jsonError(403, "Cart API is only available for USER/ADMIN.");
   }
 
@@ -78,7 +75,7 @@ export async function POST(request: NextRequest) {
     revalidateTag("cart", "max");
     return created(item);
   } catch (error) {
-    return handleCartError("cart.POST", error);
+    return handleServiceError("cart.POST", error);
   }
 }
 
@@ -91,7 +88,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const guard = await requireUser();
   if (!guard.ok) return guard.response;
-  if (!hasCartDbAccess(guard.session.user.role)) {
+  if (!hasUserOrAdminAccess(guard.session.user.role)) {
     return jsonError(403, "Cart API is only available for USER/ADMIN.");
   }
 
@@ -119,6 +116,6 @@ export async function PUT(request: NextRequest) {
     revalidateTag("cart", "max");
     return ok(result);
   } catch (error) {
-    return handleCartError("cart.PUT", error);
+    return handleServiceError("cart.PUT", error);
   }
 }

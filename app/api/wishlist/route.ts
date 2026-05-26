@@ -1,9 +1,10 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
-import { requireUser } from "@/lib/auth-check";
-import { created, jsonError, ok } from "@/lib/api-response";
-import { handleWishlistError } from "@/lib/services/wishlist-errors";
+import { requireUser } from "@/lib/api/guards";
+import { hasUserOrAdminAccess } from "@/lib/auth/access";
+import { created, jsonError, ok } from "@/lib/api/response";
+import { handleServiceError } from "@/lib/services/service-error";
 import {
   addWishlistItem,
   clearMyWishlist,
@@ -15,10 +16,6 @@ import {
   syncWishlistSchema,
 } from "@/lib/validations/wishlist.validation";
 
-function hasWishlistDbAccess(role: string | undefined): boolean {
-  return role === "USER" || role === "ADMIN";
-}
-
 /**
  * GET /api/wishlist
  *
@@ -27,7 +24,7 @@ function hasWishlistDbAccess(role: string | undefined): boolean {
 export async function GET() {
   const guard = await requireUser();
   if (!guard.ok) return guard.response;
-  if (!hasWishlistDbAccess(guard.session.user.role)) {
+  if (!hasUserOrAdminAccess(guard.session.user.role)) {
     return jsonError(403, "Wishlist API is only available for USER/ADMIN.");
   }
 
@@ -35,7 +32,7 @@ export async function GET() {
     const items = await getMyWishlist(guard.session.user.id);
     return ok(items);
   } catch (error) {
-    return handleWishlistError("wishlist.GET", error);
+    return handleServiceError("wishlist.GET", error);
   }
 }
 
@@ -47,7 +44,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const guard = await requireUser();
   if (!guard.ok) return guard.response;
-  if (!hasWishlistDbAccess(guard.session.user.role)) {
+  if (!hasUserOrAdminAccess(guard.session.user.role)) {
     return jsonError(403, "Wishlist API is only available for USER/ADMIN.");
   }
 
@@ -74,7 +71,7 @@ export async function POST(request: NextRequest) {
     const item = await addWishlistItem(guard.session.user.id, parsed.data);
     return created(item);
   } catch (error) {
-    return handleWishlistError("wishlist.POST", error);
+    return handleServiceError("wishlist.POST", error);
   }
 }
 
@@ -86,7 +83,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const guard = await requireUser();
   if (!guard.ok) return guard.response;
-  if (!hasWishlistDbAccess(guard.session.user.role)) {
+  if (!hasUserOrAdminAccess(guard.session.user.role)) {
     return jsonError(403, "Wishlist API is only available for USER/ADMIN.");
   }
 
@@ -113,7 +110,7 @@ export async function PUT(request: NextRequest) {
     const items = await syncWishlistProducts(guard.session.user.id, parsed.data);
     return ok(items);
   } catch (error) {
-    return handleWishlistError("wishlist.PUT", error);
+    return handleServiceError("wishlist.PUT", error);
   }
 }
 
@@ -125,7 +122,7 @@ export async function PUT(request: NextRequest) {
 export async function DELETE() {
   const guard = await requireUser();
   if (!guard.ok) return guard.response;
-  if (!hasWishlistDbAccess(guard.session.user.role)) {
+  if (!hasUserOrAdminAccess(guard.session.user.role)) {
     return jsonError(403, "Wishlist API is only available for USER/ADMIN.");
   }
 
@@ -133,7 +130,6 @@ export async function DELETE() {
     const result = await clearMyWishlist(guard.session.user.id);
     return ok(result);
   } catch (error) {
-    return handleWishlistError("wishlist.DELETE", error);
+    return handleServiceError("wishlist.DELETE", error);
   }
 }
-

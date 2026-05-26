@@ -1,10 +1,10 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
-import { requireAdmin } from "@/lib/auth-check";
-import { jsonError, ok } from "@/lib/api-response";
+import { requireAdmin } from "@/lib/api/guards";
+import { jsonError, ok } from "@/lib/api/response";
 import { listOrdersForAdmin } from "@/lib/services/order.service";
-import { handleOrderError } from "@/lib/services/order-errors";
+import { handleServiceError } from "@/lib/services/service-error";
 import { adminOrderQuerySchema } from "@/lib/validations/order.validation";
 
 /**
@@ -33,6 +33,6 @@ export async function GET(request: NextRequest) {
     const { items, meta } = await listOrdersForAdmin(parsed.data);
     return ok(items, meta);
   } catch (error) {
-    return handleOrderError("admin.orders.GET", error);
+    return handleServiceError("admin.orders.GET", error);
   }
 }

@@ -6,9 +6,13 @@ import { ArrowRight, Loader2, Lock, LogIn, Mail, ShieldAlert } from "lucide-reac
 import { cn } from "@/lib/utils";
 import { FIELD_LIMITS } from "@/lib/auth/policy";
 
-import FloatField from "./FloatField";
-import PasswordVisibilityButton from "./PasswordVisibilityButton";
-import { SocialButtons, SocialDivider } from "./SocialButtons";
+import FloatField from "@/app/(auth)/_components/FloatField";
+import {
+  GoogleSignInButton,
+  SocialDivider,
+} from "@/app/(auth)/_components/GoogleSignInButton";
+import PasswordVisibilityButton from "@/app/(auth)/_components/PasswordVisibilityButton";
+
 import type { LoginFieldUpdater, LoginForm, LoginStatus } from "../page";
 
 type LoginFormProps = {
@@ -18,6 +22,7 @@ type LoginFormProps = {
   canSubmit: boolean;
   showPassword: boolean;
   errorMessage: string | null;
+  callbackUrl?: string;
   onFieldChange: LoginFieldUpdater;
   onTogglePassword: () => void;
   onSubmit: () => void;
@@ -30,6 +35,7 @@ export default function LoginFormView({
   canSubmit,
   showPassword,
   errorMessage,
+  callbackUrl,
   onFieldChange,
   onTogglePassword,
   onSubmit,
@@ -118,7 +124,7 @@ export default function LoginFormView({
       </button>
 
       <SocialDivider />
-      <SocialButtons />
+      <GoogleSignInButton callbackUrl={callbackUrl} />
 
       <p className="mt-2 text-center text-[11px] text-gray-500">
         By signing in you agree to our{" "}

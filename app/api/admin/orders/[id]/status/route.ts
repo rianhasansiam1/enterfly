@@ -1,10 +1,10 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
-import { requireAdmin } from "@/lib/auth-check";
-import { jsonError, ok } from "@/lib/api-response";
+import { requireAdmin } from "@/lib/api/guards";
+import { jsonError, ok } from "@/lib/api/response";
 import { updateOrderStatus } from "@/lib/services/order.service";
-import { handleOrderError } from "@/lib/services/order-errors";
+import { handleServiceError } from "@/lib/services/service-error";
 import { updateOrderStatusSchema } from "@/lib/validations/order.validation";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -45,6 +45,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const order = await updateOrderStatus(id, parsed.data);
     return ok(order);
   } catch (error) {
-    return handleOrderError("admin.orders/[id].status.PATCH", error);
+    return handleServiceError("admin.orders/[id].status.PATCH", error);
   }
 }

@@ -4,10 +4,12 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
+import AuthAnimations from "@/app/(auth)/_components/AuthAnimations";
+import AuthBackground from "@/app/(auth)/_components/AuthBackground";
+import BrandPanel from "@/app/(auth)/_components/BrandPanel";
+import { useAutoRotatingIndex } from "@/app/(auth)/_components/useAutoRotatingIndex";
+
 import AccountStep from "./components/AccountStep";
-import BackgroundFX from "./components/BackgroundFX";
-import BrandPanel from "./components/BrandPanel";
-import LocalAnimationStyles from "./components/LocalAnimationStyles";
 import ProfileStep from "./components/ProfileStep";
 import RegisterFooter from "./components/RegisterFooter";
 import RegisterHeader from "./components/RegisterHeader";
@@ -16,13 +18,11 @@ import StepPanel from "./components/StepPanel";
 import SuccessState from "./components/SuccessState";
 import {
   BRAND_PERKS,
+  BRAND_STATS,
   INITIAL_FORM,
   REGISTER_STEPS,
 } from "./components/constants";
-import {
-  useAutoRotatingIndex,
-  useRegisterValidation,
-} from "./components/hooks";
+import { useRegisterValidation } from "./components/hooks";
 
 export type RegisterStep = 0 | 1 | 2;
 
@@ -161,10 +161,16 @@ export default function RegisterPage() {
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#E6E6FA]">
-      <BackgroundFX />
+      <AuthBackground />
 
       <section className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 gap-6 px-4 py-8 sm:px-6 lg:grid-cols-12 lg:gap-8 lg:py-12">
         <BrandPanel
+          badgeText="EnterFly · Welcome"
+          headlineLead="Join the local"
+          headlineEmphasis="shopping revolution."
+          subheading="Create your account in under a minute and start unlocking deals from premium stores in your neighborhood."
+          perks={BRAND_PERKS}
+          stats={BRAND_STATS}
           activePerkIndex={activePerkIndex}
           onSelectPerk={setActivePerkIndex}
         />
@@ -229,7 +235,7 @@ export default function RegisterPage() {
         </section>
       </section>
 
-      <LocalAnimationStyles />
+      <AuthAnimations />
     </main>
   );
 }

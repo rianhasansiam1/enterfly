@@ -3,24 +3,20 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { ServiceError } from "@/lib/services/service-error";
 import type {
   AddWishlistItemInput,
   SyncWishlistInput,
 } from "@/lib/validations/wishlist.validation";
 
-export class WishlistError extends Error {
-  status: number;
-  details?: Record<string, unknown>;
-
+export class WishlistError extends ServiceError {
   constructor(
     status: number,
     message: string,
     details?: Record<string, unknown>,
   ) {
-    super(message);
+    super(status, message, details);
     this.name = "WishlistError";
-    this.status = status;
-    this.details = details;
   }
 }
 

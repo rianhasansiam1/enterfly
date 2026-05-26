@@ -6,7 +6,7 @@ import { authConfig } from "@/lib/auth/auth.config";
 import { FIELD_LIMITS } from "@/lib/auth/policy";
 import { verifyPassword } from "@/lib/auth/passwords";
 import { rateLimit } from "@/lib/auth/rate-limit";
-import { loginSchema } from "@/lib/auth/schemas";
+import { loginSchema } from "@/lib/validations/auth.validation";
 import { prisma } from "@/lib/prisma";
 
 class InvalidCredentialsError extends CredentialsSignin {

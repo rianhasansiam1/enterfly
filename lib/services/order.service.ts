@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import type { OrderStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { ServiceError } from "@/lib/services/service-error";
 import type {
   AdminOrderQueryInput,
   CreateOrderInput,
@@ -31,19 +32,14 @@ import type {
  * A typed error the service throws so route handlers can map it to
  * the right HTTP status without sprinkling try/catch heuristics.
  */
-export class OrderError extends Error {
-  status: number;
-  details?: Record<string, unknown>;
-
+export class OrderError extends ServiceError {
   constructor(
     status: number,
     message: string,
     details?: Record<string, unknown>,
   ) {
-    super(message);
+    super(status, message, details);
     this.name = "OrderError";
-    this.status = status;
-    this.details = details;
   }
 }
 

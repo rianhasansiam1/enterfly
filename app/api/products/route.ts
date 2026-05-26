@@ -2,8 +2,8 @@ import type { NextRequest } from "next/server";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
-import { requireAdmin } from "@/lib/auth-check";
-import { jsonError, created, ok } from "@/lib/api-response";
+import { requireAdmin } from "@/lib/api/guards";
+import { jsonError, created, ok } from "@/lib/api/response";
 import {
   createProduct,
   listProductsCached,

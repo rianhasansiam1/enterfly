@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
+import { ServiceError } from "@/lib/services/service-error";
 import type {
   AddToCartInput,
   SyncCartInput,
@@ -25,19 +26,14 @@ import type {
 /*  Domain error                                                              */
 /* -------------------------------------------------------------------------- */
 
-export class CartError extends Error {
-  status: number;
-  details?: Record<string, unknown>;
-
+export class CartError extends ServiceError {
   constructor(
     status: number,
     message: string,
     details?: Record<string, unknown>,
   ) {
-    super(message);
+    super(status, message, details);
     this.name = "CartError";
-    this.status = status;
-    this.details = details;
   }
 }
 

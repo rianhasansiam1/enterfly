@@ -1,10 +1,10 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
-import { requireUser } from "@/lib/auth-check";
-import { jsonError, ok } from "@/lib/api-response";
+import { requireUser } from "@/lib/api/guards";
+import { jsonError, ok } from "@/lib/api/response";
 import { listMyOrders } from "@/lib/services/order.service";
-import { handleOrderError } from "@/lib/services/order-errors";
+import { handleServiceError } from "@/lib/services/service-error";
 import { orderQuerySchema } from "@/lib/validations/order.validation";
 
 /**
@@ -32,6 +32,6 @@ export async function GET(request: NextRequest) {
     );
     return ok(items, meta);
   } catch (error) {
-    return handleOrderError("orders.my-orders.GET", error);
+    return handleServiceError("orders.my-orders.GET", error);
   }
 }

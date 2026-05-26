@@ -2,8 +2,8 @@ import type { NextRequest } from "next/server";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
-import { requireAdmin } from "@/lib/auth-check";
-import { created, jsonError, ok } from "@/lib/api-response";
+import { requireAdmin } from "@/lib/api/guards";
+import { created, jsonError, ok } from "@/lib/api/response";
 import {
   createCategory,
   listCategories,

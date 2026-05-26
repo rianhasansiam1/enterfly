@@ -4,8 +4,11 @@ import { Mail, User } from "lucide-react";
 
 import { FIELD_LIMITS } from "@/lib/auth/policy";
 
-import FloatField from "./FloatField";
-import { SocialButtons, SocialDivider } from "./SocialButtons";
+import FloatField from "@/app/(auth)/_components/FloatField";
+import {
+  GoogleSignInButton,
+  SocialDivider,
+} from "@/app/(auth)/_components/GoogleSignInButton";
 import type { FieldUpdater, RegisterForm } from "../page";
 
 type AccountStepProps = {
@@ -42,7 +45,7 @@ export default function AccountStep({
       />
 
       <SocialDivider />
-      <SocialButtons />
+      <GoogleSignInButton />
     </>
   );
 }

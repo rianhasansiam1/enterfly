@@ -4,7 +4,8 @@ import { MapPin, Phone } from "lucide-react";
 
 import { FIELD_LIMITS } from "@/lib/auth/policy";
 
-import FloatField from "./FloatField";
+import FloatField from "@/app/(auth)/_components/FloatField";
+
 import TermsCheckbox from "./TermsCheckbox";
 import type { FieldUpdater, RegisterForm } from "../page";
 
