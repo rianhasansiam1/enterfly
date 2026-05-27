@@ -16,6 +16,12 @@ model User {
   image    String? // profile picture URL (e.g. Google avatar)
   role     Role    @default(USER)
 
+  // How this row was first created. Stamped automatically:
+  //   - CREDENTIAL when the visitor signs up via the email/password form
+  //   - GOOGLE     when the visitor authenticates with Google OAuth
+  // Treat the value as immutable once set; we never silently upgrade.
+  provider AuthProvider @default(CREDENTIAL)
+
   // Captured when the user accepts the Terms & Privacy at registration.
   // Null means the user has not (yet) accepted the latest terms.
   termsAcceptedAt DateTime?
@@ -31,6 +37,11 @@ model User {
 enum Role {
   USER
   ADMIN
+}
+
+enum AuthProvider {
+  CREDENTIAL
+  GOOGLE
 }
 
 model Category {
@@ -121,19 +132,29 @@ model Order {
   id          String @id @default(cuid())
   orderNumber String @unique // human-readable receipt id, e.g. "ORD-260525-A1B2C3D4"
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  // Nullable for backward compatibility with rows from the previous
+  // guest-checkout era; the current code path always sets it to a real
+  // session userId because checkout is auth-only.
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
 
   items OrderItem[]
 
   subtotal       Float
   deliveryCharge Float @default(0)
   discountAmount Float @default(0)
+  taxAmount      Float @default(0)
   totalAmount    Float
 
-  customerName    String
-  customerPhone   String
-  customerAddress String
+  customerName       String
+  customerPhone      String
+  customerAddress    String
+  customerEmail      String? // optional override for the receipt email
+  customerCity       String? // city / district
+  customerPostalCode String? // ZIP / postal code
+  customerNote       String? // optional shipping/delivery note from the customer
+
+  promoCode String? // snapshot of the code applied at order time
 
   status        OrderStatus   @default(PENDING)
   paymentMethod PaymentMethod @default(CASH_ON_DELIVERY)
@@ -157,6 +178,7 @@ enum OrderStatus {
 
 enum PaymentMethod {
   CASH_ON_DELIVERY
+  ONLINE
 }
 
 enum PaymentStatus {

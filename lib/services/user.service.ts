@@ -3,10 +3,13 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 
+import { hashPassword, verifyPassword } from "@/lib/auth/passwords";
 import { prisma } from "@/lib/prisma";
 import { ServiceError } from "@/lib/services/service-error";
 import type {
   AdminUserQueryInput,
+  ChangePasswordInput,
+  UpdateProfileInput,
   UpdateUserRoleInput,
 } from "@/lib/validations/user.validation";
 
@@ -222,4 +225,156 @@ export async function updateUserRole(
       updatedAt: true,
     },
   });
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Customer self-serve                                                       */
+/* -------------------------------------------------------------------------- */
+
+const profileSelect = {
+  id: true,
+  name: true,
+  email: true,
+  phone: true,
+  city: true,
+  image: true,
+  role: true,
+  provider: true,
+  termsAcceptedAt: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.UserSelect;
+
+/**
+ * Lightweight "is this a credential-based account" check used by the
+ * password-change endpoint. We never expose the password hash itself.
+ */
+async function readPasswordHash(userId: string) {
+  const row = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, password: true, provider: true },
+  });
+  return row;
+}
+
+/**
+ * Build the rich profile snapshot used by the My Profile dashboard.
+ *
+ * Returns the user record plus aggregate stats so the page can render
+ * the overview tab without firing a second round of requests.
+ */
+export async function getProfileOverview(userId: string) {
+  const [user, orderAggregate, ordersByStatus, cartCount, wishlistCount] =
+    await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: profileSelect,
+      }),
+      prisma.order.aggregate({
+        where: { userId, status: { not: "CANCELLED" } },
+        _sum: { totalAmount: true },
+        _count: { _all: true },
+        _max: { createdAt: true },
+      }),
+      prisma.order.groupBy({
+        by: ["status"],
+        where: { userId },
+        _count: { _all: true },
+      }),
+      prisma.cartItem.count({ where: { userId } }),
+      prisma.wishlist.count({ where: { userId } }),
+    ]);
+
+  if (!user) throw new UserError(404, "User not found.");
+
+  const statusBreakdown = ordersByStatus.reduce<Record<string, number>>(
+    (acc, row) => {
+      acc[row.status] = row._count._all;
+      return acc;
+    },
+    {},
+  );
+
+  return {
+    user,
+    stats: {
+      totalSpend: orderAggregate._sum.totalAmount ?? 0,
+      totalOrders: orderAggregate._count._all,
+      lastOrderAt: orderAggregate._max.createdAt ?? null,
+      ordersByStatus: statusBreakdown,
+      cartCount,
+      wishlistCount,
+    },
+  };
+}
+
+/**
+ * Apply a partial profile update from the customer-facing settings
+ * page. Email and role are intentionally not editable here — email
+ * changes touch auth and require a verification flow we don't have
+ * yet, and role is admin-only.
+ */
+export async function updateOwnProfile(
+  userId: string,
+  input: UpdateProfileInput,
+) {
+  // Build the partial Prisma `data` payload from only the fields the
+  // client actually sent. Empty strings were normalized to `undefined`
+  // by the schema so nothing here will accidentally blank the column.
+  const data: Prisma.UserUpdateInput = {};
+  if (input.name !== undefined) data.name = input.name;
+  if (input.phone !== undefined) data.phone = input.phone;
+  if (input.city !== undefined) data.city = input.city;
+  if (input.image !== undefined) data.image = input.image;
+
+  if (Object.keys(data).length === 0) {
+    throw new UserError(400, "No changes to save.");
+  }
+
+  return prisma.user.update({
+    where: { id: userId },
+    data,
+    select: profileSelect,
+  });
+}
+
+/**
+ * Change the caller's password.
+ *
+ * Rules:
+ *   - Credential accounts: must supply the current password.
+ *   - Google-only accounts: setting a password for the first time is
+ *     allowed without `currentPassword`. The provider stamp stays
+ *     GOOGLE so the audit trail (and the "how did this user join us?"
+ *     reporting) still reflects the original signup.
+ *   - The new password is bcrypt-hashed in `passwords.ts`.
+ */
+export async function changeOwnPassword(
+  userId: string,
+  input: ChangePasswordInput,
+) {
+  const row = await readPasswordHash(userId);
+  if (!row) throw new UserError(404, "User not found.");
+
+  const hasExisting = Boolean(row.password);
+
+  if (hasExisting) {
+    if (!input.currentPassword) {
+      throw new UserError(400, "Enter your current password to continue.");
+    }
+    const matches = await verifyPassword(input.currentPassword, row.password);
+    if (!matches) {
+      throw new UserError(401, "Current password is incorrect.");
+    }
+  }
+
+  const hashed = await hashPassword(input.newPassword);
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { password: hashed },
+    select: { id: true },
+  });
+
+  return { ok: true as const, hadPassword: hasExisting };
 }

@@ -9,14 +9,14 @@ type OrderStatus =
 
 type PaymentStatus = "PAID" | "UNPAID";
 
-type PaymentMethod = "CASH_ON_DELIVERY";
+type PaymentMethod = "CASH_ON_DELIVERY" | "ONLINE";
 
 type AdminOrderUser = {
   id: string;
   name: string | null;
   email: string | null;
   phone: string | null;
-};
+} | null;
 
 type AdminOrderRow = {
   id: string;

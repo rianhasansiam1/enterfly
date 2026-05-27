@@ -9,14 +9,14 @@ export type OrderStatus =
 
 export type PaymentStatus = "PAID" | "UNPAID";
 
-export type PaymentMethod = "CASH_ON_DELIVERY";
+export type PaymentMethod = "CASH_ON_DELIVERY" | "ONLINE";
 
 export type AdminOrderUser = {
   id: string;
   name: string | null;
   email: string | null;
   phone: string | null;
-};
+} | null;
 
 export type AdminOrderRow = {
   id: string;
@@ -76,7 +76,8 @@ export const STATUS_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
 };
 
 function parseUser(value: unknown): AdminOrderUser {
-  const record = (value ?? {}) as Partial<AdminOrderUser>;
+  if (value == null) return null;
+  const record = value as Partial<NonNullable<AdminOrderUser>>;
   return {
     id: typeof record.id === "string" ? record.id : "",
     name: typeof record.name === "string" ? record.name : null,
@@ -109,8 +110,8 @@ function parseRow(entry: unknown): AdminOrderRow {
     totalAmount: Number(item.totalAmount ?? 0),
     status: parseOrderStatus(item.status),
     paymentMethod:
-      item.paymentMethod === "CASH_ON_DELIVERY"
-        ? "CASH_ON_DELIVERY"
+      item.paymentMethod === "ONLINE"
+        ? "ONLINE"
         : "CASH_ON_DELIVERY",
     paymentStatus: parsePaymentStatus(item.paymentStatus),
     customerName: typeof item.customerName === "string" ? item.customerName : "",

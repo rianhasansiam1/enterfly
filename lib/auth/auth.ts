@@ -140,12 +140,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       try {
         // Upsert keeps the email column as the join key. We never overwrite a
         // password set during Credentials signup — that field stays untouched.
+        // `provider` is stamped GOOGLE on create. An existing CREDENTIAL row
+        // keeps its provider so the audit trail (and the password-recovery
+        // flow that depends on it) stays accurate.
         const dbUser = await prisma.user.upsert({
           where: { email },
           create: {
             email,
             name: user.name ?? email.split("@")[0],
             image: user.image ?? null,
+            provider: "GOOGLE",
           },
           update: {
             // Refresh display fields, but only when Google actually has them.

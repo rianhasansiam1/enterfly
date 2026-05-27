@@ -96,8 +96,8 @@ export default function AdminOrdersPage() {
         order.orderNumber.toLowerCase().includes(q) ||
         order.customerName.toLowerCase().includes(q) ||
         order.customerPhone.toLowerCase().includes(q) ||
-        (order.user.email ?? "").toLowerCase().includes(q) ||
-        (order.user.name ?? "").toLowerCase().includes(q);
+        (order.user?.email ?? "").toLowerCase().includes(q) ||
+        (order.user?.name ?? "").toLowerCase().includes(q);
 
       const matchStatus =
         statusFilter === "ALL" || order.status === statusFilter;
@@ -344,7 +344,7 @@ export default function AdminOrdersPage() {
                           <p className="text-xs text-gray-500">
                             {order.customerPhone}
                           </p>
-                          {order.user.email && (
+                          {order.user?.email && (
                             <p className="text-xs text-gray-400">
                               {order.user.email}
                             </p>

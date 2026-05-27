@@ -66,6 +66,8 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
         phone,
         city,
+        // Email/password sign-up: the only path that lands here.
+        provider: "CREDENTIAL",
         // Stamped server-side. Zod already required `agreeToTerms === true`.
         termsAcceptedAt: new Date(),
       },

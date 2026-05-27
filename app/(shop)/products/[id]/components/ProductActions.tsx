@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Minus, Plus, ShoppingCart } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Minus, Plus, ShoppingCart, Zap } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useDispatch } from "react-redux";
 
@@ -40,6 +41,7 @@ const ProductActions = ({
   stockCount?: number;
 }) => {
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
   const { data: session, status } = useSession();
 
   const [quantity, setQuantity] = useState(1);
@@ -136,6 +138,30 @@ const ProductActions = ({
           {addedToCart ? "Added!" : "Add to cart"}
         </button>
       </div>
+
+      <button
+        type="button"
+        onClick={() => {
+          if (!inStock) return;
+          const productIdString = String(productId);
+          const target = `/checkout?buy=${encodeURIComponent(productIdString)}:${quantity}`;
+          // Buy Now requires an account so the order has a real userId.
+          if (status !== "authenticated") {
+            router.push(`/login?callbackUrl=${encodeURIComponent(target)}`);
+            return;
+          }
+          router.push(target);
+        }}
+        disabled={!inStock}
+        className={`flex w-full items-center justify-center gap-2 rounded-lg px-6 py-2.5 text-sm font-bold transition-all ${
+          inStock
+            ? "bg-linear-to-r from-amber-500 via-orange-500 to-rose-500 text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg"
+            : "bg-gray-200 text-gray-500 cursor-not-allowed"
+        }`}
+      >
+        <Zap className="h-4 w-4" />
+        Buy now
+      </button>
     </div>
   );
 };

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Lock } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useDispatch, useSelector } from "react-redux";
@@ -156,6 +157,7 @@ function toCartViewModel(item: CartItem) {
 
 export default function CartPage() {
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
   const { data: session, status } = useSession();
 
   const items = useSelector((state: RootState) => state.cart.items);
@@ -429,7 +431,15 @@ export default function CartPage() {
   const handleRemovePromo = () => setPromo(null);
 
   const handleCheckout = () => {
-    console.info("Proceed to checkout", { items, promo, totals });
+    // Checkout requires authentication so the order can be attached
+    // to a real user record. Bounce unauthenticated visitors to the
+    // sign-in page first, with a callbackUrl that lands them right
+    // back on /checkout.
+    if (status !== "authenticated") {
+      router.push(`/login?callbackUrl=${encodeURIComponent("/checkout")}`);
+      return;
+    }
+    router.push("/checkout");
   };
 
   const itemCards = items.map(toCartViewModel);
