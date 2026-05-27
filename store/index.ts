@@ -2,8 +2,10 @@ import { configureStore } from "@reduxjs/toolkit";
 
 import adminBannersReducer from "@/store/slices/admin-banners.slice";
 import adminCategoriesReducer from "@/store/slices/admin-categories.slice";
+import adminMessagesReducer from "@/store/slices/admin-messages.slice";
 import adminOrdersReducer from "@/store/slices/admin-orders.slice";
 import adminProductsReducer from "@/store/slices/admin-products.slice";
+import adminReportsReducer from "@/store/slices/admin-reports.slice";
 import adminSettingsReducer from "@/store/slices/admin-settings.slice";
 import adminUsersReducer from "@/store/slices/admin-users.slice";
 import allProductsReducer from "@/store/slices/all-products.slice";
@@ -23,6 +25,8 @@ export const store = configureStore({
     adminCategories: adminCategoriesReducer,
     adminBanners: adminBannersReducer,
     adminSettings: adminSettingsReducer,
+    adminMessages: adminMessagesReducer,
+    adminReports: adminReportsReducer,
   },
 });
 

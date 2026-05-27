@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import emailjs from "@emailjs/browser";
 import {
   Send,
   User,
@@ -10,7 +11,12 @@ import {
   Tag,
   CheckCircle2,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
+
+const SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID ?? "";
+const TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID ?? "";
+const PUBLIC_KEY = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY ?? "";
 
 const subjects = [
   "General Inquiry",
@@ -21,7 +27,7 @@ const subjects = [
   "Other",
 ];
 
-type Status = "idle" | "sending" | "sent";
+type Status = "idle" | "sending" | "sent" | "error";
 
 export default function ContactForm() {
   const [name, setName] = useState("");
@@ -30,12 +36,76 @@ export default function ContactForm() {
   const [subject, setSubject] = useState(subjects[0]);
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<Status>("idle");
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("sending");
-    // Simulated submit (no backend wired yet)
-    setTimeout(() => {
+    setErrorMsg("");
+
+    const emailJsConfigured = Boolean(SERVICE_ID && TEMPLATE_ID && PUBLIC_KEY);
+
+    const visitTime = new Date().toLocaleString("en-IN", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+
+    const templateParams = {
+      from_name: name,
+      user_email: email,
+      subject,
+      phone: phone || "Not provided",
+      message,
+      visit_time: visitTime,
+    };
+
+    try {
+      // 1) Persist to our own DB first so we never lose a message even
+      //    if EmailJS hiccups. The API responds 201 on success and
+      //    revalidates the admin "Messages" cache for us.
+      const dbResponse = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          phone: phone || undefined,
+          subject,
+          message,
+        }),
+      });
+
+      if (!dbResponse.ok) {
+        let payload: unknown = null;
+        try {
+          payload = (await dbResponse.json()) as unknown;
+        } catch {
+          // ignore
+        }
+        const fallback = "We couldn't save your message. Please try again.";
+        const apiError =
+          payload && typeof payload === "object"
+            ? ((payload as { error?: string }).error ?? fallback)
+            : fallback;
+        throw new Error(apiError);
+      }
+
+      // 2) Best-effort email notification. A failure here doesn't roll
+      //    back the saved message — admin still sees it in the panel.
+      if (emailJsConfigured) {
+        try {
+          await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, {
+            publicKey: PUBLIC_KEY,
+          });
+        } catch (emailErr) {
+          console.warn("[contact] EmailJS notification failed", emailErr);
+        }
+      } else {
+        console.warn(
+          "[contact] EmailJS not configured — message saved to DB only.",
+        );
+      }
+
       setStatus("sent");
       setName("");
       setEmail("");
@@ -43,7 +113,14 @@ export default function ContactForm() {
       setSubject(subjects[0]);
       setMessage("");
       setTimeout(() => setStatus("idle"), 4000);
-    }, 1200);
+    } catch (err) {
+      setStatus("error");
+      setErrorMsg(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again."
+      );
+    }
   };
 
   return (
@@ -192,7 +269,7 @@ export default function ContactForm() {
 
               <button
                 type="submit"
-                disabled={status !== "idle"}
+                disabled={status === "sending" || status === "sent"}
                 className="group inline-flex items-center gap-2 rounded-full bg-linear-to-r from-violet-600 to-purple-600 px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:from-violet-700 hover:to-purple-700 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-80"
               >
                 {status === "sending" && (
@@ -207,7 +284,7 @@ export default function ContactForm() {
                     Message Sent
                   </>
                 )}
-                {status === "idle" && (
+                {(status === "idle" || status === "error") && (
                   <>
                     <Send className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                     Send Message
@@ -215,6 +292,13 @@ export default function ContactForm() {
                 )}
               </button>
             </div>
+
+            {status === "error" && errorMsg && (
+              <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
           </form>
         </div>
       </div>

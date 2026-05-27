@@ -349,3 +349,29 @@ model StoreSettings {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// Inbound messages submitted from the public /contact form.
+// Captured without requiring a logged-in user; the admin can review,
+// mark as read, archive, or delete from the admin "Messages" page.
+model ContactMessage {
+  id      String @id @default(cuid())
+  name    String
+  email   String
+  phone   String?
+  subject String
+  message String
+
+  status ContactMessageStatus @default(NEW)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+}
+
+enum ContactMessageStatus {
+  NEW
+  READ
+  ARCHIVED
+}

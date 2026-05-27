@@ -1,0 +1,636 @@
+import "server-only";
+
+import { Prisma } from "@prisma/client";
+
+import { prisma } from "@/lib/prisma";
+import { ServiceError } from "@/lib/services/service-error";
+import type { ReportQueryInput } from "@/lib/validations/report.validation";
+
+/**
+ * Server-side report aggregations for the admin "Reports" page.
+ *
+ * Each report type returns a payload ready for the client to render
+ * (preview table + PDF). Money fields are rounded to 2 dp at the
+ * service edge so the PDF and the on-screen preview never disagree.
+ */
+
+export class ReportError extends ServiceError {
+  constructor(
+    status: number,
+    message: string,
+    details?: Record<string, unknown>,
+  ) {
+    super(status, message, details);
+    this.name = "ReportError";
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Shared helpers                                                            */
+/* -------------------------------------------------------------------------- */
+
+/** Round currency to 2 dp; use everywhere in this module. */
+function money(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+/**
+ * Resolve the [from, to] window the report should cover.
+ *
+ *   - When `from` is missing, default to 30 days before `to`.
+ *   - When `to` is missing, default to now.
+ *   - The window is inclusive on both ends; we widen `to` to the
+ *     end-of-day so callers can pass a date-only string and still
+ *     capture the orders placed that same evening.
+ */
+function resolveWindow(query: ReportQueryInput) {
+  const now = new Date();
+
+  let to = query.to ? new Date(query.to) : now;
+  // Widen to end-of-day when the caller passed a calendar date only.
+  if (query.to && /^\d{4}-\d{2}-\d{2}$/.test(query.to)) {
+    to = new Date(`${query.to}T23:59:59.999Z`);
+  }
+
+  let from = query.from ? new Date(query.from) : null;
+  if (!from) {
+    from = new Date(to);
+    from.setDate(from.getDate() - 30);
+  }
+  // For pure dates, anchor at start-of-day so the window is intuitive.
+  if (query.from && /^\d{4}-\d{2}-\d{2}$/.test(query.from)) {
+    from = new Date(`${query.from}T00:00:00.000Z`);
+  }
+
+  return { from, to };
+}
+
+type Window = { from: Date; to: Date };
+
+/** Common Prisma `where` block filtering Order rows by createdAt. */
+function orderDateWhere(window: Window): Prisma.OrderWhereInput {
+  return { createdAt: { gte: window.from, lte: window.to } };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  1. Sales report                                                           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Sales overview: revenue, AOV, refund/cancel impact, payment-status
+ * split, plus a daily series for the chart in the preview.
+ *
+ * Cancelled orders are excluded from the revenue figures but are
+ * tracked separately so admins can see how much was at-risk vs. lost.
+ */
+async function buildSalesReport(window: Window, limit: number) {
+  const where: Prisma.OrderWhereInput = orderDateWhere(window);
+
+  const [orders, statusGroups, paymentGroups] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      select: {
+        id: true,
+        orderNumber: true,
+        totalAmount: true,
+        subtotal: true,
+        deliveryCharge: true,
+        discountAmount: true,
+        status: true,
+        paymentStatus: true,
+        paymentMethod: true,
+        customerName: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+    }),
+    prisma.order.groupBy({
+      by: ["status"],
+      where,
+      _count: { _all: true },
+      _sum: { totalAmount: true },
+    }),
+    prisma.order.groupBy({
+      by: ["paymentStatus"],
+      where: { ...where, status: { not: "CANCELLED" } },
+      _count: { _all: true },
+      _sum: { totalAmount: true },
+    }),
+  ]);
+
+  const totals = await prisma.order.aggregate({
+    where,
+    _count: { _all: true },
+  });
+
+  const liveAggregate = await prisma.order.aggregate({
+    where: { ...where, status: { not: "CANCELLED" } },
+    _sum: {
+      totalAmount: true,
+      subtotal: true,
+      deliveryCharge: true,
+      discountAmount: true,
+    },
+    _count: { _all: true },
+  });
+
+  const cancelledAggregate = await prisma.order.aggregate({
+    where: { ...where, status: "CANCELLED" },
+    _sum: { totalAmount: true },
+    _count: { _all: true },
+  });
+
+  // Daily series — bucket by UTC date for a tidy chart.
+  const dailyMap = new Map<
+    string,
+    { day: string; revenue: number; orders: number }
+  >();
+  const dayCursor = new Date(window.from);
+  dayCursor.setUTCHours(0, 0, 0, 0);
+  while (dayCursor <= window.to) {
+    const key = dayCursor.toISOString().slice(0, 10);
+    dailyMap.set(key, { day: key, revenue: 0, orders: 0 });
+    dayCursor.setUTCDate(dayCursor.getUTCDate() + 1);
+  }
+
+  for (const order of orders) {
+    if (order.status === "CANCELLED") continue;
+    const key = new Date(order.createdAt).toISOString().slice(0, 10);
+    const bucket = dailyMap.get(key);
+    if (!bucket) continue;
+    bucket.revenue = money(bucket.revenue + order.totalAmount);
+    bucket.orders += 1;
+  }
+
+  const totalRevenue = money(liveAggregate._sum.totalAmount ?? 0);
+  const totalOrders = liveAggregate._count._all;
+  const avgOrderValue = totalOrders > 0 ? money(totalRevenue / totalOrders) : 0;
+
+  return {
+    summary: {
+      totalRevenue,
+      totalOrders,
+      avgOrderValue,
+      grossSubtotal: money(liveAggregate._sum.subtotal ?? 0),
+      totalDeliveryCharges: money(liveAggregate._sum.deliveryCharge ?? 0),
+      totalDiscounts: money(liveAggregate._sum.discountAmount ?? 0),
+      cancelledRevenue: money(cancelledAggregate._sum.totalAmount ?? 0),
+      cancelledOrders: cancelledAggregate._count._all,
+      ordersInWindow: totals._count._all,
+    },
+    byStatus: statusGroups.map((group) => ({
+      status: group.status,
+      orders: group._count._all,
+      revenue: money(group._sum.totalAmount ?? 0),
+    })),
+    byPaymentStatus: paymentGroups.map((group) => ({
+      paymentStatus: group.paymentStatus,
+      orders: group._count._all,
+      revenue: money(group._sum.totalAmount ?? 0),
+    })),
+    dailySeries: Array.from(dailyMap.values()),
+    recentOrders: orders.map((order) => ({
+      id: order.id,
+      orderNumber: order.orderNumber,
+      customerName: order.customerName,
+      status: order.status,
+      paymentStatus: order.paymentStatus,
+      paymentMethod: order.paymentMethod,
+      totalAmount: money(order.totalAmount),
+      createdAt: order.createdAt.toISOString(),
+    })),
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  2. Orders report                                                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Order log: every order in the window with the line-item count and
+ * the basic financial breakdown. Useful for end-of-day reconciliation.
+ */
+async function buildOrdersReport(window: Window, limit: number) {
+  const where = orderDateWhere(window);
+
+  const [rows, statusGroups, totals] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      select: {
+        id: true,
+        orderNumber: true,
+        customerName: true,
+        customerPhone: true,
+        status: true,
+        paymentStatus: true,
+        paymentMethod: true,
+        subtotal: true,
+        deliveryCharge: true,
+        discountAmount: true,
+        totalAmount: true,
+        createdAt: true,
+        _count: { select: { items: true } },
+      },
+    }),
+    prisma.order.groupBy({
+      by: ["status"],
+      where,
+      _count: { _all: true },
+    }),
+    prisma.order.aggregate({
+      where,
+      _count: { _all: true },
+      _sum: { totalAmount: true, discountAmount: true },
+    }),
+  ]);
+
+  return {
+    summary: {
+      totalOrders: totals._count._all,
+      totalAmount: money(totals._sum.totalAmount ?? 0),
+      totalDiscounts: money(totals._sum.discountAmount ?? 0),
+    },
+    byStatus: statusGroups.map((group) => ({
+      status: group.status,
+      orders: group._count._all,
+    })),
+    rows: rows.map((row) => ({
+      id: row.id,
+      orderNumber: row.orderNumber,
+      customerName: row.customerName,
+      customerPhone: row.customerPhone,
+      status: row.status,
+      paymentStatus: row.paymentStatus,
+      paymentMethod: row.paymentMethod,
+      itemsCount: row._count.items,
+      subtotal: money(row.subtotal),
+      deliveryCharge: money(row.deliveryCharge),
+      discountAmount: money(row.discountAmount),
+      totalAmount: money(row.totalAmount),
+      createdAt: row.createdAt.toISOString(),
+    })),
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  3. Top products report                                                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Sales-by-product: aggregates OrderItem rows for non-cancelled orders
+ * inside the window and ranks products by units sold and revenue.
+ */
+async function buildProductsReport(window: Window, limit: number) {
+  const orderItems = await prisma.orderItem.groupBy({
+    by: ["productId"],
+    where: {
+      order: {
+        createdAt: { gte: window.from, lte: window.to },
+        status: { not: "CANCELLED" },
+      },
+    },
+    _sum: { quantity: true, price: true },
+    _count: { _all: true },
+  });
+
+  if (orderItems.length === 0) {
+    return {
+      summary: { uniqueProducts: 0, unitsSold: 0, revenue: 0 },
+      rows: [],
+    };
+  }
+
+  // Compute revenue per product (price * quantity per row would be ideal,
+  // but `groupBy` can't multiply — so we re-aggregate from raw rows for
+  // the products we actually care about).
+  const productIds = orderItems.map((row) => row.productId);
+
+  const detailedRows = await prisma.orderItem.findMany({
+    where: {
+      productId: { in: productIds },
+      order: {
+        createdAt: { gte: window.from, lte: window.to },
+        status: { not: "CANCELLED" },
+      },
+    },
+    select: {
+      productId: true,
+      quantity: true,
+      price: true,
+    },
+  });
+
+  const productMap = new Map<string, { units: number; revenue: number }>();
+  for (const row of detailedRows) {
+    const bucket = productMap.get(row.productId) ?? { units: 0, revenue: 0 };
+    bucket.units += row.quantity;
+    bucket.revenue += row.price * row.quantity;
+    productMap.set(row.productId, bucket);
+  }
+
+  const products = await prisma.product.findMany({
+    where: { id: { in: productIds } },
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      stock: true,
+      status: true,
+      category: { select: { id: true, name: true } },
+    },
+  });
+  const productInfo = new Map(products.map((p) => [p.id, p]));
+
+  const rows = Array.from(productMap.entries())
+    .map(([productId, agg]) => {
+      const info = productInfo.get(productId);
+      return {
+        productId,
+        name: info?.name ?? "Deleted product",
+        category: info?.category?.name ?? "—",
+        unitsSold: agg.units,
+        revenue: money(agg.revenue),
+        currentPrice: info ? money(info.price) : null,
+        currentStock: info?.stock ?? null,
+        status: info?.status ?? null,
+      };
+    })
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, limit);
+
+  const totalUnits = rows.reduce((sum, row) => sum + row.unitsSold, 0);
+  const totalRevenue = money(rows.reduce((sum, row) => sum + row.revenue, 0));
+
+  return {
+    summary: {
+      uniqueProducts: rows.length,
+      unitsSold: totalUnits,
+      revenue: totalRevenue,
+    },
+    rows,
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  4. Inventory report                                                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Inventory snapshot: low-stock and out-of-stock products plus a
+ * full catalog list for the PDF. The window is ignored — inventory is
+ * always reported "as of now".
+ */
+async function buildInventoryReport(limit: number) {
+  const [products, totals, outOfStock, lowStock] = await Promise.all([
+    prisma.product.findMany({
+      orderBy: [{ stock: "asc" }, { name: "asc" }],
+      take: limit,
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        discountPrice: true,
+        stock: true,
+        status: true,
+        category: { select: { id: true, name: true } },
+        updatedAt: true,
+      },
+    }),
+    prisma.product.aggregate({
+      _count: { _all: true },
+      _sum: { stock: true },
+    }),
+    prisma.product.count({ where: { stock: 0 } }),
+    prisma.product.count({ where: { stock: { gt: 0, lte: 5 } } }),
+  ]);
+
+  // Inventory value = sum(stock * price) at current price.
+  const allForValue = await prisma.product.findMany({
+    select: { stock: true, price: true, discountPrice: true },
+  });
+  const inventoryValue = allForValue.reduce((sum, p) => {
+    const unit = p.discountPrice != null && p.discountPrice < p.price
+      ? p.discountPrice
+      : p.price;
+    return sum + unit * p.stock;
+  }, 0);
+
+  return {
+    summary: {
+      totalProducts: totals._count._all,
+      totalUnitsInStock: totals._sum.stock ?? 0,
+      outOfStock,
+      lowStock,
+      inventoryValue: money(inventoryValue),
+    },
+    rows: products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      category: p.category?.name ?? "—",
+      price: money(p.price),
+      discountPrice: p.discountPrice != null ? money(p.discountPrice) : null,
+      stock: p.stock,
+      status: p.status,
+      updatedAt: p.updatedAt.toISOString(),
+    })),
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  5. Customers report                                                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Customer behaviour: top spenders + new sign-ups in the window.
+ * Cancelled orders are excluded from the spend numbers.
+ */
+async function buildCustomersReport(window: Window, limit: number) {
+  const [newSignups, orderAggregates, totalUsers] = await Promise.all([
+    prisma.user.count({
+      where: { createdAt: { gte: window.from, lte: window.to } },
+    }),
+    prisma.order.groupBy({
+      by: ["userId"],
+      where: {
+        createdAt: { gte: window.from, lte: window.to },
+        status: { not: "CANCELLED" },
+      },
+      _sum: { totalAmount: true },
+      _count: { _all: true },
+      _max: { createdAt: true },
+    }),
+    prisma.user.count(),
+  ]);
+
+  if (orderAggregates.length === 0) {
+    return {
+      summary: {
+        totalUsers,
+        newSignupsInWindow: newSignups,
+        activeBuyers: 0,
+        totalRevenue: 0,
+        avgRevenuePerBuyer: 0,
+      },
+      rows: [],
+    };
+  }
+
+  const userIds = orderAggregates.map((row) => row.userId);
+  const users = await prisma.user.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, name: true, email: true, phone: true, city: true, role: true },
+  });
+  const userMap = new Map(users.map((u) => [u.id, u]));
+
+  const rows = orderAggregates
+    .map((row) => {
+      const user = userMap.get(row.userId);
+      return {
+        userId: row.userId,
+        name: user?.name ?? "(deleted user)",
+        email: user?.email ?? null,
+        phone: user?.phone ?? null,
+        city: user?.city ?? null,
+        role: user?.role ?? "USER",
+        ordersCount: row._count._all,
+        totalSpend: money(row._sum.totalAmount ?? 0),
+        lastOrderAt: row._max.createdAt
+          ? row._max.createdAt.toISOString()
+          : null,
+      };
+    })
+    .sort((a, b) => b.totalSpend - a.totalSpend)
+    .slice(0, limit);
+
+  const totalRevenue = money(
+    orderAggregates.reduce((sum, row) => sum + (row._sum.totalAmount ?? 0), 0),
+  );
+
+  return {
+    summary: {
+      totalUsers,
+      newSignupsInWindow: newSignups,
+      activeBuyers: orderAggregates.length,
+      totalRevenue,
+      avgRevenuePerBuyer:
+        orderAggregates.length > 0
+          ? money(totalRevenue / orderAggregates.length)
+          : 0,
+    },
+    rows,
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  6. Categories report                                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Performance by category: products per category, units sold and
+ * revenue earned by category in the window.
+ */
+async function buildCategoriesReport(window: Window, limit: number) {
+  const categories = await prisma.category.findMany({
+    select: {
+      id: true,
+      name: true,
+      status: true,
+      _count: { select: { products: true } },
+    },
+    orderBy: { name: "asc" },
+  });
+
+  // Pull every order item in the window; small-shop catalog so a bulk
+  // fetch is fine. If this grows, switch to a raw SQL aggregate.
+  const items = await prisma.orderItem.findMany({
+    where: {
+      order: {
+        createdAt: { gte: window.from, lte: window.to },
+        status: { not: "CANCELLED" },
+      },
+    },
+    select: {
+      quantity: true,
+      price: true,
+      product: { select: { categoryId: true } },
+    },
+  });
+
+  const aggregate = new Map<string, { units: number; revenue: number }>();
+  for (const item of items) {
+    const key = item.product.categoryId;
+    const bucket = aggregate.get(key) ?? { units: 0, revenue: 0 };
+    bucket.units += item.quantity;
+    bucket.revenue += item.price * item.quantity;
+    aggregate.set(key, bucket);
+  }
+
+  const rows = categories
+    .map((category) => {
+      const stats = aggregate.get(category.id);
+      return {
+        categoryId: category.id,
+        name: category.name,
+        status: category.status,
+        productCount: category._count.products,
+        unitsSold: stats?.units ?? 0,
+        revenue: money(stats?.revenue ?? 0),
+      };
+    })
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, limit);
+
+  const totalRevenue = money(rows.reduce((sum, row) => sum + row.revenue, 0));
+  const totalUnits = rows.reduce((sum, row) => sum + row.unitsSold, 0);
+
+  return {
+    summary: {
+      totalCategories: categories.length,
+      activeCategories: categories.filter((c) => c.status === "ACTIVE").length,
+      unitsSold: totalUnits,
+      revenue: totalRevenue,
+    },
+    rows,
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Public entry                                                              */
+/* -------------------------------------------------------------------------- */
+
+export type ReportPayload = Awaited<ReturnType<typeof buildReport>>;
+
+export async function buildReport(query: ReportQueryInput) {
+  const window = resolveWindow(query);
+  const meta = {
+    type: query.type,
+    from: window.from.toISOString(),
+    to: window.to.toISOString(),
+    generatedAt: new Date().toISOString(),
+    limit: query.limit,
+  };
+
+  switch (query.type) {
+    case "sales":
+      return { meta, sales: await buildSalesReport(window, query.limit) };
+    case "orders":
+      return { meta, orders: await buildOrdersReport(window, query.limit) };
+    case "products":
+      return { meta, products: await buildProductsReport(window, query.limit) };
+    case "inventory":
+      return { meta, inventory: await buildInventoryReport(query.limit) };
+    case "customers":
+      return { meta, customers: await buildCustomersReport(window, query.limit) };
+    case "categories":
+      return {
+        meta,
+        categories: await buildCategoriesReport(window, query.limit),
+      };
+    default:
+      // Should be unreachable thanks to Zod, but keep TS happy.
+      throw new ReportError(400, "Unknown report type.");
+  }
+}

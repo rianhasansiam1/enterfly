@@ -11,6 +11,7 @@ import {
   BarChart3,
   Settings,
   Image as ImageIcon,
+  Mail,
 } from "lucide-react";
 
 export type NavItem = {
@@ -25,6 +26,7 @@ export const ADMIN_NAV: NavItem[] = [
   { href: "/admin/products", label: "Products", icon: Package, badge: "248" },
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag, badge: "32" },
   { href: "/admin/users", label: "Customers", icon: Users },
+  { href: "/admin/messages", label: "Messages", icon: Mail },
   { href: "/admin/categories", label: "Categories", icon: FolderTree },
   { href: "/admin/banners", label: "Banners", icon: ImageIcon },
   { href: "/admin/reports", label: "Reports", icon: BarChart3 },
