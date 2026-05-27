@@ -3,35 +3,6 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import AdminSidebar from "./components/AdminSidebar";
-import AdminHeader from "./components/AdminHeader";
-import { ADMIN_NAV } from "./components/data";
-
-function getPageMeta(pathname: string) {
-  // Pick the deepest matching nav entry so subroutes still resolve.
-  const match = [...ADMIN_NAV]
-    .sort((a, b) => b.href.length - a.href.length)
-    .find((item) =>
-      item.href === "/admin"
-        ? pathname === "/admin"
-        : pathname === item.href || pathname.startsWith(`${item.href}/`),
-    );
-
-  if (!match) {
-    return { title: "Admin", subtitle: "EnterFly Console" };
-  }
-
-  if (match.href === "/admin") {
-    return {
-      title: "Dashboard",
-      subtitle: "Welcome back, here's what's happening today.",
-    };
-  }
-
-  return {
-    title: match.label,
-    subtitle: `Manage ${match.label.toLowerCase()} in your store.`,
-  };
-}
 
 export default function AdminLayout({
   children,
@@ -41,7 +12,6 @@ export default function AdminLayout({
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [prevPath, setPrevPath] = useState(pathname);
-  const meta = getPageMeta(pathname);
 
   // Close the mobile drawer whenever the route changes.
   // Adjusts state during render instead of in an effect to avoid the cascading-render warning.
@@ -65,10 +35,7 @@ export default function AdminLayout({
       <div className="mx-auto flex w-full max-w-7xl gap-6 px-3 py-4 sm:px-4 sm:py-6 lg:px-6">
         <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        <main className="min-w-0 flex-1">
-         
-          {children}
-        </main>
+        <main className="min-w-0 flex-1">{children}</main>
       </div>
     </div>
   );

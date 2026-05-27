@@ -1,17 +1,22 @@
-import { ArrowDownRight, ArrowUpRight, IndianRupee, ShoppingBag, Users, Undo2 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import { DASHBOARD_STATS } from "./data";
-import type { Stat } from "./data";
+"use client";
+
+import {
+  ArrowDownRight,
+  ArrowRight,
+  ArrowUpRight,
+  IndianRupee,
+  ShoppingBag,
+  Undo2,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
+
+import type { DashboardStats, DashboardTrend } from "@/features/admin-dashboard/api";
 import { cn } from "@/lib/utils";
 
-const ICONS: Record<string, LucideIcon> = {
-  revenue: IndianRupee,
-  orders: ShoppingBag,
-  customers: Users,
-  refunds: Undo2,
-};
+type Accent = "violet" | "emerald" | "amber" | "indigo";
 
-const ACCENT_STYLES: Record<Stat["accent"], { ring: string; tile: string; icon: string }> = {
+const ACCENT_STYLES: Record<Accent, { ring: string; tile: string; icon: string }> = {
   violet: {
     ring: "from-violet-500/30 to-indigo-500/20",
     tile: "bg-violet-100 text-violet-700",
@@ -34,59 +39,178 @@ const ACCENT_STYLES: Record<Stat["accent"], { ring: string; tile: string; icon: 
   },
 };
 
-export default function StatCards() {
+type CardConfig = {
+  id: keyof DashboardStats;
+  label: string;
+  hint: string;
+  accent: Accent;
+  icon: LucideIcon;
+  format: (value: number) => string;
+  /**
+   * Some metrics (e.g. cancellations) are healthier when going down.
+   * `up`/`down`/`flat` is computed by the service so the card just
+   * needs to know which direction to colour as positive.
+   */
+  positiveTrend?: DashboardTrend;
+};
+
+function formatBdt(value: number): string {
+  return `BDT ${Math.round(value).toLocaleString()}`;
+}
+
+function formatCount(value: number): string {
+  return value.toLocaleString();
+}
+
+const CARDS: readonly CardConfig[] = [
+  {
+    id: "revenue",
+    label: "Revenue (this month)",
+    hint: "vs last month",
+    accent: "violet",
+    icon: IndianRupee,
+    format: formatBdt,
+    positiveTrend: "up",
+  },
+  {
+    id: "orders",
+    label: "Orders (this month)",
+    hint: "vs last month",
+    accent: "indigo",
+    icon: ShoppingBag,
+    format: formatCount,
+    positiveTrend: "up",
+  },
+  {
+    id: "customers",
+    label: "Customers",
+    hint: "new sign-ups vs last month",
+    accent: "emerald",
+    icon: Users,
+    format: formatCount,
+    positiveTrend: "up",
+  },
+  {
+    id: "cancellations",
+    label: "Cancellations",
+    hint: "vs last month",
+    accent: "amber",
+    icon: Undo2,
+    format: formatBdt,
+    positiveTrend: "down",
+  },
+];
+
+type StatCardsProps = {
+  stats: DashboardStats | null;
+  loading?: boolean;
+};
+
+export default function StatCards({ stats, loading }: StatCardsProps) {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {DASHBOARD_STATS.map((stat) => {
-        const Icon = ICONS[stat.id] ?? ShoppingBag;
-        const styles = ACCENT_STYLES[stat.accent];
-        const TrendIcon = stat.trend === "up" ? ArrowUpRight : ArrowDownRight;
-
+      {CARDS.map((card) => {
+        const stat = stats?.[card.id] ?? null;
         return (
-          <article
-            key={stat.id}
-            className="group relative overflow-hidden rounded-2xl border border-violet-100 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
-          >
-            <div
-              aria-hidden
-              className={cn(
-                "pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-linear-to-br opacity-60 blur-2xl transition-opacity duration-300 group-hover:opacity-100",
-                styles.ring,
-              )}
-            />
-            <div className="relative flex items-start justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  {stat.label}
-                </p>
-                <p className="mt-2 text-2xl font-extrabold text-gray-900">
-                  {stat.value}
-                </p>
-              </div>
-              <div className={cn("rounded-xl p-2.5", styles.tile)}>
-                <Icon className={cn("h-5 w-5", styles.icon)} />
-              </div>
-            </div>
-
-            <div className="relative mt-3 flex items-center gap-2">
-              <span
-                className={cn(
-                  "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-bold",
-                  stat.trend === "up"
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-red-50 text-red-600",
-                )}
-              >
-                <TrendIcon className="h-3 w-3" />
-                {stat.delta}
-              </span>
-              <span className="text-[11px] font-medium text-gray-500">
-                {stat.hint}
-              </span>
-            </div>
-          </article>
+          <StatCard
+            key={card.id}
+            card={card}
+            stat={stat}
+            loading={loading || !stats}
+          />
         );
       })}
     </div>
   );
+}
+
+type StatCardProps = {
+  card: CardConfig;
+  stat: DashboardStats[keyof DashboardStats] | null;
+  loading: boolean;
+};
+
+function StatCard({ card, stat, loading }: StatCardProps) {
+  const styles = ACCENT_STYLES[card.accent];
+  const Icon = card.icon;
+
+  const TrendIcon =
+    stat?.trend === "down"
+      ? ArrowDownRight
+      : stat?.trend === "up"
+        ? ArrowUpRight
+        : ArrowRight;
+
+  const positive = stat
+    ? stat.trend === "flat"
+      ? null
+      : stat.trend === card.positiveTrend
+    : null;
+
+  const deltaPill =
+    positive === null
+      ? "bg-gray-100 text-gray-600"
+      : positive
+        ? "bg-emerald-50 text-emerald-700"
+        : "bg-red-50 text-red-600";
+
+  return (
+    <article className="group relative overflow-hidden rounded-2xl border border-violet-100 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+      <div
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-linear-to-br opacity-60 blur-2xl transition-opacity duration-300 group-hover:opacity-100",
+          styles.ring,
+        )}
+      />
+      <div className="relative flex items-start justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            {card.label}
+          </p>
+          {loading ? (
+            <div className="mt-2 h-8 w-32 animate-pulse rounded-md bg-violet-50" />
+          ) : (
+            <p className="mt-2 text-2xl font-extrabold text-gray-900">
+              {stat ? card.format(stat.current) : "—"}
+            </p>
+          )}
+        </div>
+        <div className={cn("rounded-xl p-2.5", styles.tile)}>
+          <Icon className={cn("h-5 w-5", styles.icon)} />
+        </div>
+      </div>
+
+      <div className="relative mt-3 flex items-center gap-2">
+        {loading ? (
+          <span className="h-4 w-24 animate-pulse rounded-full bg-violet-50" />
+        ) : stat ? (
+          <span
+            className={cn(
+              "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-bold",
+              deltaPill,
+            )}
+          >
+            <TrendIcon className="h-3 w-3" />
+            {formatDelta(stat.delta)}
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold text-gray-500">
+            —
+          </span>
+        )}
+        <span className="text-[11px] font-medium text-gray-500">
+          {card.hint}
+        </span>
+      </div>
+    </article>
+  );
+}
+
+function formatDelta(delta: number): string {
+  if (!Number.isFinite(delta)) return "—";
+  const sign = delta > 0 ? "+" : "";
+  // Trim a trailing .0 so 12.0% renders as 12%.
+  const rounded = Math.round(delta * 10) / 10;
+  return `${sign}${rounded}%`;
 }

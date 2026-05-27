@@ -87,18 +87,6 @@ export default function AdminSidebar({ open, onClose }: Props) {
                       />
                       {item.label}
                     </span>
-                    {item.badge && (
-                      <span
-                        className={cn(
-                          "rounded-full px-2 py-0.5 text-[10px] font-bold",
-                          active
-                            ? "bg-white/20 text-white"
-                            : "bg-violet-100 text-violet-700",
-                        )}
-                      >
-                        {item.badge}
-                      </span>
-                    )}
                   </Link>
                 </li>
               );
