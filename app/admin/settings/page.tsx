@@ -733,8 +733,8 @@ export default function AdminSettingsPage() {
             </p>
           </div>
 
-          <form onSubmit={handlePromoSubmit} className="flex flex-1 flex-col">
-            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+          <form onSubmit={handlePromoSubmit} className="flex min-h-0 flex-1 flex-col">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Code" required>
                   <input

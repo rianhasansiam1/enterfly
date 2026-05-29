@@ -80,6 +80,50 @@ function mapApiProduct(item: ApiProduct): Product {
   };
 }
 
+/**
+ * Lightweight search used by the navbar live dropdown.
+ *
+ * Hits the same public listing endpoint with `search` + `status=ACTIVE`,
+ * but only pulls the first small page since the dropdown shows a preview.
+ * Accepts an `AbortSignal` so callers can cancel stale keystrokes.
+ */
+export async function searchProductsFromApi(
+  query: string,
+  options?: { limit?: number; signal?: AbortSignal },
+): Promise<Product[]> {
+  const trimmed = query.trim();
+  if (trimmed.length === 0) return [];
+
+  const params = new URLSearchParams({
+    status: "ACTIVE",
+    search: trimmed,
+    page: "1",
+    pageSize: String(options?.limit ?? 6),
+    sort: "latest",
+  });
+
+  const response = await fetch(`/api/products?${params.toString()}`, {
+    signal: options?.signal,
+  });
+
+  let payload: unknown;
+  try {
+    payload = (await response.json()) as unknown;
+  } catch {
+    throw new Error("Failed to search products.");
+  }
+  if (!response.ok) {
+    throw new Error(readApiError(payload, "Failed to search products."));
+  }
+
+  const envelope = payload as ApiResponse<ApiProduct[]>;
+  if (!envelope.success || !Array.isArray(envelope.data)) {
+    throw new Error("Products API returned an unexpected response.");
+  }
+
+  return envelope.data.map(mapApiProduct);
+}
+
 export async function fetchAllActiveProductsFromApi(): Promise<Product[]> {
   let page = 1;
   let totalPages = 1;

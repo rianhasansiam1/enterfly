@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
-  Image as ImageIcon,
   Mail,
   MapPin,
   Phone,
@@ -24,6 +23,7 @@ import {
 } from "@/lib/auth/policy";
 
 import FloatField from "@/app/(auth)/_components/FloatField";
+import ImageUploader from "@/components/ui/ImageUploader";
 
 type SettingsTabProps = {
   user: ProfileUser;
@@ -223,17 +223,14 @@ export default function SettingsTab({ user, onUpdated }: SettingsTabProps) {
           valid={validity.city}
         />
         <div className="sm:col-span-2">
-          <FloatField
-            icon={<ImageIcon className="h-4 w-4" />}
-            label="Profile picture URL"
+          <ImageUploader
+            label="Profile picture"
             value={form.image}
             onChange={handleChange("image")}
-            autoComplete="url"
-            maxLength={2048}
-            valid={validity.image}
+            disabled={submitState.status === "saving"}
           />
           <p className="mt-1 text-[11px] text-gray-500">
-            Paste a public image URL. Leave blank to use your initials.
+            Upload a photo, or leave blank to use your initials.
           </p>
         </div>
       </div>

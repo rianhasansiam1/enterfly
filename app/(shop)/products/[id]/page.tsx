@@ -127,18 +127,18 @@ export default async function ProductDetailsPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-3 py-6 sm:px-4 lg:px-6">
         <Breadcrumbs items={breadcrumbItems} />
 
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-4">
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-12 gap-6">
+          <div className="md:col-span-6 lg:col-span-4">
             <ProductGallery images={galleryImages} productName={product.name} />
 
            
           </div>
 
-          <div className="lg:col-span-5">
-            <div className="bg-white rounded-2xl p-6 border border-gray-100">
+          <div className="md:col-span-6 lg:col-span-5">
+            <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100">
               <ProductInfo
                 name={product.name}
                 price={price}
@@ -158,7 +158,7 @@ export default async function ProductDetailsPage({ params }: Props) {
             </div>
           </div>
 
-          <div className="lg:col-span-3">
+          <div className="md:col-span-12 lg:col-span-3">
             <RecentProducts products={recentProducts} title="Recent Product" />
           </div>
         </div>

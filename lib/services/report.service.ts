@@ -478,7 +478,9 @@ async function buildCustomersReport(window: Window, limit: number) {
     };
   }
 
-  const userIds = orderAggregates.map((row) => row.userId);
+  const userIds = orderAggregates
+    .map((row) => row.userId)
+    .filter((id): id is string => id !== null);
   const users = await prisma.user.findMany({
     where: { id: { in: userIds } },
     select: { id: true, name: true, email: true, phone: true, city: true, role: true },
@@ -487,7 +489,7 @@ async function buildCustomersReport(window: Window, limit: number) {
 
   const rows = orderAggregates
     .map((row) => {
-      const user = userMap.get(row.userId);
+      const user = row.userId ? userMap.get(row.userId) : undefined;
       return {
         userId: row.userId,
         name: user?.name ?? "(deleted user)",

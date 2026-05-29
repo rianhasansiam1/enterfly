@@ -42,11 +42,11 @@ const ReviewSection = ({
       </h2>
 
       {/* Rating Overview */}
-      <div className="bg-white rounded-2xl border border-violet-100 p-6">
-        <div className="grid md:grid-cols-2 gap-8">
+      <div className="bg-white rounded-2xl border border-violet-100 p-4 sm:p-6">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-8">
           {/* Average Rating */}
           <div className="text-center md:text-left md:border-r md:border-violet-100 md:pr-8">
-            <div className="text-5xl font-bold text-violet-700 mb-2">
+            <div className="text-4xl sm:text-5xl font-bold text-violet-700 mb-2">
               {averageRating.toFixed(1)}
             </div>
             <div className="flex items-center justify-center md:justify-start gap-1 mb-2">

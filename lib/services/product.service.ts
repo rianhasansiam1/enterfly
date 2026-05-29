@@ -31,7 +31,16 @@ function buildWhere(query: ProductQueryInput): Prisma.ProductWhereInput {
   const where: Prisma.ProductWhereInput = {};
 
   if (query.search) {
-    where.name = { contains: query.search, mode: "insensitive" };
+    // Match the product name OR its category name so a search like
+    // "electronics" surfaces every product in that category.
+    where.OR = [
+      { name: { contains: query.search, mode: "insensitive" } },
+      {
+        category: {
+          name: { contains: query.search, mode: "insensitive" },
+        },
+      },
+    ];
   }
   if (query.categoryId) where.categoryId = query.categoryId;
   if (query.status) where.status = query.status;

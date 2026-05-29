@@ -28,6 +28,8 @@ import type {
 } from "@/features/admin-products/api";
 import { readApiError } from "@/features/http/api-envelope";
 import { cn } from "@/lib/utils";
+import ImageUploader from "@/components/ui/ImageUploader";
+import MultiImageUploader from "@/components/ui/MultiImageUploader";
 
 export default function AdminProductsPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -590,8 +592,8 @@ export default function AdminProductsPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
-            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+          <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
               <Field label="Name" required>
                 <input
                   value={form.name}
@@ -689,21 +691,21 @@ export default function AdminProductsPage() {
                 />
               </Field>
 
-              <Field label="Primary Image URL">
-                <input
+              <Field label="Primary Image">
+                <ImageUploader
                   value={form.image}
-                  onChange={(event) => setForm((prev) => ({ ...prev, image: event.target.value }))}
-                  className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
-                  placeholder="https://..."
+                  onChange={(url) => setForm((prev) => ({ ...prev, image: url }))}
+                  disabled={isSubmitting}
                 />
               </Field>
 
-              <Field label="Extra Image URLs">
-                <textarea
-                  value={form.images}
-                  onChange={(event) => setForm((prev) => ({ ...prev, images: event.target.value }))}
-                  className="min-h-24 w-full rounded-xl border border-violet-200 px-3 py-2 text-sm outline-none transition focus:border-violet-500"
-                  placeholder="One per line or comma-separated"
+              <Field label="Extra Images">
+                <MultiImageUploader
+                  value={normalizeImagesInput(form.images)}
+                  onChange={(urls) =>
+                    setForm((prev) => ({ ...prev, images: urls.join("\n") }))
+                  }
+                  disabled={isSubmitting}
                 />
               </Field>
 

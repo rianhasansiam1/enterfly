@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { Menu, ShieldCheck } from "lucide-react";
 import AdminSidebar from "./components/AdminSidebar";
 
 export default function AdminLayout({
@@ -35,7 +36,29 @@ export default function AdminLayout({
       <div className="mx-auto flex w-full max-w-7xl gap-6 px-3 py-4 sm:px-4 sm:py-6 lg:px-6">
         <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="min-w-0 flex-1">
+          {/* Mobile top bar — exposes the off-canvas sidebar toggle below lg. */}
+          <div className="mb-4 flex items-center gap-3 rounded-2xl border border-violet-100 bg-white/85 px-3 py-2.5 shadow-sm backdrop-blur-md lg:hidden">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open admin menu"
+              className="rounded-lg p-2 text-gray-700 transition-colors duration-200 hover:bg-violet-50 hover:text-violet-700"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-linear-to-r from-violet-600 to-indigo-700">
+                <ShieldCheck className="h-4 w-4 text-white" />
+              </div>
+              <span className="bg-linear-to-r from-violet-600 to-indigo-700 bg-clip-text text-base font-extrabold text-transparent">
+                Admin Panel
+              </span>
+            </div>
+          </div>
+
+          {children}
+        </main>
       </div>
     </div>
   );

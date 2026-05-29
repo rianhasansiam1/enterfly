@@ -79,6 +79,7 @@ import {
   type CategoryOption,
 } from "@/features/admin-products/api";
 import { cn } from "@/lib/utils";
+import ImageUploader from "@/components/ui/ImageUploader";
 
 const STATUS_BADGE: Record<BannerStatus, string> = {
   ACTIVE: "bg-emerald-50 text-emerald-700 ring-emerald-200",
@@ -682,8 +683,8 @@ export default function AdminBannersPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
-            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+          <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
               {editing?.kind === "carousel" && (
                 <CarouselFormFields
                   form={carouselForm}
@@ -1150,12 +1151,10 @@ function CarouselFormFields({
 
   return (
     <>
-      <Field label="Image URL" required>
-        <input
+      <Field label="Image" required>
+        <ImageUploader
           value={form.image}
-          onChange={(e) => update("image", e.target.value)}
-          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
-          placeholder="https://..."
+          onChange={(url) => update("image", url)}
         />
       </Field>
       <div className="grid grid-cols-2 gap-3">
@@ -1285,12 +1284,10 @@ function CategoryBannerFormFields({
           ))}
         </select>
       </Field>
-      <Field label="Image URL" required>
-        <input
+      <Field label="Image" required>
+        <ImageUploader
           value={form.image}
-          onChange={(e) => update("image", e.target.value)}
-          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
-          placeholder="https://..."
+          onChange={(url) => update("image", url)}
         />
       </Field>
       <div className="grid grid-cols-2 gap-3">
@@ -1366,12 +1363,10 @@ function DealFormFields({
 
   return (
     <>
-      <Field label="Image URL" required>
-        <input
+      <Field label="Image" required>
+        <ImageUploader
           value={form.image}
-          onChange={(e) => update("image", e.target.value)}
-          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
-          placeholder="https://..."
+          onChange={(url) => update("image", url)}
         />
       </Field>
       <div className="grid grid-cols-2 gap-3">
@@ -1451,12 +1446,10 @@ function PromoFormFields({
 
   return (
     <>
-      <Field label="Image URL" required>
-        <input
+      <Field label="Image" required>
+        <ImageUploader
           value={form.image}
-          onChange={(e) => update("image", e.target.value)}
-          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
-          placeholder="https://..."
+          onChange={(url) => update("image", url)}
         />
       </Field>
       <div className="grid grid-cols-2 gap-3">

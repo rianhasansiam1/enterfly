@@ -1,7 +1,8 @@
 "use client";
 
-import { Bell, Menu, Search, User } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Bell, Menu, User } from "lucide-react";
+
+import SearchBar from "@/components/layout/SearchBar";
 
 type Props = {
   title: string;
@@ -32,15 +33,11 @@ export default function AdminHeader({ title, subtitle, onOpenSidebar }: Props) {
         )}
       </div>
 
-      <div className="ml-auto hidden w-64 md:block">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-          <Input
-            type="search"
-            placeholder="Search orders, users…"
-            className="h-9 rounded-xl border-violet-200 bg-white pl-9 text-sm"
-          />
-        </div>
+      <div className="ml-auto hidden w-72 md:block">
+        <SearchBar
+          placeholder="Search products, categories…"
+          inputClassName="h-9 rounded-xl border-violet-200 bg-white"
+        />
       </div>
 
       <button

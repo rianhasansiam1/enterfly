@@ -39,6 +39,7 @@ import {
   type CategoryStatus,
 } from "@/features/admin-categories/api";
 import { cn } from "@/lib/utils";
+import ImageUploader from "@/components/ui/ImageUploader";
 
 const STATUS_BADGE: Record<CategoryStatus, string> = {
   ACTIVE: "bg-emerald-50 text-emerald-700 ring-emerald-200",
@@ -539,8 +540,8 @@ export default function AdminCategoriesPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
-            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+          <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
               <Field label="Name" required>
                 <input
                   value={form.name}
@@ -571,14 +572,13 @@ export default function AdminCategoriesPage() {
                 </select>
               </Field>
 
-              <Field label="Image URL">
-                <input
+              <Field label="Image">
+                <ImageUploader
                   value={form.image}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, image: event.target.value }))
+                  onChange={(url) =>
+                    setForm((prev) => ({ ...prev, image: url }))
                   }
-                  className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
-                  placeholder="https://..."
+                  disabled={isSubmitting}
                 />
               </Field>
 

@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Search,
   Menu,
   User,
   ShoppingCart,
@@ -9,7 +8,6 @@ import {
   MapPin,
   Store,
   Info,
-  X,
   LogIn,
   UserPlus,
   LogOut,
@@ -22,7 +20,6 @@ import { useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +34,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import SearchBar from "@/components/layout/SearchBar";
 
 type MenuItem = {
   href: string;
@@ -67,7 +65,6 @@ export default function Navbar() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [query, setQuery] = useState("");
 
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -161,28 +158,7 @@ export default function Navbar() {
         </nav>
 
         {/* DESKTOP SEARCH */}
-        <div className="mx-4 hidden max-w-lg flex-1 md:flex">
-          <div className="relative w-full">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
-            <Input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search products, stores, categories..."
-              className="h-10 rounded-xl border-violet-500/40 bg-white/60 pl-11 pr-9 text-sm text-gray-800 focus-visible:bg-white focus-visible:border-violet-500 focus-visible:ring-violet-200"
-            />
-            {query && (
-              <button
-                type="button"
-                aria-label="Clear search"
-                onClick={() => setQuery("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 transition-colors duration-200 hover:bg-white/70"
-              >
-                <X className="h-4 w-4 text-gray-600" />
-              </button>
-            )}
-          </div>
-        </div>
+        <SearchBar className="mx-4 hidden max-w-lg flex-1 md:block" />
 
         {/* RIGHT ICONS */}
         <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
@@ -385,26 +361,11 @@ export default function Navbar() {
 
           {/* Mobile Search */}
           <div className="border-b border-violet-200 bg-white/40 px-4 py-3">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-              <Input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search..."
-                className="rounded-xl border-violet-300 bg-white pl-10 pr-9 text-sm"
-              />
-              {query && (
-                <button
-                  type="button"
-                  aria-label="Clear search"
-                  onClick={() => setQuery("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 transition-colors duration-200 hover:bg-gray-100"
-                >
-                  <X className="h-3.5 w-3.5 text-gray-600" />
-                </button>
-              )}
-            </div>
+            <SearchBar
+              placeholder="Search..."
+              inputClassName="rounded-xl border-violet-300 bg-white"
+              onNavigate={() => setMobileMenuOpen(false)}
+            />
           </div>
 
           <nav className="flex flex-col gap-1 p-3">

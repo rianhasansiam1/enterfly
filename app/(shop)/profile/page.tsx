@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import ProfileClient from "./components/ProfileClient";
 
@@ -14,8 +15,14 @@ export const metadata: Metadata = {
  *
  * Server wrapper only — every tab below this needs the live session
  * and Redux stores (cart, wishlist), so the bulk of the page is a
- * client component.
+ * client component. `ProfileClient` reads `useSearchParams`, so it is
+ * wrapped in Suspense to satisfy the CSR bailout requirement during
+ * static prerendering.
  */
 export default function ProfilePage() {
-  return <ProfileClient />;
+  return (
+    <Suspense fallback={null}>
+      <ProfileClient />
+    </Suspense>
+  );
 }

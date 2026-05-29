@@ -121,13 +121,14 @@ const usageLimit = z
 function refineDiscountRules<T extends z.ZodTypeAny>(schema: T) {
   return schema
     .refine(
-      (data: {
-        discountType?: "FLAT" | "PERCENT";
-        value?: number;
-      }) => {
-        if (data.discountType !== "PERCENT") return true;
-        if (data.value === undefined) return true;
-        return data.value >= 0 && data.value <= 100;
+      (data) => {
+        const value = data as {
+          discountType?: "FLAT" | "PERCENT";
+          value?: number;
+        };
+        if (value.discountType !== "PERCENT") return true;
+        if (value.value === undefined) return true;
+        return value.value >= 0 && value.value <= 100;
       },
       {
         message: "Percent discount must be between 0 and 100.",
@@ -135,10 +136,11 @@ function refineDiscountRules<T extends z.ZodTypeAny>(schema: T) {
       },
     )
     .refine(
-      (data: { startsAt?: string | null; endsAt?: string | null }) => {
-        if (!data.startsAt || !data.endsAt) return true;
-        const start = new Date(data.startsAt);
-        const end = new Date(data.endsAt);
+      (data) => {
+        const range = data as { startsAt?: string | null; endsAt?: string | null };
+        if (!range.startsAt || !range.endsAt) return true;
+        const start = new Date(range.startsAt);
+        const end = new Date(range.endsAt);
         if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
           return true;
         }

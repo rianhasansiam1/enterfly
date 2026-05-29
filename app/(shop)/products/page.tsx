@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 
 import FilterSidebar from "./components/FilterSidebar";
@@ -37,7 +38,17 @@ const INITIAL_PRICE_BOUNDS: [number, number] = [0, 5000];
 const DEFAULT_PAGE_SIZE = 12;
 
 export default function AllProductsPage() {
+  return (
+    <Suspense fallback={null}>
+      <AllProductsPageInner />
+    </Suspense>
+  );
+}
+
+function AllProductsPageInner() {
   const dispatch = useDispatch<AppDispatch>();
+  const searchParams = useSearchParams();
+  const searchTerm = (searchParams.get("search") ?? "").trim().toLowerCase();
   const productsFromStore = useSelector(
     (state: RootState) => state.allProducts.items,
   );
@@ -158,6 +169,12 @@ export default function AllProductsPage() {
     const list = products.filter((product) => {
       const finalPrice = getFinalPrice(product);
 
+      const matchSearch =
+        searchTerm.length === 0 ||
+        product.name.toLowerCase().includes(searchTerm) ||
+        product.category.toLowerCase().includes(searchTerm) ||
+        (product.brand?.toLowerCase().includes(searchTerm) ?? false);
+
       const matchCategory =
         filters.categories.length === 0 ||
         filters.categories.includes(product.category);
@@ -176,6 +193,7 @@ export default function AllProductsPage() {
       const matchStock = !filters.inStockOnly || product.inStock;
 
       return (
+        matchSearch &&
         matchCategory &&
         matchBrand &&
         matchPrice &&
@@ -202,10 +220,11 @@ export default function AllProductsPage() {
           return b.reviewCount - a.reviewCount;
       }
     });
-  }, [filters, products, sort]);
+  }, [filters, products, sort, searchTerm]);
 
   const resetKey = [
     sort,
+    searchTerm,
     filters.categories.join("|"),
     filters.brands.join("|"),
     filters.minRating,

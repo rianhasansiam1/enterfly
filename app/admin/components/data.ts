@@ -9,6 +9,7 @@ import {
   Settings,
   Image as ImageIcon,
   Mail,
+  ShieldCheck,
 } from "lucide-react";
 
 /**
@@ -29,6 +30,7 @@ export const ADMIN_NAV: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
+  { href: "/admin/courier", label: "Courier Check", icon: ShieldCheck },
   { href: "/admin/users", label: "Customers", icon: Users },
   { href: "/admin/messages", label: "Messages", icon: Mail },
   { href: "/admin/categories", label: "Categories", icon: FolderTree },
