@@ -25,9 +25,9 @@ const PAGE_MARGIN = 14;
 
 const STORE_INFO = {
   name: "EnterFly",
-  tagline: "Local Marketplace · enterfly.local",
-  address: "Dhaka, Bangladesh",
-  email: "support@enterfly.local",
+  tagline: "Local Marketplace · enterfly26@gmail.com",
+  address: "Mirpur, Dhaka, Bangladesh",
+  email: "enterfly26@gmail.com",
 };
 
 type Doc = jsPDF;

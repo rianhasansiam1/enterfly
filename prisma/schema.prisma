@@ -6,30 +6,25 @@ datasource db {
   provider = "postgresql"
 }
 
-/**
- * --------------------------------------------------------------------------
- */
-/**
- * Users & auth
- */
-/**
- * --------------------------------------------------------------------------
- */
 
+
+
+
+
+
+ //Users & auth
 model User {
   id       String  @id @default(cuid())
   name     String
   email    String  @unique
-  password String? // nullable: Google OAuth users never set a password
+  password String? 
   phone    String?
   city     String?
-  image    String? // profile picture URL (e.g. Google avatar)
+  image    String? 
   role     Role    @default(USER)
 
-  // How this row was first created (CREDENTIAL or GOOGLE). Immutable.
+  
   provider AuthProvider @default(CREDENTIAL)
-
-  // Captured when the user accepts the Terms & Privacy at registration.
   termsAcceptedAt DateTime?
 
   orders          Order[]
@@ -37,6 +32,7 @@ model User {
   wishlists       Wishlist[]
   addresses       Address[]
   promoCodeUsages PromoCodeUsage[]
+  reviews         Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -52,16 +48,12 @@ enum AuthProvider {
   GOOGLE
 }
 
-/**
- * --------------------------------------------------------------------------
- */
-/**
- * Catalog
- */
-/**
- * --------------------------------------------------------------------------
- */
 
+
+
+
+
+ // Catalog
 model Category {
   id          String         @id @default(cuid())
   name        String
@@ -100,6 +92,7 @@ model Product {
   cartItems  CartItem[]
   wishlists  Wishlist[]
   orderItems OrderItem[]
+  reviews    Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -305,6 +298,93 @@ model OrderItem {
   @@index([orderId])
   @@index([productId])
   @@index([variantId])
+}
+
+/**
+ * --------------------------------------------------------------------------
+ */
+/**
+ * Reviews
+ */
+/**
+ * --------------------------------------------------------------------------
+ */
+
+// Product reviews. Two origins (see `source`):
+//   - CUSTOMER: written by a logged-in user who received the product
+//     (the create path enforces a DELIVERED order for that product), so
+//     `userId` is set and `verified` is true.
+//   - ADMIN: seeded by an admin for a product; `userId` is null and the
+//     display name is captured in `authorName`.
+// `userId` is SET NULL on user delete so the review (and its rating)
+// survives account removal. `authorName` snapshots the display name so
+// the UI never needs to join back to User.
+model Review {
+  id String @id @default(cuid())
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  authorName String // snapshot of the reviewer's display name
+  rating     Int // 1..5
+  title      String?
+  comment    String?
+
+  source   ReviewSource @default(CUSTOMER)
+  verified Boolean      @default(false) // true when tied to a delivered order
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // One review per user per product. Admin-seeded rows keep userId null;
+  // Postgres treats NULLs as distinct so many admin rows per product are
+  // allowed, while a real user is capped at one review per product.
+  @@unique([userId, productId])
+  @@index([productId, createdAt])
+  @@index([rating])
+}
+
+enum ReviewSource {
+  CUSTOMER
+  ADMIN
+}
+
+/**
+ * --------------------------------------------------------------------------
+ */
+/**
+ * Testimonials
+ */
+/**
+ * --------------------------------------------------------------------------
+ */
+
+// Admin-managed shopper testimonials shown in the "Loved by shoppers"
+// section on the About page. Independent from product `Review`s: these
+// are curated marketing quotes, not tied to a user or product. The
+// storefront reads only ACTIVE rows, ordered by `position` then newest.
+model Testimonial {
+  id       String            @id @default(cuid())
+  name     String
+  location String?
+  image    String? // hosted avatar URL (optional)
+  rating   Int               @default(5) // 1..5
+  text     String
+  position Int               @default(0)
+  status   TestimonialStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, position])
+}
+
+enum TestimonialStatus {
+  ACTIVE
+  INACTIVE
 }
 
 /**

@@ -97,7 +97,7 @@ const Footer = () => {
               <h5 className="text-sm sm:text-base font-black text-gray-800 mb-2 sm:mb-3">Keep In Touch</h5>
               <div className="flex gap-2">
                 <Link
-                  href="#"
+                  href="https://www.facebook.com/enterfly26"
                   aria-label="Facebook"
                   className="w-8 h-8 sm:w-10 sm:h-10 bg-[#3B5998] rounded flex items-center justify-center hover:opacity-80 transition"
                 >

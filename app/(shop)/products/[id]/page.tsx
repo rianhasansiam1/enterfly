@@ -19,6 +19,7 @@ import ProductInfo from "./components/ProductInfo";
 import PromoBanners from "./components/PromoBanners";
 import RecentProducts from "./components/RecentProducts";
 import RelatedProducts from "./components/RelatedProducts";
+import ReviewSection from "./components/ReviewSection";
 
 const FALLBACK_PRODUCT_IMAGE =
   "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400";
@@ -176,6 +177,10 @@ export default async function ProductDetailsPage({ params }: Props) {
 
         <div className="mt-10">
           <DealsCarousel deals={dealBanners} title="Black Friday Deals" />
+        </div>
+
+        <div className="mt-10" id="reviews">
+          <ReviewSection productId={product.id} />
         </div>
 
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-12 gap-6 pb-12">

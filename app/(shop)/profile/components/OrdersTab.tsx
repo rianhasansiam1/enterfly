@@ -10,6 +10,7 @@ import {
   Package,
   RotateCcw,
   ShoppingBag,
+  Star,
   XCircle,
 } from "lucide-react";
 
@@ -270,6 +271,15 @@ function OrderRow({
   const previewItems = order.items.slice(0, 3);
   const moreItems = order.items.length - previewItems.length;
   const canCancel = CANCELLABLE_STATUSES.has(order.status);
+  // After delivery, point the customer at the first ordered product so
+  // they can leave a review on its detail page.
+  const reviewableProductId =
+    order.status === "DELIVERED"
+      ? order.items.find((item) => item.product?.id ?? item.productId)
+          ?.product?.id ??
+        order.items.find((item) => item.productId)?.productId ??
+        null
+      : null;
 
   return (
     <li className="overflow-hidden rounded-3xl border border-violet-100 bg-white shadow-sm">
@@ -351,6 +361,14 @@ function OrderRow({
                 <XCircle className="h-3.5 w-3.5" />
                 {cancelling ? "Cancelling..." : "Cancel"}
               </button>
+            ) : reviewableProductId ? (
+              <Link
+                href={`/products/${reviewableProductId}#reviews`}
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-linear-to-r from-amber-500 to-orange-500 px-3 text-xs font-bold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <Star className="h-3.5 w-3.5" />
+                Review
+              </Link>
             ) : (
               <Link
                 href="/products"

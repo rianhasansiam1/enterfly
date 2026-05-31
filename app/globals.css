@@ -128,3 +128,33 @@
    
   }
 }
+
+/*
+ * Testimonials marquee — continuous left-to-right scroll for the About
+ * page "Loved by shoppers" section when there are more than 3 reviews.
+ * The track holds two copies of the list; translating by -50% loops
+ * seamlessly. Pauses on hover and respects reduced-motion.
+ */
+@keyframes testimonial-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.testimonial-marquee-track {
+  animation: testimonial-marquee var(--marquee-duration, 40s) linear infinite;
+  width: max-content;
+}
+
+.testimonial-marquee:hover .testimonial-marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .testimonial-marquee-track {
+    animation: none;
+  }
+}

@@ -268,7 +268,7 @@ export default function AdminCourierPage() {
               No customers match the current search.
             </div>
           ) : (
-            <div className="max-h-112 overflow-y-auto">
+            <div className="max-h-112 overflow-x-auto overflow-y-auto">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 bg-violet-50 text-left text-xs uppercase tracking-wider text-violet-700">
                   <tr>

@@ -4,19 +4,9 @@ import { MapPin, Navigation, Building2 } from "lucide-react";
 
 const offices = [
   {
-    city: "Mumbai (HQ)",
-    address: "Marine Lines, Mumbai, Maharashtra 400002",
-    phone: "+91 99999 99999",
-  },
-  {
-    city: "Bengaluru",
-    address: "Indiranagar, Bengaluru, Karnataka 560038",
-    phone: "+91 88888 88888",
-  },
-  {
-    city: "Delhi",
-    address: "Connaught Place, New Delhi, 110001",
-    phone: "+91 77777 77777",
+    city: "Dhaka (HQ)",
+    address: "Mirpur, Dhaka, Bangladesh",
+    phone: "01307026260",
   },
 ];
 
@@ -46,7 +36,7 @@ export default function ContactMap() {
           <div className="relative h-72 overflow-hidden rounded-3xl shadow-lg ring-1 ring-violet-100 sm:h-80 lg:h-full lg:min-h-[420px]">
             <iframe
               title="EnterFly HQ"
-              src="https://www.google.com/maps?q=Marine+Lines+Mumbai&output=embed"
+              src="https://www.google.com/maps?q=Mirpur+Dhaka&output=embed"
               className="h-full w-full border-0"
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"

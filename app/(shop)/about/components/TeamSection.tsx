@@ -5,20 +5,20 @@ import { Users } from "lucide-react";
 
 const team = [
   {
-    name: "Aarav Mehta",
-    role: "Founder & CEO",
+    name: "Rian Hasan Siam",
+    role: "Head Of IT",
     image:
-      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400",
+      "/images/RianDP.png",
   },
   {
-    name: "Priya Sharma",
-    role: "Head of Product",
+    name: "Moniruzzaman Raju",
+    role: "CEO",
     image:
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400",
+      "/images/raju.jpg",
   },
   {
-    name: "Rohan Kapoor",
-    role: "Engineering Lead",
+    name: "Imtiaz Ahmed",
+    role: "Co Founder",
     image:
       "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400",
   },

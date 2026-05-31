@@ -49,6 +49,8 @@ async function reset() {
   await prisma.promoCode.deleteMany();
   await prisma.contactMessage.deleteMany();
   await prisma.storeSettings.deleteMany();
+  await prisma.review.deleteMany();
+  await prisma.testimonial.deleteMany();
   await prisma.user.deleteMany();
 }
 
@@ -868,6 +870,47 @@ async function seedBanners(categoryBySlug: Map<string, { id: string }>) {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Testimonials (About page "Loved by shoppers")                             */
+/* -------------------------------------------------------------------------- */
+
+async function seedTestimonials() {
+  await prisma.testimonial.createMany({
+    data: [
+      {
+        name: "Sneha Iyer",
+        location: "Mumbai",
+        image:
+          "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200",
+        rating: 5,
+        text: "EnterFly is my go-to for everyday shopping. Same-day delivery from local stores feels like magic, and the prices are unbeatable.",
+        position: 0,
+        status: "ACTIVE",
+      },
+      {
+        name: "Karan Patel",
+        location: "Bengaluru",
+        image:
+          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200",
+        rating: 5,
+        text: "Clean app, real deals, and genuine products. I love that every store is verified. Customer support helped me within minutes.",
+        position: 1,
+        status: "ACTIVE",
+      },
+      {
+        name: "Nidhi Rao",
+        location: "Pune",
+        image:
+          "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=200",
+        rating: 4,
+        text: "The flash sale section keeps me coming back. Quality has been consistent across groceries, fashion, and electronics.",
+        position: 2,
+        status: "ACTIVE",
+      },
+    ],
+  });
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Main                                                                      */
 /* -------------------------------------------------------------------------- */
 
@@ -895,6 +938,9 @@ async function main() {
 
   await seedBanners(categoryBySlug);
   console.log("  ✓ unified banners (CAROUSEL, CATEGORY, TOP, DEAL, PROMO)");
+
+  await seedTestimonials();
+  console.log("  ✓ testimonials (About page)");
 
   console.log("✅ Seed complete.");
 }

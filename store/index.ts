@@ -6,7 +6,9 @@ import adminMessagesReducer from "@/store/slices/admin-messages.slice";
 import adminOrdersReducer from "@/store/slices/admin-orders.slice";
 import adminProductsReducer from "@/store/slices/admin-products.slice";
 import adminReportsReducer from "@/store/slices/admin-reports.slice";
+import adminReviewsReducer from "@/store/slices/admin-reviews.slice";
 import adminSettingsReducer from "@/store/slices/admin-settings.slice";
+import adminTestimonialsReducer from "@/store/slices/admin-testimonials.slice";
 import adminUsersReducer from "@/store/slices/admin-users.slice";
 import allProductsReducer from "@/store/slices/all-products.slice";
 import cartReducer from "@/store/slices/cart.slice";
@@ -27,6 +29,8 @@ export const store = configureStore({
     adminSettings: adminSettingsReducer,
     adminMessages: adminMessagesReducer,
     adminReports: adminReportsReducer,
+    adminReviews: adminReviewsReducer,
+    adminTestimonials: adminTestimonialsReducer,
   },
 });
 

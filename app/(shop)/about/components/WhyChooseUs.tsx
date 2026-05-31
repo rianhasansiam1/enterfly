@@ -1,21 +1,16 @@
 "use client";
 
 import {
-  ShieldCheck,
+ 
   Truck,
   Tag,
   Headphones,
-  RefreshCw,
+ 
   Sparkles,
 } from "lucide-react";
 
 const features = [
-  {
-    icon: ShieldCheck,
-    title: "Verified Stores",
-    desc: "Every merchant on EnterFly is hand-picked and verified for quality and authenticity.",
-    color: "from-violet-500 to-purple-600",
-  },
+  
   {
     icon: Truck,
     title: "Fast Local Delivery",
@@ -34,18 +29,7 @@ const features = [
     desc: "Our friendly support team is always ready to help, day or night.",
     color: "from-emerald-500 to-teal-600",
   },
-  {
-    icon: RefreshCw,
-    title: "Easy Returns",
-    desc: "Hassle-free 7-day returns and refunds on every purchase.",
-    color: "from-indigo-500 to-blue-600",
-  },
-  {
-    icon: Sparkles,
-    title: "Premium Experience",
-    desc: "Beautifully designed shopping flow built for speed and clarity.",
-    color: "from-fuchsia-500 to-pink-600",
-  },
+  
 ];
 
 export default function WhyChooseUs() {
