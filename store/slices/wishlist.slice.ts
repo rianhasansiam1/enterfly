@@ -69,6 +69,10 @@ const wishlistSlice = createSlice({
     setWishlistError(state, action: PayloadAction<string | null>) {
       state.error = action.payload;
     },
+    /** Reset to initial state — used on logout. */
+    resetWishlistState() {
+      return initialState;
+    },
   },
 });
 
@@ -81,6 +85,7 @@ export const {
   setWishlistHydrated,
   setWishlistLoading,
   setWishlistError,
+  resetWishlistState,
 } = wishlistSlice.actions;
 
 export default wishlistSlice.reducer;

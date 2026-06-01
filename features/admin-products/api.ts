@@ -155,12 +155,25 @@ export function parseProductsPayload(payload: unknown): AdminProduct[] {
     const discountPrice = readNumber(row.discountPrice);
     const stock = readNumber(row.stock) ?? 0;
 
-    // color/size live on the primary variant in the serialized payload.
-    const primaryVariant = Array.isArray(row.variants)
-      ? asRecord(row.variants[0])
-      : null;
+    // color comes from the primary variant; size is collected from ALL
+    // variants and joined so the admin edit form shows the full set
+    // (e.g. "S, M, L") that was originally entered.
+    const variantsArr = Array.isArray(row.variants) ? row.variants : [];
+    const primaryVariant = asRecord(variantsArr[0]);
     const color = primaryVariant ? readString(primaryVariant.color) : null;
-    const size = primaryVariant ? readString(primaryVariant.size) : null;
+
+    // Collect unique sizes from all variants, preserving order.
+    const allSizes: string[] = [];
+    const seenSizes = new Set<string>();
+    for (const v of variantsArr) {
+      const vRec = asRecord(v);
+      const s = vRec ? readString(vRec.size) : null;
+      if (s && !seenSizes.has(s)) {
+        seenSizes.add(s);
+        allSizes.push(s);
+      }
+    }
+    const size = allSizes.length > 0 ? allSizes.join(", ") : null;
 
     return {
       id: readString(row.id) ?? "",

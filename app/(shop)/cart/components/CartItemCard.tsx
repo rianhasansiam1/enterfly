@@ -12,11 +12,14 @@ import Image from "next/image";
 import Link from "next/link";
 
 import ColorBadge from "@/components/ui/ColorBadge";
+import { confirm, toast } from "@/lib/feedback";
 
 import QuantityStepper from "./QuantityStepper";
 
 type CartItem = {
   id: string;
+  slug: string;
+  productId: string;
   name: string;
   brand: string;
   image: string;
@@ -56,7 +59,7 @@ export default function CartItemCard({
     <article className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 shadow-sm transition-all duration-300 hover:border-violet-200 hover:shadow-md sm:p-4">
       <div className="flex gap-3 sm:gap-4">
         <Link
-          href={`/products/${item.id}`}
+          href={`/products/${item.slug}`}
           className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-xl bg-gray-50 sm:w-32"
         >
           <Image
@@ -85,7 +88,7 @@ export default function CartItemCard({
                 {item.brand}
               </p>
               <Link
-                href={`/products/${item.id}`}
+                href={`/products/${item.slug}`}
                 className="mt-0.5 line-clamp-2 text-sm font-semibold text-gray-900 hover:text-violet-700 sm:text-base"
               >
                 {item.name}
@@ -158,7 +161,10 @@ export default function CartItemCard({
             <div className="flex items-center gap-1">
               <button
                 type="button"
-                onClick={() => onSaveForLater(item.id)}
+                onClick={() => {
+                  onSaveForLater(item.id);
+                  toast.info("Saved for later");
+                }}
                 className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-gray-600 transition-colors hover:bg-violet-50 hover:text-violet-700"
               >
                 <Bookmark className="h-3.5 w-3.5" />
@@ -167,7 +173,18 @@ export default function CartItemCard({
               </button>
               <button
                 type="button"
-                onClick={() => onRemove(item.id)}
+                onClick={async () => {
+                  const ok = await confirm({
+                    title: "Remove item?",
+                    description: `"${item.name}" will be removed from your cart.`,
+                    confirmLabel: "Remove",
+                    variant: "danger",
+                  });
+                  if (ok) {
+                    onRemove(item.id);
+                    toast.success("Item removed from cart");
+                  }
+                }}
                 aria-label="Remove from cart"
                 className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-rose-600 transition-colors hover:bg-rose-50"
               >

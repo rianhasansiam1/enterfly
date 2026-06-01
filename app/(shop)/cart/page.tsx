@@ -36,21 +36,13 @@ import {
 } from "@/features/cart/storage";
 import type { CartItem } from "@/features/cart/api";
 import { asRecord } from "@/features/http/api-envelope";
-
-type SavedItem = {
-  id: string;
-  productId: string;
-  variantId?: string | null;
-  sku?: string | null;
-  color?: string | null;
-  size?: string | null;
-  name: string;
-  brand: string;
-  image: string;
-  price: number;
-  originalPrice?: number;
-  inStock: boolean;
-};
+import {
+  type SavedItem,
+  readLocalSaved,
+  writeLocalSaved,
+  normalizeSavedItem,
+} from "@/features/cart/saved-storage";
+import { confirm, toast } from "@/lib/feedback";
 
 type AppliedPromo = {
   code: string;
@@ -60,7 +52,6 @@ type AppliedPromo = {
 
 const FALLBACK_PRODUCT_IMAGE =
   "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400";
-const SAVED_LOCAL_STORAGE_KEY = "enterfly:saved-for-later:v1";
 
 const FREE_SHIPPING_THRESHOLD = 50000;
 const STANDARD_SHIPPING_FEE = 120;
@@ -72,73 +63,15 @@ const VALID_PROMO_CODES: Record<string, { discount: number; description: string 
   FLYHIGH: { discount: 2500, description: "BDT 2500 off - flash deal" },
 };
 
-function normalizeSavedItem(raw: unknown): SavedItem | null {
-  const entry = asRecord(raw);
-  if (!entry) return null;
-
-  const id = typeof entry.id === "string" ? entry.id : "";
-  const productIdFromEntry = typeof entry.productId === "string" ? entry.productId : "";
-  const productId = productIdFromEntry || id;
-  const name = typeof entry.name === "string" ? entry.name : "";
-  const image = typeof entry.image === "string" ? entry.image : "";
-
-  if (!productId || !name) return null;
-
-  const price =
-    typeof entry.price === "number" && Number.isFinite(entry.price) ? entry.price : 0;
-
-  const originalPrice =
-    typeof entry.originalPrice === "number" && Number.isFinite(entry.originalPrice)
-      ? entry.originalPrice
-      : undefined;
-
-  return {
-    id: id || `saved:${productId}`,
-    productId,
-    variantId: typeof entry.variantId === "string" ? entry.variantId : null,
-    sku: typeof entry.sku === "string" ? entry.sku : null,
-    color: typeof entry.color === "string" ? entry.color : null,
-    size: typeof entry.size === "string" ? entry.size : null,
-    name,
-    brand: typeof entry.brand === "string" && entry.brand ? entry.brand : "EnterFly",
-    image: image || FALLBACK_PRODUCT_IMAGE,
-    price,
-    originalPrice,
-    inStock: typeof entry.inStock === "boolean" ? entry.inStock : true,
-  };
-}
-
 function readLocalCart(): CartItem[] {
   return readCartFromStorage({ dedupeByProductId: true });
-}
-
-function readLocalSaved(): SavedItem[] {
-  if (typeof window === "undefined") return [];
-
-  const raw = window.localStorage.getItem(SAVED_LOCAL_STORAGE_KEY);
-  if (!raw) return [];
-
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-
-    return parsed
-      .map(normalizeSavedItem)
-      .filter((item): item is SavedItem => item !== null);
-  } catch {
-    return [];
-  }
-}
-
-function writeLocalSaved(items: SavedItem[]) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(SAVED_LOCAL_STORAGE_KEY, JSON.stringify(items));
 }
 
 function toSavedItem(item: CartItem): SavedItem {
   return {
     id: `saved:${item.variantId ?? item.productId}`,
     productId: item.productId,
+    slug: item.slug ?? item.productId,
     variantId: item.variantId ?? null,
     sku: item.sku ?? null,
     color: item.color ?? null,
@@ -155,6 +88,8 @@ function toSavedItem(item: CartItem): SavedItem {
 function toCartViewModel(item: CartItem) {
   return {
     id: item.id,
+    productId: item.productId,
+    slug: item.slug ?? item.productId,
     name: item.name,
     brand: "EnterFly",
     image: item.image ?? FALLBACK_PRODUCT_IMAGE,
@@ -304,23 +239,22 @@ export default function CartPage() {
         const message =
           err instanceof Error ? err.message : "Failed to update cart quantity.";
         dispatch(setCartError(message));
+        toast.error(message);
       }
       return;
     }
 
-    const optimistic: CartItem = {
-      ...target,
-      quantity: safeQuantity,
-      lineTotal: target.unitPrice * safeQuantity,
-    };
-
-    const targetKey = cartItemKey(optimistic);
-    const localAfterOptimistic = readLocalCart().map((entry) =>
-      cartItemKey(entry) === targetKey ? optimistic : entry,
+    // Local path: build the updated list directly from Redux state (the
+    // source of truth) — do NOT re-read from localStorage, because
+    // readLocalCart({ dedupeByProductId: true }) sums duplicate quantities
+    // and would inflate the count on every change.
+    const updatedItems = items.map((item) =>
+      item.id === id
+        ? { ...item, quantity: safeQuantity, lineTotal: item.unitPrice * safeQuantity }
+        : item,
     );
-    writeLocalCart(localAfterOptimistic);
-    const localItems = readLocalCart();
-    dispatch(setCartData({ items: localItems, summary: computeCartSummary(localItems) }));
+    writeLocalCart(updatedItems);
+    dispatch(setCartData({ items: updatedItems, summary: computeCartSummary(updatedItems) }));
   };
 
   const handleRemove = async (id: string) => {
@@ -339,6 +273,7 @@ export default function CartPage() {
         const message =
           err instanceof Error ? err.message : "Failed to remove item from cart.";
         dispatch(setCartError(message));
+        toast.error(message);
       }
       return;
     }
@@ -367,6 +302,7 @@ export default function CartPage() {
     const nextSaved = saved.filter((item) => item.id !== id);
     setSaved(nextSaved);
     writeLocalSaved(nextSaved);
+    toast.success("Removed from saved items");
   };
 
   const handleSavedMoveToCart = async (id: string) => {
@@ -385,10 +321,12 @@ export default function CartPage() {
         const nextSaved = saved.filter((item) => item.id !== id);
         setSaved(nextSaved);
         writeLocalSaved(nextSaved);
+        toast.success(`${target.name} moved to cart`);
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to move saved item to cart.";
         dispatch(setCartError(message));
+        toast.error(message);
       }
       return;
     }
@@ -438,11 +376,15 @@ export default function CartPage() {
     const nextSaved = saved.filter((item) => item.id !== id);
     setSaved(nextSaved);
     writeLocalSaved(nextSaved);
+    toast.success(`${target.name} moved to cart`);
   };
 
   const handleApplyPromo = (code: string) => {
     const match = VALID_PROMO_CODES[code];
-    if (!match) return null;
+    if (!match) {
+      toast.error("Invalid promo code. Please try again.");
+      return null;
+    }
 
     const next: AppliedPromo = {
       code,
@@ -451,10 +393,14 @@ export default function CartPage() {
     };
 
     setPromo(next);
+    toast.success(`Promo code applied — ${match.description}`);
     return next;
   };
 
-  const handleRemovePromo = () => setPromo(null);
+  const handleRemovePromo = () => {
+    setPromo(null);
+    toast.info("Promo code removed");
+  };
 
   const handleCheckout = () => {
     // Checkout requires authentication so the order can be attached
@@ -492,7 +438,18 @@ export default function CartPage() {
             Loading cart...
           </div>
         ) : isEmpty ? (
-          <EmptyCart />
+          <>
+            <EmptyCart />
+            {saved.length > 0 && (
+              <div className="mt-6">
+                <SavedForLater
+                  items={saved}
+                  onMoveToCart={handleSavedMoveToCart}
+                  onRemove={handleSavedRemove}
+                />
+              </div>
+            )}
+          </>
         ) : (
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-8">
             <div className="flex min-w-0 flex-col gap-4">

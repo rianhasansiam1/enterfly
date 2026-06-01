@@ -13,6 +13,7 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react";
+import { toast } from "@/lib/feedback";
 
 const SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID ?? "";
 const TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID ?? "";
@@ -112,14 +113,15 @@ export default function ContactForm() {
       setPhone("");
       setSubject(subjects[0]);
       setMessage("");
+      toast.success("Message sent! We'll get back to you shortly.");
       setTimeout(() => setStatus("idle"), 4000);
     } catch (err) {
       setStatus("error");
-      setErrorMsg(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong. Please try again."
-      );
+      const msg = err instanceof Error
+        ? err.message
+        : "Something went wrong. Please try again.";
+      setErrorMsg(msg);
+      toast.error(msg);
     }
   };
 

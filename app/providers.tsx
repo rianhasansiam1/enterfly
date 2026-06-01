@@ -4,6 +4,9 @@ import { SessionProvider } from "next-auth/react";
 import { Provider as ReduxProvider } from "react-redux";
 
 import store from "@/store";
+import Toaster from "@/components/ui/Toaster";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import StoreHydrator from "@/components/layout/StoreHydrator";
 
 /**
  * Single client-side provider tree mounted by the root layout.
@@ -12,6 +15,11 @@ import store from "@/store";
  *   - NextAuth's `SessionProvider` so any descendant client component can
  *     call `useSession`, `signIn`, or `signOut`.
  *   - The Redux store so dispatch/select hooks work app-wide.
+ *   - `<StoreHydrator />` to populate cart/wishlist from localStorage
+ *     (and the server for authenticated users) on first mount so that
+ *     navbar badges render the correct counts immediately.
+ *   - `<Toaster />` for lightweight toast notifications (small actions).
+ *   - `<ConfirmDialog />` for SweetAlert-style confirmation modals (major actions).
  *
  * Kept as one file so the root layout only mounts one client boundary.
  */
@@ -22,7 +30,12 @@ export default function Providers({
 }) {
   return (
     <SessionProvider>
-      <ReduxProvider store={store}>{children}</ReduxProvider>
+      <ReduxProvider store={store}>
+        <StoreHydrator />
+        {children}
+        <Toaster />
+        <ConfirmDialog />
+      </ReduxProvider>
     </SessionProvider>
   );
 }

@@ -5,6 +5,7 @@ export type CartStatus = "ACTIVE" | "INACTIVE";
 export type CartItem = {
   id: string;
   productId: string;
+  slug?: string | null;
   variantId?: string | null;
   sku?: string | null;
   color?: string | null;
@@ -112,4 +113,30 @@ export async function removeCartItemOnServer(itemId: string): Promise<{ id: stri
   });
 
   return readApiData<{ id: string }>(response, "Failed to remove cart item.");
+}
+
+/**
+ * Merge guest cart items into the authenticated user's server cart.
+ *
+ * Calls `POST /api/cart/merge` which adds guest quantities to existing
+ * server rows (unlike sync which skips duplicates). Used by StoreHydrator
+ * at login time.
+ */
+export async function mergeGuestCartToServer(
+  localItems: CartItem[],
+): Promise<CartSnapshot> {
+  const response = await fetch("/api/cart/merge", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      items: localItems.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        ...(item.variantId ? { variantId: item.variantId } : {}),
+      })),
+    }),
+    cache: "no-store",
+  });
+
+  return readApiData<CartSnapshot>(response, "Failed to merge guest cart.");
 }

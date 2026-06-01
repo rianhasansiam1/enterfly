@@ -68,7 +68,7 @@ export default function WishlistCard({
         />
 
         <Link
-          href={`/products/${item.id}`}
+          href={`/products/${item.slug ?? item.id}`}
           className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-xl bg-gray-50 sm:w-32"
         >
           <Image
@@ -92,7 +92,7 @@ export default function WishlistCard({
                 {item.brand} • {item.category}
               </p>
               <Link
-                href={`/products/${item.id}`}
+                href={`/products/${item.slug ?? item.id}`}
                 className="mt-0.5 line-clamp-2 text-sm font-semibold text-gray-900 hover:text-violet-700 sm:text-base"
               >
                 {item.name}
@@ -134,7 +134,7 @@ export default function WishlistCard({
     >
       {/* Image */}
       <div className="relative aspect-4/5 overflow-hidden bg-gray-50">
-        <Link href={`/products/${item.id}`}>
+        <Link href={`/products/${item.slug ?? item.id}`}>
           <Image
             src={item.image}
             alt={item.name}
@@ -205,7 +205,7 @@ export default function WishlistCard({
         <p className="text-[10px] font-semibold uppercase tracking-wider text-violet-600">
           {item.brand} • {item.category}
         </p>
-        <Link href={`/products/${item.id}`}>
+        <Link href={`/products/${item.slug ?? item.id}`}>
           <h3 className="mt-1 line-clamp-2 min-h-10 text-sm font-semibold leading-tight text-gray-900 transition-colors hover:text-violet-700">
             {item.name}
           </h3>

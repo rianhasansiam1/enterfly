@@ -32,6 +32,7 @@ export function normalizeWishlistItem(raw: unknown): WishlistItem | null {
 
   return {
     id: entry.id,
+    slug: typeof entry.slug === "string" && entry.slug ? entry.slug : undefined,
     name: entry.name,
     brand: typeof entry.brand === "string" && entry.brand ? entry.brand : "EnterFly",
     image: typeof entry.image === "string" && entry.image ? entry.image : "",

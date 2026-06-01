@@ -179,8 +179,11 @@ export default function ProductFormDrawer({
                       onChange((prev) => ({ ...prev, size: event.target.value }))
                     }
                     className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
-                    placeholder="e.g. M, L, XL / 42"
+                    placeholder="S, M, L, XL  or  10, 24, 30"
                   />
+                  <p className="mt-1 text-[11px] text-gray-400">
+                    Comma-separated sizes create separate variants
+                  </p>
                 </Field>
               </div>
 

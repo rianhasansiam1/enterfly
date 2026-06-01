@@ -292,10 +292,24 @@ export async function getProductSlugById(id: string): Promise<string | null> {
   return row?.slug ?? null;
 }
 
+/**
+ * Parse a size input that may contain comma-separated values (e.g. "M, L, XL"
+ * or "10, 24, 90") into an array of individual size strings. Returns an array
+ * with a single `null` entry when the input is empty/null.
+ */
+function parseSizes(raw: string | null | undefined): (string | null)[] {
+  if (!raw || !raw.trim()) return [null];
+  const parts = raw
+    .split(/[,،]+/) // support both comma and Arabic comma
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  return parts.length > 0 ? parts : [null];
+}
+
 export async function createProduct(input: CreateProductInput) {
-  // The product holds catalog data; price/stock live on a default
-  // variant and images become ProductImage rows. We keep the legacy
-  // flat input shape and map it onto the new model here.
+  // The product holds catalog data; price/stock live on variants and
+  // images become ProductImage rows. We keep the legacy flat input shape
+  // and map it onto the new model here.
   const slug = await uniqueSlug(input.name);
   const imageUrls = [
     ...(input.image ? [input.image] : []),
@@ -303,6 +317,20 @@ export async function createProduct(input: CreateProductInput) {
   ];
   // De-dupe while preserving order.
   const uniqueImages = Array.from(new Set(imageUrls));
+
+  // Split comma-separated sizes into individual variants so the
+  // storefront size picker gets real selectable options.
+  const sizes = parseSizes(input.size);
+  const variantsToCreate = sizes.map((size, index) => ({
+    sku: sizes.length > 1
+      ? `SKU-${slug}-${size?.toLowerCase().replace(/\s+/g, "") ?? "def"}-${Math.random().toString(36).slice(2, 6)}`
+      : `SKU-${slug}-${Math.random().toString(36).slice(2, 8)}`,
+    color: input.color ?? null,
+    size,
+    price: input.price,
+    salePrice: input.discountPrice ?? null,
+    stock: index === 0 ? input.stock : input.stock, // Each size variant gets the same stock
+  }));
 
   // Generate a human-readable product code. The unique constraint is the
   // real guard, so on the rare concurrent-create collision (P2002) we
@@ -320,14 +348,7 @@ export async function createProduct(input: CreateProductInput) {
           status: input.status,
           categoryId: input.categoryId,
           variants: {
-            create: {
-              sku: `SKU-${slug}-${Math.random().toString(36).slice(2, 8)}`,
-              color: input.color ?? null,
-              size: input.size ?? null,
-              price: input.price,
-              salePrice: input.discountPrice ?? null,
-              stock: input.stock,
-            },
+            create: variantsToCreate,
           },
           images: {
             create: uniqueImages.map((url, index) => ({
@@ -365,24 +386,64 @@ export async function updateProduct(id: string, input: UpdateProductInput) {
     productData.category = { connect: { id: input.categoryId } };
   }
 
-  // Resolve the primary variant for price/stock updates.
-  const primaryVariant =
-    input.price !== undefined ||
-    input.discountPrice !== undefined ||
-    input.stock !== undefined ||
-    input.color !== undefined ||
-    input.size !== undefined
-      ? await prisma.productVariant.findFirst({
-          where: { productId: id },
-          orderBy: { createdAt: "asc" },
-          select: { id: true },
-        })
-      : null;
+  // Determine whether size contains comma-separated values that need to
+  // be expanded into multiple variants (one per size).
+  const newSizes = input.size !== undefined ? parseSizes(input.size) : null;
+  const needsVariantRebuild = newSizes !== null && newSizes.length > 1;
+
+  // Resolve the primary variant for price/stock updates (single-variant path).
+  const needsPrimaryUpdate =
+    !needsVariantRebuild &&
+    (input.price !== undefined ||
+      input.discountPrice !== undefined ||
+      input.stock !== undefined ||
+      input.color !== undefined ||
+      input.size !== undefined);
+
+  const primaryVariant = needsPrimaryUpdate
+    ? await prisma.productVariant.findFirst({
+        where: { productId: id },
+        orderBy: { createdAt: "asc" },
+        select: { id: true },
+      })
+    : null;
 
   return prisma.$transaction(async (tx) => {
     await tx.product.update({ where: { id }, data: productData });
 
-    if (primaryVariant) {
+    if (needsVariantRebuild && newSizes) {
+      // Multi-size path: replace all existing variants with one per size.
+      // Fetch the current product to preserve color/price/stock defaults.
+      const current = await tx.product.findUniqueOrThrow({
+        where: { id },
+        include: { variants: { orderBy: { createdAt: "asc" } } },
+      });
+      const baseVariant = current.variants[0];
+      const color = input.color ?? baseVariant?.color ?? null;
+      const price = input.price ?? (baseVariant ? baseVariant.price.toNumber() : 0);
+      const salePrice = input.discountPrice !== undefined
+        ? input.discountPrice
+        : baseVariant?.salePrice != null
+          ? baseVariant.salePrice.toNumber()
+          : null;
+      const stock = input.stock ?? baseVariant?.stock ?? 0;
+      const slug = current.slug;
+
+      // Delete existing variants and create new ones per size.
+      await tx.productVariant.deleteMany({ where: { productId: id } });
+      await tx.productVariant.createMany({
+        data: newSizes.map((size) => ({
+          productId: id,
+          sku: `SKU-${slug}-${size?.toLowerCase().replace(/\s+/g, "") ?? "def"}-${Math.random().toString(36).slice(2, 6)}`,
+          color,
+          size,
+          price,
+          salePrice,
+          stock,
+        })),
+      });
+    } else if (primaryVariant) {
+      // Single-variant path: update existing primary variant fields.
       const variantData: Prisma.ProductVariantUpdateInput = {};
       if (input.price !== undefined) variantData.price = input.price;
       if (input.discountPrice !== undefined) {

@@ -11,6 +11,7 @@ import {
   PenLine,
   X,
 } from 'lucide-react'
+import { toast } from '@/lib/feedback'
 
 import {
   createReview,
@@ -332,14 +333,15 @@ function WriteReviewForm({
         comment: comment.trim() || undefined,
       })
       setDone(true)
+      toast.success('Review submitted — thanks!')
       // Give the success note a beat before refreshing the list.
       setTimeout(onSubmitted, 800)
     } catch (submitError) {
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : 'Failed to submit your review.',
-      )
+      const msg = submitError instanceof Error
+        ? submitError.message
+        : 'Failed to submit your review.'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setSubmitting(false)
     }

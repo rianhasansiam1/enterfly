@@ -48,6 +48,7 @@ export class CartError extends ServiceError {
 const cartItemProductSelect = {
   id: true,
   name: true,
+  slug: true,
   status: true,
   images: {
     orderBy: { position: "asc" },
@@ -98,6 +99,7 @@ function effectiveVariantPrice(variant: {
 type CartLine = {
   id: string;
   productId: string;
+  slug: string;
   variantId: string;
   sku: string;
   color: string | null;
@@ -136,6 +138,7 @@ function toLine(row: CartItemWithRelations): {
   const line: CartLine = {
     id: row.id,
     productId: p.id,
+    slug: p.slug,
     variantId: variant.id,
     sku: variant.sku,
     color: variant.color,
@@ -306,24 +309,25 @@ export async function syncCartItems(userId: string, input: SyncCartInput) {
     existingRows.map((row) => [row.variantId, row.quantity]),
   );
 
+  // Only create items that don't already exist on the server. Items
+  // that the user already has are left untouched so a page refresh
+  // never inflates quantities (the old `{ increment }` upsert was
+  // adding local quantities to existing server quantities each time).
   const writes = requested.flatMap((item) => {
     const stock = stockByVariantId.get(item.variantId);
     if (stock == null || stock <= 0) return [];
 
-    const existingQuantity = existingByVariantId.get(item.variantId) ?? 0;
-    const remaining = Math.max(0, stock - existingQuantity);
-    if (remaining <= 0) return [];
+    // Item already exists on the server — keep the server quantity.
+    if (existingByVariantId.has(item.variantId)) return [];
 
-    const quantity = Math.min(item.quantity, remaining);
-    return prisma.cartItem.upsert({
-      where: { userId_variantId: { userId, variantId: item.variantId } },
-      create: {
+    const quantity = Math.min(item.quantity, stock);
+    return prisma.cartItem.create({
+      data: {
         userId,
         productId: item.productId,
         variantId: item.variantId,
         quantity,
       },
-      update: { quantity: { increment: quantity } },
     });
   });
 
@@ -434,4 +438,108 @@ export async function removeCartItem(itemId: string, userId: string) {
 export async function clearMyCart(userId: string) {
   const result = await prisma.cartItem.deleteMany({ where: { userId } });
   return { deletedCount: result.count };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Merge (login: guest cart → server)                                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Merge guest cart items into an authenticated user's server cart.
+ *
+ * Unlike `syncCartItems`, which only creates items that don't already exist,
+ * this function **adds** the guest quantity to any existing server row (capped
+ * at the variant's stock). This is the correct behavior for login-time merge:
+ * if the guest had 3× "Black / L" and the server already has 2×, the result
+ * is 5× (or stock, whichever is lower).
+ */
+export async function mergeCartItems(
+  userId: string,
+  input: SyncCartInput,
+) {
+  if (input.items.length === 0) {
+    return getMyCart(userId);
+  }
+
+  // Resolve and dedupe by variant.
+  const merged = new Map<
+    string,
+    { productId: string; variantId: string; quantity: number }
+  >();
+
+  for (const item of input.items) {
+    let resolved;
+    try {
+      resolved = await resolveVariant(item.productId, item.variantId);
+    } catch {
+      // Skip invalid/deleted/inactive items silently.
+      continue;
+    }
+    const variantId = resolved.variant.id;
+    const existing = merged.get(variantId);
+    merged.set(variantId, {
+      productId: resolved.product.id,
+      variantId,
+      quantity: (existing?.quantity ?? 0) + item.quantity,
+    });
+  }
+
+  const requested = Array.from(merged.values());
+  if (requested.length === 0) {
+    return getMyCart(userId);
+  }
+
+  // Fetch variant stock and existing server rows.
+  const variantIds = requested.map((i) => i.variantId);
+  const [variants, existingRows] = await Promise.all([
+    prisma.productVariant.findMany({
+      where: { id: { in: variantIds } },
+      select: { id: true, stock: true },
+    }),
+    prisma.cartItem.findMany({
+      where: { userId, variantId: { in: variantIds } },
+      select: { id: true, variantId: true, quantity: true },
+    }),
+  ]);
+
+  const stockByVariant = new Map(variants.map((v) => [v.id, v.stock]));
+  const existingByVariant = new Map(
+    existingRows.map((r) => [r.variantId, r]),
+  );
+
+  const writes: ReturnType<typeof prisma.cartItem.upsert>[] = [];
+
+  for (const item of requested) {
+    const stock = stockByVariant.get(item.variantId);
+    if (stock == null || stock <= 0) continue;
+
+    const existing = existingByVariant.get(item.variantId);
+    const combinedQty = Math.min(
+      (existing?.quantity ?? 0) + item.quantity,
+      stock,
+    );
+
+    writes.push(
+      prisma.cartItem.upsert({
+        where: {
+          userId_variantId: { userId, variantId: item.variantId },
+        },
+        create: {
+          userId,
+          productId: item.productId,
+          variantId: item.variantId,
+          quantity: Math.min(item.quantity, stock),
+        },
+        update: {
+          quantity: combinedQty,
+        },
+      }),
+    );
+  }
+
+  if (writes.length > 0) {
+    await prisma.$transaction(writes);
+  }
+
+  return getMyCart(userId);
 }

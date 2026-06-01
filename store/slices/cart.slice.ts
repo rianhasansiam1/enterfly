@@ -5,6 +5,7 @@ type CartStatus = "ACTIVE" | "INACTIVE";
 type CartItem = {
   id: string;
   productId: string;
+  slug?: string | null;
   variantId?: string | null;
   sku?: string | null;
   color?: string | null;
@@ -116,6 +117,10 @@ const cartSlice = createSlice({
     setCartError(state, action: PayloadAction<string | null>) {
       state.error = action.payload;
     },
+    /** Reset to initial state — used on logout. */
+    resetCartState() {
+      return initialState;
+    },
   },
 });
 
@@ -131,6 +136,7 @@ export const {
   setCartHydrated,
   setCartLoading,
   setCartError,
+  resetCartState,
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

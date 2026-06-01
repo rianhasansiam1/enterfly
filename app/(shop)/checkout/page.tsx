@@ -21,6 +21,7 @@ import {
 } from "@/store/slices/cart.slice";
 import { computeCartSummary } from "@/features/cart/summary";
 import type { AppDispatch, RootState } from "@/store";
+import { toast } from "@/lib/feedback";
 
 import CheckoutHeader from "./components/CheckoutHeader";
 import CheckoutItemsCard from "./components/CheckoutItemsCard";
@@ -181,9 +182,11 @@ function CheckoutPageInner() {
               tone: "success",
               message: `${next.promo.code} applied.`,
             });
+            toast.success(`Promo code ${next.promo.code} applied`);
           } else {
             setAppliedPromo(null);
             setPromoFeedback({ tone: "error", message: next.promo.reason });
+            toast.error(next.promo.reason);
           }
         }
       } catch (error) {
@@ -216,6 +219,7 @@ function CheckoutPageInner() {
     setAppliedPromo(null);
     setPromoCode("");
     setPromoFeedback(null);
+    toast.info("Promo code removed");
   };
 
   const handleRetry = () => setPreviewToken((token) => token + 1);
@@ -259,11 +263,16 @@ function CheckoutPageInner() {
     setSubmitError(null);
 
     if (!preview || preview.items.length === 0) {
-      setSubmitError("Your cart is empty. Add items before checking out.");
+      const msg = "Your cart is empty. Add items before checking out.";
+      setSubmitError(msg);
+      toast.error(msg);
       return;
     }
 
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      toast.warning("Please fill in all required fields.");
+      return;
+    }
 
     setIsPlacingOrder(true);
 
@@ -302,11 +311,13 @@ function CheckoutPageInner() {
         // logged-in path still works because the API can re-fetch.
       }
 
+      toast.success("Order placed successfully!");
       router.push(`/orders/${result.order.id}?just-placed=1`);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to place the order.";
       setSubmitError(message);
+      toast.error(message);
     } finally {
       setIsPlacingOrder(false);
     }

@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "@/lib/feedback";
 
 import { useMemo, useState } from "react";
 import {
@@ -113,10 +114,16 @@ export default function SecurityTab({ user }: SecurityTabProps) {
       });
       setHasPassword(true);
       setForm(EMPTY_FORM);
+      toast.success(
+        result.hadPassword
+          ? "Password changed successfully"
+          : "Password set — you can now sign in with email",
+      );
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to change password.";
       setSubmitState({ status: "error", message });
+      toast.error(message);
     }
   };
 

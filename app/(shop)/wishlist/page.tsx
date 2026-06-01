@@ -9,6 +9,7 @@ import WishlistToolbar from "./components/WishlistToolbar";
 import WishlistCard from "./components/WishlistCard";
 import EmptyWishlist from "./components/EmptyWishlist";
 import BulkActionsBar from "./components/BulkActionsBar";
+import SavedForLater from "@/app/(shop)/cart/components/SavedForLater";
 import {
   setWishlistError,
   setWishlistItems,
@@ -39,6 +40,11 @@ import {
   readLocalWishlist,
   writeLocalWishlist,
 } from "@/features/wishlist/storage";
+import {
+  readLocalSaved,
+  writeLocalSaved,
+} from "@/features/cart/saved-storage";
+import { confirm, toast } from "@/lib/feedback";
 
 type WishlistView = "grid" | "list";
 
@@ -63,6 +69,14 @@ export default function WishlistPage() {
   const [sort, setSort] = useState<WishlistSort>("recent");
   const [view, setView] = useState<WishlistView>("grid");
   const [activeCategory, setActiveCategory] = useState("all");
+
+  // Saved-for-later items are shared with the cart page via localStorage.
+  const [saved, setSaved] = useState<import("@/features/cart/saved-storage").SavedItem[]>([]);
+
+  // Hydrate saved-for-later from localStorage on mount.
+  useEffect(() => {
+    setSaved(readLocalSaved());
+  }, []);
 
   const canUseServer =
     status === "authenticated" && isServerWishlistRole(session?.user?.role);
@@ -218,18 +232,31 @@ export default function WishlistPage() {
             ? err.message
             : "Failed to update wishlist on server.";
         dispatch(setWishlistError(message));
+        toast.error(message);
         return;
       }
     }
 
     writeLocalWishlist(next);
+    toast.success(ids.length === 1 ? "Removed from wishlist" : `${ids.length} items removed from wishlist`);
   };
 
   const handleRemove = (id: string) => {
     void removeItems([id]);
   };
 
-  const handleRemoveSelected = () => {
+  const handleRemoveSelected = async () => {
+    const count = selected.size;
+    if (count === 0) return;
+
+    const ok = await confirm({
+      title: `Remove ${count} item${count > 1 ? "s" : ""}?`,
+      description: `This will remove ${count} selected item${count > 1 ? "s" : ""} from your wishlist.`,
+      confirmLabel: "Remove",
+      variant: "danger",
+    });
+    if (!ok) return;
+
     void removeItems(Array.from(selected));
   };
 
@@ -249,10 +276,12 @@ export default function WishlistPage() {
         const message =
           err instanceof Error ? err.message : "Failed to move item to cart.";
         dispatch(setCartErrorAction(message));
+        toast.error(message);
         return;
       }
 
       await removeItems(toMove.map((item) => item.id));
+      toast.success(toMove.length === 1 ? `${toMove[0].name} moved to cart` : `${toMove.length} items moved to cart`);
       return;
     }
 
@@ -276,6 +305,7 @@ export default function WishlistPage() {
     dispatch(setCartData({ items: optimistic, summary: computeCartSummary(optimistic) }));
 
     await removeItems(toMove.map((item) => item.id));
+    toast.success(toMove.length === 1 ? `${toMove[0].name} moved to cart` : `${toMove.length} items moved to cart`);
   };
 
   const handleMoveToCart = (id: string) => {
@@ -310,6 +340,7 @@ export default function WishlistPage() {
 
     try {
       await navigator.clipboard.writeText(url);
+      toast.info("Link copied to clipboard");
     } catch {
       console.info("Share link:", url);
     }
@@ -321,6 +352,63 @@ export default function WishlistPage() {
   };
 
   const isFiltered = query.trim() !== "" || activeCategory !== "all";
+
+  // ── Saved-for-later handlers ──────────────────────────────────────────
+  const handleSavedRemove = (id: string) => {
+    const next = saved.filter((item) => item.id !== id);
+    setSaved(next);
+    writeLocalSaved(next);
+    toast.success("Removed from saved items");
+  };
+
+  const handleSavedMoveToCart = async (id: string) => {
+    const target = saved.find((item) => item.id === id);
+    if (!target || !target.inStock) return;
+
+    const canUseServerCart =
+      status === "authenticated" && isServerWishlistRole(session?.user?.role);
+
+    if (canUseServerCart) {
+      dispatch(setCartErrorAction(null));
+      try {
+        await addCartItemOnServer(target.productId, 1, target.variantId);
+        const snapshot = await fetchServerCartSnapshot();
+        writeLocalCart(snapshot.items);
+        dispatch(setCartData(snapshot));
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to move item to cart.";
+        dispatch(setCartErrorAction(message));
+        toast.error(message);
+        return;
+      }
+    } else {
+      const localBefore = readLocalCart();
+      const next = upsertLocalCartItem(localBefore, {
+        id: `local:${target.variantId ?? target.productId}`,
+        productId: target.productId,
+        variantId: target.variantId ?? null,
+        sku: target.sku ?? null,
+        color: target.color ?? null,
+        size: target.size ?? null,
+        name: target.name,
+        image: target.image,
+        quantity: 1,
+        unitPrice: target.price,
+        originalPrice: target.originalPrice ?? target.price,
+        lineTotal: target.price,
+        stock: 10,
+        status: "ACTIVE",
+      });
+      writeLocalCart(next);
+      dispatch(setCartData({ items: next, summary: computeCartSummary(next) }));
+    }
+
+    const nextSaved = saved.filter((item) => item.id !== id);
+    setSaved(nextSaved);
+    writeLocalSaved(nextSaved);
+    toast.success(`${target.name} moved to cart`);
+  };
 
   return (
     <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
@@ -393,13 +481,22 @@ export default function WishlistPage() {
             </div>
           )}
         </section>
+
+        {/* Saved for later — always visible, shared with the cart page */}
+        {saved.length > 0 && (
+          <SavedForLater
+            items={saved}
+            onMoveToCart={(id) => { void handleSavedMoveToCart(id); }}
+            onRemove={handleSavedRemove}
+          />
+        )}
       </div>
 
       <BulkActionsBar
         selectedCount={selected.size}
         onClear={clearSelection}
         onMoveAllToCart={handleMoveSelectedToCart}
-        onRemoveAll={handleRemoveSelected}
+        onRemoveAll={() => { void handleRemoveSelected(); }}
       />
     </main>
   );

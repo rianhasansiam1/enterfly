@@ -25,6 +25,7 @@ const wishlistInclude = {
     select: {
       id: true,
       name: true,
+      slug: true,
       status: true,
       images: {
         orderBy: { position: "asc" },
@@ -49,6 +50,7 @@ type WishlistWithProduct = Prisma.WishlistGetPayload<{
 
 export type WishlistUiItem = {
   id: string;
+  slug: string;
   name: string;
   brand: string;
   image: string;
@@ -84,6 +86,7 @@ function toWishlistUiItem(row: WishlistWithProduct): WishlistUiItem {
 
   return {
     id: row.product.id,
+    slug: row.product.slug,
     name: row.product.name,
     brand: row.product.category.name,
     image: row.product.images[0]?.url ?? FALLBACK_PRODUCT_IMAGE,

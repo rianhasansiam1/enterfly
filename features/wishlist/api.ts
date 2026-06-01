@@ -2,6 +2,7 @@ import { readApiData } from "@/features/http/api-envelope";
 
 export type WishlistItem = {
   id: string;
+  slug?: string;
   name: string;
   brand: string;
   image: string;
@@ -68,5 +69,41 @@ export async function removeWishlistItemOnServer(productId: string): Promise<voi
   await readApiData<{ id: string }>(
     response,
     "Failed to remove this product from wishlist.",
+  );
+}
+
+/**
+ * Fetch the authenticated user's wishlist from the server.
+ */
+export async function fetchServerWishlist(): Promise<WishlistItem[]> {
+  const response = await fetch("/api/wishlist", {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  return readApiData<WishlistItem[]>(
+    response,
+    "Failed to load wishlist from server.",
+  );
+}
+
+/**
+ * Merge guest wishlist product IDs into the authenticated user's
+ * server wishlist. Duplicates are skipped automatically.
+ * Used by StoreHydrator at login time.
+ */
+export async function mergeGuestWishlistToServer(
+  productIds: string[],
+): Promise<WishlistItem[]> {
+  const response = await fetch("/api/wishlist/merge", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ productIds }),
+    cache: "no-store",
+  });
+
+  return readApiData<WishlistItem[]>(
+    response,
+    "Failed to merge guest wishlist.",
   );
 }

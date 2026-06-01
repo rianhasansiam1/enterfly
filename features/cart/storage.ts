@@ -56,6 +56,7 @@ export function normalizeCartItem(
   return {
     id: id || `local:${productId}`,
     productId,
+    slug: typeof entry.slug === "string" && entry.slug ? entry.slug : null,
     variantId: typeof entry.variantId === "string" ? entry.variantId : null,
     sku: typeof entry.sku === "string" ? entry.sku : null,
     color: typeof entry.color === "string" ? entry.color : null,

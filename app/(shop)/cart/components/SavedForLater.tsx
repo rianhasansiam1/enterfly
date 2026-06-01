@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 type SavedItem = {
   id: string;
   productId: string;
+  slug: string;
   name: string;
   brand: string;
   image: string;
@@ -50,7 +51,7 @@ export default function SavedForLater({
             className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md"
           >
             <Link
-              href={`/products/${item.productId}`}
+              href={`/products/${item.slug}`}
               className="relative block aspect-square overflow-hidden bg-gray-50"
             >
               <Image
@@ -84,7 +85,7 @@ export default function SavedForLater({
                 {item.brand}
               </p>
               <Link
-                href={`/products/${item.productId}`}
+                href={`/products/${item.slug}`}
                 className="mt-0.5 line-clamp-1 text-xs font-semibold text-gray-900 hover:text-violet-700"
               >
                 {item.name}

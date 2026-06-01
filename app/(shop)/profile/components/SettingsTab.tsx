@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "@/lib/feedback";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -152,10 +153,12 @@ export default function SettingsTab({ user, onUpdated }: SettingsTabProps) {
       const updated = await updateProfileOnServer(patch);
       onUpdated(updated);
       setSubmitState({ status: "success" });
+      toast.success("Profile updated successfully");
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to save changes.";
       setSubmitState({ status: "error", message });
+      toast.error(message);
     }
   };
 

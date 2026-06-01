@@ -20,6 +20,7 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import { useSelector } from "react-redux";
 
 import {
   DropdownMenu,
@@ -36,6 +37,8 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import SearchBar from "@/components/layout/SearchBar";
+import { confirm } from "@/lib/feedback";
+import type { RootState } from "@/store";
 
 type MenuItem = {
   href: string;
@@ -59,6 +62,14 @@ export default function Navbar() {
   const { data: session } = useSession();
   const user = session?.user ?? null;
   const isAdmin = user?.role === "ADMIN";
+
+  // Badge counts from Redux store
+  const cartCount = useSelector((state: RootState) =>
+    state.cart.items.reduce((sum, item) => sum + item.quantity, 0),
+  );
+  const wishlistCount = useSelector(
+    (state: RootState) => state.wishlist.items.length,
+  );
 
   const visibleMenuItems = MENU_ITEMS.filter(
     (item) => !item.adminOnly || isAdmin,
@@ -89,7 +100,15 @@ export default function Navbar() {
     setProfileMenuOpen(true);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const ok = await confirm({
+      title: "Sign out?",
+      description: "You'll need to sign in again to access your account.",
+      confirmLabel: "Sign out",
+      cancelLabel: "Stay",
+      variant: "warning",
+    });
+    if (!ok) return;
     setProfileMenuOpen(false);
     setMobileMenuOpen(false);
     void signOut({ callbackUrl: "/" });
@@ -198,18 +217,28 @@ export default function Navbar() {
 
           <Link
             href="/wishlist"
-            aria-label="Wishlist"
+            aria-label={`Wishlist${wishlistCount > 0 ? `, ${wishlistCount} item${wishlistCount === 1 ? "" : "s"}` : ""}`}
             className="group relative rounded-full p-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/40"
           >
             <Heart className="h-5 w-5 text-violet-600 transition-transform duration-200 group-hover:scale-110" />
+            {wishlistCount > 0 && (
+              <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold leading-none text-white ring-2 ring-white">
+                {wishlistCount > 99 ? "99+" : wishlistCount}
+              </span>
+            )}
           </Link>
 
           <Link
             href="/cart"
-            aria-label="Cart"
+            aria-label={`Cart${cartCount > 0 ? `, ${cartCount} item${cartCount === 1 ? "" : "s"}` : ""}`}
             className="group relative rounded-full p-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/40"
           >
             <ShoppingCart className="h-5 w-5 text-violet-600 transition-transform duration-200 group-hover:scale-110" />
+            {cartCount > 0 && (
+              <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-violet-600 text-[10px] font-bold leading-none text-white ring-2 ring-white">
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            )}
           </Link>
 
           {/* DESKTOP: PROFILE / AUTH */}
@@ -317,7 +346,7 @@ export default function Navbar() {
                     <DropdownMenuItem
                       onSelect={(event) => {
                         event.preventDefault();
-                        handleLogout();
+                        void handleLogout();
                       }}
                       className="text-red-600 focus:bg-red-50 focus:text-red-700"
                     >
@@ -405,7 +434,7 @@ export default function Navbar() {
                   </Link>
                   <button
                     type="button"
-                    onClick={handleLogout}
+                    onClick={() => { void handleLogout(); }}
                     className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-base font-semibold text-red-600 transition-all duration-200 hover:translate-x-1 hover:bg-red-50"
                   >
                     <LogOut className="h-5 w-5" />

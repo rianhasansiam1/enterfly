@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { toast } from "@/lib/feedback";
 
 import {
   removeWishlistItem,
@@ -89,6 +90,7 @@ export default function ProductCard({
     const localBefore = readLocalWishlist();
     const optimisticItem: WishlistItem = {
       id,
+      slug,
       name,
       brand: "EnterFly",
       image,
@@ -108,6 +110,7 @@ export default function ProductCard({
       const nextLocal = localBefore.filter((item) => item.id !== id);
       writeLocalWishlist(nextLocal);
       dispatch(removeWishlistItem(id));
+      toast.success("Removed from wishlist");
 
       if (!canUseServer) return;
 
@@ -122,6 +125,7 @@ export default function ProductCard({
             ? error.message
             : "Failed to remove item from wishlist.";
         dispatch(setWishlistError(message));
+        toast.error(message);
       } finally {
         setIsBusy(false);
       }
@@ -131,6 +135,7 @@ export default function ProductCard({
     const nextLocal = upsertLocalWishlistItem(localBefore, optimisticItem);
     writeLocalWishlist(nextLocal);
     dispatch(upsertWishlistItem(optimisticItem));
+    toast.success("Added to wishlist");
 
     if (!canUseServer) return;
 
@@ -148,6 +153,7 @@ export default function ProductCard({
           ? error.message
           : "Failed to add item to wishlist.";
       dispatch(setWishlistError(message));
+      toast.error(message);
     } finally {
       setIsBusy(false);
     }
@@ -167,10 +173,12 @@ export default function ProductCard({
         const snapshot = await fetchServerCartSnapshot();
         writeLocalCart(snapshot.items);
         dispatch(setCartData(snapshot));
+        toast.success("Added to cart");
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Failed to add item to cart.";
         dispatch(setCartErrorAction(message));
+        toast.error(message);
       } finally {
         setIsCartBusy(false);
       }
@@ -194,6 +202,7 @@ export default function ProductCard({
     const nextLocal = upsertLocalCartItem(localBefore, optimisticItem);
     writeLocalCart(nextLocal);
     dispatch(setCartData({ items: nextLocal, summary: computeCartSummary(nextLocal) }));
+    toast.success("Added to cart");
   };
 
   return (
