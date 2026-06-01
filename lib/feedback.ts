@@ -55,7 +55,9 @@ function createEmitter<T>() {
   return {
     subscribe(fn: (value: T) => void) {
       listeners.add(fn);
-      return () => listeners.delete(fn);
+      return () => {
+        listeners.delete(fn);
+      };
     },
     emit(value: T) {
       listeners.forEach((fn) => fn(value));

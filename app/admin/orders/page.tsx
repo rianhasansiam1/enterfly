@@ -18,6 +18,11 @@ import {
   type OrderStatus,
   type PaymentStatus,
 } from "@/features/admin-orders/api";
+import {
+  confirmMajorAction,
+  notifyActionError,
+  notifyActionSuccess,
+} from "@/lib/admin-feedback";
 
 import OrderSummaryCards from "./components/OrderSummaryCards";
 import OrdersToolbar from "./components/OrdersToolbar";
@@ -104,6 +109,17 @@ export default function AdminOrdersPage() {
     order: AdminOrderRow,
     next: OrderStatus,
   ) => {
+    if (next === "CANCELLED") {
+      const confirmed = await confirmMajorAction({
+        title: `Cancel order ${order.orderNumber}?`,
+        description:
+          "This will mark the order as cancelled and stop further processing.",
+        confirmLabel: "Cancel order",
+        variant: "danger",
+      });
+      if (!confirmed) return;
+    }
+
     setMutationError(null);
     setSuccessNote(null);
     setBusyOrderId(order.id);
@@ -115,11 +131,14 @@ export default function AdminOrdersPage() {
           changes: { status: next, updatedAt: new Date().toISOString() },
         }),
       );
-      setSuccessNote(`Order ${order.orderNumber} moved to ${next}.`);
+      const message = `Order ${order.orderNumber} moved to ${next}.`;
+      setSuccessNote(message);
+      notifyActionSuccess(message);
     } catch (mutation) {
       const message =
         mutation instanceof Error ? mutation.message : "Failed to update status.";
       setMutationError(message);
+      notifyActionError(mutation, "Failed to update status.");
     } finally {
       setBusyOrderId(null);
     }
@@ -127,6 +146,20 @@ export default function AdminOrdersPage() {
 
   const handleTogglePayment = async (order: AdminOrderRow) => {
     const next: PaymentStatus = order.paymentStatus === "PAID" ? "UNPAID" : "PAID";
+    const confirmed = await confirmMajorAction({
+      title:
+        next === "PAID"
+          ? `Confirm payment for ${order.orderNumber}?`
+          : `Mark ${order.orderNumber} as unpaid?`,
+      description:
+        next === "PAID"
+          ? "This marks the order as paid."
+          : "This will remove the paid flag from this order.",
+      confirmLabel: next === "PAID" ? "Confirm payment" : "Mark unpaid",
+      variant: next === "PAID" ? "success" : "warning",
+    });
+    if (!confirmed) return;
+
     setMutationError(null);
     setSuccessNote(null);
     setBusyOrderId(order.id);
@@ -141,15 +174,16 @@ export default function AdminOrdersPage() {
           },
         }),
       );
-      setSuccessNote(
-        `Order ${order.orderNumber} marked as ${next.toLowerCase()}.`,
-      );
+      const message = `Order ${order.orderNumber} marked as ${next.toLowerCase()}.`;
+      setSuccessNote(message);
+      notifyActionSuccess(message);
     } catch (mutation) {
       const message =
         mutation instanceof Error
           ? mutation.message
           : "Failed to update payment status.";
       setMutationError(message);
+      notifyActionError(mutation, "Failed to update payment status.");
     } finally {
       setBusyOrderId(null);
     }

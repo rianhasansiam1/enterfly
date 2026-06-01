@@ -3,8 +3,13 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { Eye, EyeOff, Loader2, Pencil, Trash2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { FALLBACK_IMAGE, type AdminProduct } from "@/features/admin-products/api";
+import {
+  LIST_ITEM_TRANSITION,
+  LIST_ITEM_VARIANTS,
+} from "@/lib/motion/list-removal";
 import { cn } from "@/lib/utils";
 
 export default function ProductsTable({
@@ -59,10 +64,20 @@ export default function ProductsTable({
             </tr>
           </thead>
           <tbody>
+            <AnimatePresence initial={false}>
             {products.map((product) => {
               const isBusy = busyActionProductId === product.id;
               return (
-                <tr key={product.id} className="border-t border-violet-100/70">
+                <motion.tr
+                  key={product.id}
+                  layout
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={LIST_ITEM_VARIANTS}
+                  transition={LIST_ITEM_TRANSITION}
+                  className="border-t border-violet-100/70"
+                >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <img
@@ -148,9 +163,10 @@ export default function ProductsTable({
                       </button>
                     </div>
                   </td>
-                </tr>
+                </motion.tr>
               );
             })}
+            </AnimatePresence>
           </tbody>
         </table>
       </div>

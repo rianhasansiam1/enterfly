@@ -495,3 +495,14 @@ export function softDeleteProduct(id: string) {
     include: productInclude,
   });
 }
+
+/**
+ * Hard delete: permanently remove the product row.
+ *
+ * Related rows are handled by DB relations:
+ * - ProductImage/ProductVariant/CartItem/Wishlist cascade delete.
+ * - OrderItem product/variant references are set to NULL (snapshot stays).
+ */
+export function hardDeleteProduct(id: string) {
+  return prisma.product.delete({ where: { id } });
+}

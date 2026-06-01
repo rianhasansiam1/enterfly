@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertCircle,
   ChevronLeft,
@@ -21,6 +22,10 @@ import {
   type MyOrdersPage,
   type OrderStatus,
 } from "@/features/orders/api";
+import {
+  LIST_ITEM_TRANSITION,
+  LIST_ITEM_VARIANTS,
+} from "@/lib/motion/list-removal";
 
 import { FALLBACK_PRODUCT_IMAGE, ORDER_STATUS_TONE } from "./constants";
 
@@ -235,14 +240,26 @@ export default function OrdersTab() {
 
       {state.status === "ready" && orders.length > 0 && (
         <ul className="flex flex-col gap-3">
-          {orders.map((order) => (
-            <OrderRow
-              key={order.id}
-              order={order}
-              cancelling={cancellingId === order.id}
-              onCancel={handleCancel}
-            />
-          ))}
+          <AnimatePresence initial={false} mode="popLayout">
+            {orders.map((order) => (
+              <motion.li
+                key={order.id}
+                layout
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={LIST_ITEM_VARIANTS}
+                transition={LIST_ITEM_TRANSITION}
+                className="list-none overflow-hidden"
+              >
+                <OrderRow
+                  order={order}
+                  cancelling={cancellingId === order.id}
+                  onCancel={handleCancel}
+                />
+              </motion.li>
+            ))}
+          </AnimatePresence>
         </ul>
       )}
 
@@ -282,7 +299,7 @@ function OrderRow({
       : null;
 
   return (
-    <li className="overflow-hidden rounded-3xl border border-violet-100 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-3xl border border-violet-100 bg-white shadow-sm">
       <div className="flex flex-col gap-4 p-4 sm:p-5 lg:flex-row lg:items-center lg:gap-6">
         <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
           <div className="flex shrink-0 -space-x-3">
@@ -381,7 +398,7 @@ function OrderRow({
           </div>
         </div>
       </div>
-    </li>
+    </div>
   );
 }
 

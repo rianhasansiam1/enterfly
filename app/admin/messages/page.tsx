@@ -18,6 +18,12 @@ import {
   type AdminMessageRow,
   type ContactMessageStatus,
 } from "@/features/admin-messages/api";
+import {
+  confirmMajorAction,
+  notifyActionError,
+  notifyActionSuccess,
+} from "@/lib/admin-feedback";
+import { useAnimatedRemoval } from "@/lib/hooks/useAnimatedRemoval";
 
 import MessageSummaryCards from "./components/MessageSummaryCards";
 import MessagesToolbar from "./components/MessagesToolbar";
@@ -45,6 +51,11 @@ export default function AdminMessagesPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [openMessage, setOpenMessage] = useState<AdminMessageRow | null>(null);
+  const { visibleItems: animatedMessages, queueRemoval: queueMessageRemoval } =
+    useAnimatedRemoval({
+      items: messages,
+      getId: (message) => message.id,
+    });
 
   const refreshMessages = useCallback(async () => {
     dispatch(setAdminMessagesLoading(true));
@@ -70,7 +81,7 @@ export default function AdminMessagesPage() {
 
   const visibleMessages = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return messages.filter((row) => {
+    return animatedMessages.filter((row) => {
       const matchQuery =
         !q ||
         row.name.toLowerCase().includes(q) ||
@@ -83,7 +94,7 @@ export default function AdminMessagesPage() {
         statusFilter === "ALL" || row.status === statusFilter;
       return matchQuery && matchStatus;
     });
-  }, [messages, query, statusFilter]);
+  }, [animatedMessages, query, statusFilter]);
 
   const totals = useMemo(() => {
     let newCount = 0;
@@ -100,6 +111,7 @@ export default function AdminMessagesPage() {
   const handleSetStatus = async (
     row: AdminMessageRow,
     next: ContactMessageStatus,
+    options?: { silent?: boolean },
   ) => {
     if (row.status === next) return;
     setMutationError(null);
@@ -118,38 +130,59 @@ export default function AdminMessagesPage() {
       if (openMessage?.id === row.id) {
         setOpenMessage({ ...openMessage, status: updated.status });
       }
+      if (!options?.silent) {
+        notifyActionSuccess("Message status updated.");
+      }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to update message.";
       setMutationError(message);
+      if (!options?.silent) {
+        notifyActionError(err, "Failed to update message.");
+      }
     } finally {
       setBusyId(null);
     }
   };
 
   const handleDelete = async (row: AdminMessageRow) => {
-    if (!window.confirm(`Delete message from ${row.name || row.email}?`)) {
-      return;
-    }
-    setMutationError(null);
-    setBusyId(row.id);
-    try {
-      await deleteAdminMessage(row.id);
-      dispatch(removeAdminMessage(row.id));
-      if (openMessage?.id === row.id) setOpenMessage(null);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to delete message.";
-      setMutationError(message);
-    } finally {
-      setBusyId(null);
-    }
+    const confirmed = await confirmMajorAction({
+      title: `Delete message from ${row.name || row.email}?`,
+      description: "This action cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
+
+    queueMessageRemoval(
+      row.id,
+      async () => {
+        setMutationError(null);
+        setBusyId(row.id);
+        try {
+          await deleteAdminMessage(row.id);
+          dispatch(removeAdminMessage(row.id));
+          if (openMessage?.id === row.id) setOpenMessage(null);
+          notifyActionSuccess("Message deleted.");
+        } catch (err) {
+          const message =
+            err instanceof Error ? err.message : "Failed to delete message.";
+          setMutationError(message);
+          throw new Error(message);
+        } finally {
+          setBusyId(null);
+        }
+      },
+      (error) => {
+        notifyActionError(error, "Failed to delete message.");
+      },
+    );
   };
 
   const handleOpen = (row: AdminMessageRow) => {
     setOpenMessage(row);
     if (row.status === "NEW") {
-      void handleSetStatus(row, "READ");
+      void handleSetStatus(row, "READ", { silent: true });
     }
   };
 

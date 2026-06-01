@@ -67,6 +67,9 @@ const adminCategoriesSlice = createSlice({
         state.items[index] = { ...state.items[index], ...action.payload.changes };
       }
     },
+    removeAdminCategory(state, action: PayloadAction<string>) {
+      state.items = state.items.filter((item) => item.id !== action.payload);
+    },
     setAdminCategoriesLoading(state, action: PayloadAction<boolean>) {
       state.isLoading = action.payload;
     },
@@ -80,6 +83,7 @@ export const {
   setAdminCategories,
   upsertAdminCategory,
   patchAdminCategory,
+  removeAdminCategory,
   setAdminCategoriesLoading,
   setAdminCategoriesError,
 } = adminCategoriesSlice.actions;

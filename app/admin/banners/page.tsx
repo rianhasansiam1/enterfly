@@ -64,6 +64,12 @@ import {
   fetchActiveCategories,
   type CategoryOption,
 } from "@/features/admin-products/api";
+import {
+  confirmMajorAction,
+  notifyActionError,
+  notifyActionSuccess,
+} from "@/lib/admin-feedback";
+import { useAnimatedRemoval } from "@/lib/hooks/useAnimatedRemoval";
 
 import BannerSummaryCards from "./components/BannerSummaryCards";
 import BannerTabsBar from "./components/BannerTabsBar";
@@ -108,6 +114,32 @@ export default function AdminBannersPage() {
 
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
+
+  const { visibleItems: visibleCarousel, queueRemoval: queueCarouselRemoval } =
+    useAnimatedRemoval({
+      items: carousel,
+      getId: (banner) => banner.id,
+    });
+  const { visibleItems: visibleCategory, queueRemoval: queueCategoryRemoval } =
+    useAnimatedRemoval({
+      items: categoryBanners,
+      getId: (banner) => banner.id,
+    });
+  const { visibleItems: visibleTop, queueRemoval: queueTopRemoval } =
+    useAnimatedRemoval({
+      items: top,
+      getId: (banner) => banner.id,
+    });
+  const { visibleItems: visibleDeal, queueRemoval: queueDealRemoval } =
+    useAnimatedRemoval({
+      items: deal,
+      getId: (banner) => banner.id,
+    });
+  const { visibleItems: visiblePromo, queueRemoval: queuePromoRemoval } =
+    useAnimatedRemoval({
+      items: promo,
+      getId: (banner) => banner.id,
+    });
 
   const refresh = useCallback(async () => {
     dispatch(setAdminBannersLoading(true));
@@ -255,10 +287,12 @@ export default function AdminBannersPage() {
           const row = await createCarouselBanner(body);
           dispatch(upsertCarouselBanner(row));
           setSuccessNote("Carousel slide created.");
+          notifyActionSuccess("Carousel slide created.");
         } else {
           const row = await updateCarouselBanner(editing.banner.id, body);
           dispatch(upsertCarouselBanner(row));
           setSuccessNote("Carousel slide updated.");
+          notifyActionSuccess("Carousel slide updated.");
         }
       } else if (editing.kind === "category") {
         if (!categoryForm.categoryId) {
@@ -278,10 +312,12 @@ export default function AdminBannersPage() {
           const row = await createCategoryBanner(body);
           dispatch(upsertCategoryBanner(row));
           setSuccessNote("Category banner created.");
+          notifyActionSuccess("Category banner created.");
         } else {
           const row = await updateCategoryBanner(editing.banner.id, body);
           dispatch(upsertCategoryBanner(row));
           setSuccessNote("Category banner updated.");
+          notifyActionSuccess("Category banner updated.");
         }
       } else if (editing.kind === "top") {
         const position = parseIntSafe(topForm.position, "Position");
@@ -299,10 +335,12 @@ export default function AdminBannersPage() {
           const row = await createTopBanner(body);
           dispatch(upsertTopBanner(row));
           setSuccessNote("Top banner created.");
+          notifyActionSuccess("Top banner created.");
         } else {
           const row = await updateTopBanner(editing.banner.id, body);
           dispatch(upsertTopBanner(row));
           setSuccessNote("Top banner updated.");
+          notifyActionSuccess("Top banner updated.");
         }
       } else if (editing.kind === "deal") {
         const position = parseIntSafe(dealForm.position, "Position");
@@ -319,10 +357,12 @@ export default function AdminBannersPage() {
           const row = await createDealBanner(body);
           dispatch(upsertDealBanner(row));
           setSuccessNote("Deal banner created.");
+          notifyActionSuccess("Deal banner created.");
         } else {
           const row = await updateDealBanner(editing.banner.id, body);
           dispatch(upsertDealBanner(row));
           setSuccessNote("Deal banner updated.");
+          notifyActionSuccess("Deal banner updated.");
         }
       } else {
         const position = parseIntSafe(promoForm.position, "Position");
@@ -340,10 +380,12 @@ export default function AdminBannersPage() {
           const row = await createPromoBanner(body);
           dispatch(upsertPromoBanner(row));
           setSuccessNote("Promo banner created.");
+          notifyActionSuccess("Promo banner created.");
         } else {
           const row = await updatePromoBanner(editing.banner.id, body);
           dispatch(upsertPromoBanner(row));
           setSuccessNote("Promo banner updated.");
+          notifyActionSuccess("Promo banner updated.");
         }
       }
       closePanel();
@@ -351,6 +393,7 @@ export default function AdminBannersPage() {
       const message =
         mutation instanceof Error ? mutation.message : "Banner mutation failed.";
       setMutationError(message);
+      notifyActionError(mutation, "Banner mutation failed.");
     } finally {
       setIsSubmitting(false);
     }
@@ -358,99 +401,174 @@ export default function AdminBannersPage() {
 
   /* ---------------------------- Delete handlers -------------------------- */
 
-  const confirmAndDelete = (label: string) => {
-    if (typeof window === "undefined") return true;
-    return window.confirm(`Delete this ${label}? This cannot be undone.`);
-  };
-
   const handleDeleteCarousel = async (banner: CarouselBannerRow) => {
-    if (!confirmAndDelete("carousel slide")) return;
-    setMutationError(null);
-    setSuccessNote(null);
-    setBusyId(banner.id);
-    try {
-      await deleteCarouselBanner(banner.id);
-      dispatch(removeCarouselBanner(banner.id));
-      setSuccessNote("Carousel slide deleted.");
-    } catch (mutation) {
-      const message =
-        mutation instanceof Error ? mutation.message : "Delete failed.";
-      setMutationError(message);
-    } finally {
-      setBusyId(null);
-    }
+    const confirmed = await confirmMajorAction({
+      title: "Delete this carousel slide?",
+      description: "This action cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
+    queueCarouselRemoval(
+      banner.id,
+      async () => {
+        setMutationError(null);
+        setSuccessNote(null);
+        setBusyId(banner.id);
+        try {
+          await deleteCarouselBanner(banner.id);
+          dispatch(removeCarouselBanner(banner.id));
+          setSuccessNote("Carousel slide deleted.");
+          notifyActionSuccess("Carousel slide deleted.");
+        } catch (mutation) {
+          const message =
+            mutation instanceof Error ? mutation.message : "Delete failed.";
+          setMutationError(message);
+          throw new Error(message);
+        } finally {
+          setBusyId(null);
+        }
+      },
+      (error) => {
+        notifyActionError(error, "Delete failed.");
+      },
+    );
   };
 
   const handleDeleteCategory = async (banner: CategoryBannerRow) => {
-    if (!confirmAndDelete("category banner")) return;
-    setMutationError(null);
-    setSuccessNote(null);
-    setBusyId(banner.id);
-    try {
-      await deleteCategoryBanner(banner.id);
-      dispatch(removeCategoryBanner(banner.id));
-      setSuccessNote("Category banner deleted.");
-    } catch (mutation) {
-      const message =
-        mutation instanceof Error ? mutation.message : "Delete failed.";
-      setMutationError(message);
-    } finally {
-      setBusyId(null);
-    }
+    const confirmed = await confirmMajorAction({
+      title: "Delete this category banner?",
+      description: "This action cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
+    queueCategoryRemoval(
+      banner.id,
+      async () => {
+        setMutationError(null);
+        setSuccessNote(null);
+        setBusyId(banner.id);
+        try {
+          await deleteCategoryBanner(banner.id);
+          dispatch(removeCategoryBanner(banner.id));
+          setSuccessNote("Category banner deleted.");
+          notifyActionSuccess("Category banner deleted.");
+        } catch (mutation) {
+          const message =
+            mutation instanceof Error ? mutation.message : "Delete failed.";
+          setMutationError(message);
+          throw new Error(message);
+        } finally {
+          setBusyId(null);
+        }
+      },
+      (error) => {
+        notifyActionError(error, "Delete failed.");
+      },
+    );
   };
 
   const handleDeleteTop = async (banner: TopBannerRow) => {
-    if (!confirmAndDelete("top strip")) return;
-    setMutationError(null);
-    setSuccessNote(null);
-    setBusyId(banner.id);
-    try {
-      await deleteTopBanner(banner.id);
-      dispatch(removeTopBanner(banner.id));
-      setSuccessNote("Top banner deleted.");
-    } catch (mutation) {
-      const message =
-        mutation instanceof Error ? mutation.message : "Delete failed.";
-      setMutationError(message);
-    } finally {
-      setBusyId(null);
-    }
+    const confirmed = await confirmMajorAction({
+      title: "Delete this top strip?",
+      description: "This action cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
+    queueTopRemoval(
+      banner.id,
+      async () => {
+        setMutationError(null);
+        setSuccessNote(null);
+        setBusyId(banner.id);
+        try {
+          await deleteTopBanner(banner.id);
+          dispatch(removeTopBanner(banner.id));
+          setSuccessNote("Top banner deleted.");
+          notifyActionSuccess("Top banner deleted.");
+        } catch (mutation) {
+          const message =
+            mutation instanceof Error ? mutation.message : "Delete failed.";
+          setMutationError(message);
+          throw new Error(message);
+        } finally {
+          setBusyId(null);
+        }
+      },
+      (error) => {
+        notifyActionError(error, "Delete failed.");
+      },
+    );
   };
 
   const handleDeleteDeal = async (banner: DealBannerRow) => {
-    if (!confirmAndDelete("deal banner")) return;
-    setMutationError(null);
-    setSuccessNote(null);
-    setBusyId(banner.id);
-    try {
-      await deleteDealBanner(banner.id);
-      dispatch(removeDealBanner(banner.id));
-      setSuccessNote("Deal banner deleted.");
-    } catch (mutation) {
-      const message =
-        mutation instanceof Error ? mutation.message : "Delete failed.";
-      setMutationError(message);
-    } finally {
-      setBusyId(null);
-    }
+    const confirmed = await confirmMajorAction({
+      title: "Delete this deal banner?",
+      description: "This action cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
+    queueDealRemoval(
+      banner.id,
+      async () => {
+        setMutationError(null);
+        setSuccessNote(null);
+        setBusyId(banner.id);
+        try {
+          await deleteDealBanner(banner.id);
+          dispatch(removeDealBanner(banner.id));
+          setSuccessNote("Deal banner deleted.");
+          notifyActionSuccess("Deal banner deleted.");
+        } catch (mutation) {
+          const message =
+            mutation instanceof Error ? mutation.message : "Delete failed.";
+          setMutationError(message);
+          throw new Error(message);
+        } finally {
+          setBusyId(null);
+        }
+      },
+      (error) => {
+        notifyActionError(error, "Delete failed.");
+      },
+    );
   };
 
   const handleDeletePromo = async (banner: PromoBannerRow) => {
-    if (!confirmAndDelete("promo banner")) return;
-    setMutationError(null);
-    setSuccessNote(null);
-    setBusyId(banner.id);
-    try {
-      await deletePromoBanner(banner.id);
-      dispatch(removePromoBanner(banner.id));
-      setSuccessNote("Promo banner deleted.");
-    } catch (mutation) {
-      const message =
-        mutation instanceof Error ? mutation.message : "Delete failed.";
-      setMutationError(message);
-    } finally {
-      setBusyId(null);
-    }
+    const confirmed = await confirmMajorAction({
+      title: "Delete this promo banner?",
+      description: "This action cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
+    queuePromoRemoval(
+      banner.id,
+      async () => {
+        setMutationError(null);
+        setSuccessNote(null);
+        setBusyId(banner.id);
+        try {
+          await deletePromoBanner(banner.id);
+          dispatch(removePromoBanner(banner.id));
+          setSuccessNote("Promo banner deleted.");
+          notifyActionSuccess("Promo banner deleted.");
+        } catch (mutation) {
+          const message =
+            mutation instanceof Error ? mutation.message : "Delete failed.";
+          setMutationError(message);
+          throw new Error(message);
+        } finally {
+          setBusyId(null);
+        }
+      },
+      (error) => {
+        notifyActionError(error, "Delete failed.");
+      },
+    );
   };
 
   /* ---------------------------- Render ----------------------------------- */
@@ -501,7 +619,7 @@ export default function AdminBannersPage() {
         </div>
       ) : activeTab === "carousel" ? (
         <CarouselList
-          rows={carousel}
+          rows={visibleCarousel}
           busyId={busyId}
           onEdit={openEditCarousel}
           onDelete={(banner) => {
@@ -510,7 +628,7 @@ export default function AdminBannersPage() {
         />
       ) : activeTab === "category" ? (
         <CategoryList
-          rows={categoryBanners}
+          rows={visibleCategory}
           busyId={busyId}
           onEdit={openEditCategory}
           onDelete={(banner) => {
@@ -519,7 +637,7 @@ export default function AdminBannersPage() {
         />
       ) : activeTab === "top" ? (
         <TopList
-          rows={top}
+          rows={visibleTop}
           busyId={busyId}
           onEdit={openEditTop}
           onDelete={(banner) => {
@@ -528,7 +646,7 @@ export default function AdminBannersPage() {
         />
       ) : activeTab === "deal" ? (
         <DealList
-          rows={deal}
+          rows={visibleDeal}
           busyId={busyId}
           onEdit={openEditDeal}
           onDelete={(banner) => {
@@ -537,7 +655,7 @@ export default function AdminBannersPage() {
         />
       ) : (
         <PromoList
-          rows={promo}
+          rows={visiblePromo}
           busyId={busyId}
           onEdit={openEditPromo}
           onDelete={(banner) => {

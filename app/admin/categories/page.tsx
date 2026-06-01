@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import {
   patchAdminCategory,
+  removeAdminCategory,
   setAdminCategories,
   setAdminCategoriesError,
   setAdminCategoriesLoading,
@@ -22,6 +23,11 @@ import {
   type CategoryFormState,
   type CategoryStatus,
 } from "@/features/admin-categories/api";
+import {
+  confirmMajorAction,
+  notifyActionError,
+  notifyActionSuccess,
+} from "@/lib/admin-feedback";
 
 import CategorySummaryCards from "./components/CategorySummaryCards";
 import CategoriesToolbar from "./components/CategoriesToolbar";
@@ -148,7 +154,9 @@ export default function AdminCategoriesPage() {
           status: form.status,
         });
         dispatch(upsertAdminCategory(created));
-        setSuccessNote("Category created successfully.");
+        const message = "Category created successfully.";
+        setSuccessNote(message);
+        notifyActionSuccess(message);
         closePanel();
       } else {
         if (!editing) throw new Error("No category selected for editing.");
@@ -173,7 +181,9 @@ export default function AdminCategoriesPage() {
 
         const updated = await updateCategory(editing.id, patch);
         dispatch(upsertAdminCategory(updated));
-        setSuccessNote("Category updated successfully.");
+        const message = "Category updated successfully.";
+        setSuccessNote(message);
+        notifyActionSuccess(message);
         closePanel();
       }
     } catch (mutation) {
@@ -182,6 +192,7 @@ export default function AdminCategoriesPage() {
           ? mutation.message
           : "Category mutation failed.";
       setMutationError(message);
+      notifyActionError(mutation, "Category mutation failed.");
     } finally {
       setIsSubmitting(false);
     }
@@ -211,47 +222,57 @@ export default function AdminCategoriesPage() {
           ? "Category made visible."
           : "Category hidden from the storefront.",
       );
+      notifyActionSuccess(
+        next === "ACTIVE"
+          ? "Category made visible."
+          : "Category hidden from the storefront.",
+      );
     } catch (mutation) {
       const message =
         mutation instanceof Error
           ? mutation.message
           : "Failed to update visibility.";
       setMutationError(message);
+      notifyActionError(mutation, "Failed to update visibility.");
     } finally {
       setBusyId(null);
     }
   };
 
   const handleDelete = async (category: AdminCategoryRow) => {
-    if (typeof window !== "undefined") {
-      const confirmed = window.confirm(
-        `Hide "${category.name}"? This is a soft delete (status -> INACTIVE).`,
-      );
-      if (!confirmed) return;
-    }
+    const confirmed = await confirmMajorAction({
+      title: `Delete "${category.name}"?`,
+      description:
+        category.productCount > 0
+          ? `This will permanently delete this category and ${category.productCount} product(s) in it.`
+          : "This will permanently delete this category.",
+      confirmLabel: "Delete category",
+      variant: "danger",
+    });
+    if (!confirmed) return;
 
     setMutationError(null);
     setSuccessNote(null);
     setBusyId(category.id);
 
     try {
-      const updated = await deleteCategory(category.id);
-      dispatch(
-        patchAdminCategory({
-          id: category.id,
-          changes: {
-            status: updated.status,
-            updatedAt: updated.updatedAt,
-          },
-        }),
-      );
-      setSuccessNote("Category deleted (hidden) successfully.");
+      await deleteCategory(category.id);
+      dispatch(removeAdminCategory(category.id));
+      if (editing?.id === category.id) closePanel();
+
+      const message =
+        category.productCount > 0
+          ? `Category deleted with ${category.productCount} product(s).`
+          : "Category deleted successfully.";
+      setSuccessNote(message);
+      notifyActionSuccess(message);
     } catch (mutation) {
       const message =
         mutation instanceof Error
           ? mutation.message
           : "Failed to delete category.";
       setMutationError(message);
+      notifyActionError(mutation, "Failed to delete category.");
     } finally {
       setBusyId(null);
     }

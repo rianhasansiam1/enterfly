@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Lock } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -35,13 +36,16 @@ import {
   cartItemKey,
 } from "@/features/cart/storage";
 import type { CartItem } from "@/features/cart/api";
-import { asRecord } from "@/features/http/api-envelope";
 import {
   type SavedItem,
   readLocalSaved,
   writeLocalSaved,
-  normalizeSavedItem,
 } from "@/features/cart/saved-storage";
+import { useAnimatedRemoval } from "@/lib/hooks/useAnimatedRemoval";
+import {
+  LIST_ITEM_TRANSITION,
+  LIST_ITEM_VARIANTS,
+} from "@/lib/motion/list-removal";
 import { confirm, toast } from "@/lib/feedback";
 
 type AppliedPromo = {
@@ -118,8 +122,29 @@ export default function CartPage() {
 
   const [saved, setSaved] = useState<SavedItem[]>([]);
   const [promo, setPromo] = useState<AppliedPromo | null>(null);
+  const itemsRef = useRef(items);
 
   const canUseServer = canUseServerCart(session?.user?.role, status);
+
+  const {
+    visibleItems: visibleCartItems,
+    queueRemoval: queueCartRemoval,
+  } = useAnimatedRemoval({
+    items,
+    getId: (item) => item.id,
+  });
+
+  const {
+    visibleItems: visibleSavedItems,
+    queueRemoval: queueSavedRemoval,
+  } = useAnimatedRemoval({
+    items: saved,
+    getId: (item) => item.id,
+  });
+
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -257,10 +282,15 @@ export default function CartPage() {
     dispatch(setCartData({ items: updatedItems, summary: computeCartSummary(updatedItems) }));
   };
 
-  const handleRemove = async (id: string) => {
-    const target = items.find((item) => item.id === id);
-    if (!target) return;
+  const removeSavedFromLocal = (id: string) => {
+    setSaved((prev) => {
+      const next = prev.filter((item) => item.id !== id);
+      writeLocalSaved(next);
+      return next;
+    });
+  };
 
+  const commitRemoveFromCart = async (id: string) => {
     dispatch(setCartError(null));
 
     if (canUseServer) {
@@ -273,110 +303,150 @@ export default function CartPage() {
         const message =
           err instanceof Error ? err.message : "Failed to remove item from cart.";
         dispatch(setCartError(message));
-        toast.error(message);
+        throw new Error(message);
       }
       return;
     }
 
-    const next = items.filter((item) => item.id !== id);
+    const next = itemsRef.current.filter((item) => item.id !== id);
     writeLocalCart(next);
     dispatch(setCartData({ items: next, summary: computeCartSummary(next) }));
   };
 
-  const handleSaveForLater = async (id: string) => {
+  const handleRemove = async (id: string) => {
+    const target = items.find((item) => item.id === id);
+    if (!target) return;
+
+    const ok = await confirm({
+      title: "Remove item?",
+      description: `"${target.name}" will be removed from your cart.`,
+      confirmLabel: "Remove",
+      variant: "danger",
+    });
+    if (!ok) return;
+
+    queueCartRemoval(
+      id,
+      async () => {
+        await commitRemoveFromCart(id);
+        toast.success("Item removed from cart");
+      },
+      (error) => {
+        const message =
+          error instanceof Error ? error.message : "Failed to remove item from cart.";
+        toast.error(message);
+      },
+    );
+  };
+
+  const handleSaveForLater = (id: string) => {
     const target = items.find((item) => item.id === id);
     if (!target) return;
 
     const savedItem = toSavedItem(target);
-    const nextSaved = [
-      savedItem,
-      ...saved.filter((item) => item.id !== savedItem.id),
-    ];
-    setSaved(nextSaved);
-    writeLocalSaved(nextSaved);
 
-    await handleRemove(id);
+    queueCartRemoval(
+      id,
+      async () => {
+        await commitRemoveFromCart(id);
+        setSaved((prev) => {
+          const next = [savedItem, ...prev.filter((item) => item.id !== savedItem.id)];
+          writeLocalSaved(next);
+          return next;
+        });
+        toast.info("Saved for later");
+      },
+      (error) => {
+        const message =
+          error instanceof Error ? error.message : "Failed to save item for later.";
+        toast.error(message);
+      },
+    );
   };
 
   const handleSavedRemove = (id: string) => {
-    const nextSaved = saved.filter((item) => item.id !== id);
-    setSaved(nextSaved);
-    writeLocalSaved(nextSaved);
-    toast.success("Removed from saved items");
+    queueSavedRemoval(id, () => {
+      removeSavedFromLocal(id);
+      toast.success("Removed from saved items");
+    });
   };
 
-  const handleSavedMoveToCart = async (id: string) => {
+  const handleSavedMoveToCart = (id: string) => {
     const target = saved.find((item) => item.id === id);
     if (!target || !target.inStock) return;
 
-    if (canUseServer) {
-      dispatch(setCartError(null));
+    queueSavedRemoval(
+      id,
+      async () => {
+        if (canUseServer) {
+          dispatch(setCartError(null));
 
-      try {
-        await addToCartOnServer(target.productId, 1, target.variantId);
-        const snapshot = await fetchServerCartSnapshot();
-        dispatch(setCartData(snapshot));
-        writeLocalCart(snapshot.items);
+          try {
+            await addToCartOnServer(target.productId, 1, target.variantId);
+            const snapshot = await fetchServerCartSnapshot();
+            dispatch(setCartData(snapshot));
+            writeLocalCart(snapshot.items);
+          } catch (err) {
+            const message =
+              err instanceof Error ? err.message : "Failed to move saved item to cart.";
+            dispatch(setCartError(message));
+            throw new Error(message);
+          }
+        } else {
+          const localCartBefore = readLocalCart();
+          const savedKey = cartItemKey(target);
+          const existing = localCartBefore.find(
+            (item) => cartItemKey(item) === savedKey,
+          );
+          const nextItem: CartItem = existing
+            ? {
+                ...existing,
+                quantity: existing.quantity + 1,
+                lineTotal: existing.unitPrice * (existing.quantity + 1),
+              }
+            : {
+                id: `local:${target.variantId ?? target.productId}`,
+                productId: target.productId,
+                variantId: target.variantId ?? null,
+                sku: target.sku ?? null,
+                color: target.color ?? null,
+                size: target.size ?? null,
+                name: target.name,
+                image: target.image,
+                quantity: 1,
+                unitPrice: target.price,
+                originalPrice: target.originalPrice ?? target.price,
+                lineTotal: target.price,
+                stock: 10,
+                status: "ACTIVE",
+              };
 
-        const nextSaved = saved.filter((item) => item.id !== id);
-        setSaved(nextSaved);
-        writeLocalSaved(nextSaved);
-        toast.success(`${target.name} moved to cart`);
-      } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Failed to move saved item to cart.";
-        dispatch(setCartError(message));
-        toast.error(message);
-      }
-      return;
-    }
+          const localCartAfter = existing
+            ? localCartBefore.map((item) =>
+                cartItemKey(item) === savedKey ? nextItem : item,
+              )
+            : [nextItem, ...localCartBefore];
 
-    const localCartBefore = readLocalCart();
-    const savedKey = cartItemKey(target);
-    const existing = localCartBefore.find(
-      (item) => cartItemKey(item) === savedKey,
-    );
-    const nextItem: CartItem = existing
-      ? {
-          ...existing,
-          quantity: existing.quantity + 1,
-          lineTotal: existing.unitPrice * (existing.quantity + 1),
+          writeLocalCart(localCartAfter);
+          dispatch(
+            setCartData({
+              items: localCartAfter,
+              summary: computeCartSummary(localCartAfter),
+            }),
+          );
         }
-      : {
-          id: `local:${target.variantId ?? target.productId}`,
-          productId: target.productId,
-          variantId: target.variantId ?? null,
-          sku: target.sku ?? null,
-          color: target.color ?? null,
-          size: target.size ?? null,
-          name: target.name,
-          image: target.image,
-          quantity: 1,
-          unitPrice: target.price,
-          originalPrice: target.originalPrice ?? target.price,
-          lineTotal: target.price,
-          stock: 10,
-          status: "ACTIVE",
-        };
 
-    const localCartAfter = existing
-      ? localCartBefore.map((item) =>
-          cartItemKey(item) === savedKey ? nextItem : item,
-        )
-      : [nextItem, ...localCartBefore];
-
-    writeLocalCart(localCartAfter);
-    dispatch(
-      setCartData({
-        items: localCartAfter,
-        summary: computeCartSummary(localCartAfter),
-      }),
+        removeSavedFromLocal(id);
+        toast.success(`${target.name} moved to cart`);
+      },
+      (error) => {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to move saved item to cart.";
+        toast.error(message);
+      },
     );
-
-    const nextSaved = saved.filter((item) => item.id !== id);
-    setSaved(nextSaved);
-    writeLocalSaved(nextSaved);
-    toast.success(`${target.name} moved to cart`);
   };
 
   const handleApplyPromo = (code: string) => {
@@ -414,8 +484,8 @@ export default function CartPage() {
     router.push("/checkout");
   };
 
-  const itemCards = items.map(toCartViewModel);
-  const isEmpty = itemCards.length === 0;
+  const itemCards = visibleCartItems.map(toCartViewModel);
+  const isEmpty = items.length === 0;
 
   return (
     <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
@@ -440,10 +510,10 @@ export default function CartPage() {
         ) : isEmpty ? (
           <>
             <EmptyCart />
-            {saved.length > 0 && (
+            {visibleSavedItems.length > 0 && (
               <div className="mt-6">
                 <SavedForLater
-                  items={saved}
+                  items={visibleSavedItems}
                   onMoveToCart={handleSavedMoveToCart}
                   onRemove={handleSavedRemove}
                 />
@@ -459,15 +529,27 @@ export default function CartPage() {
               />
 
               <div className="flex flex-col gap-3">
-                {itemCards.map((item) => (
-                  <CartItemCard
-                    key={item.id}
-                    item={item}
-                    onQuantityChange={handleQuantityChange}
-                    onRemove={handleRemove}
-                    onSaveForLater={handleSaveForLater}
-                  />
-                ))}
+                <AnimatePresence initial={false} mode="popLayout">
+                  {itemCards.map((item) => (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      variants={LIST_ITEM_VARIANTS}
+                      transition={LIST_ITEM_TRANSITION}
+                      className="overflow-hidden"
+                    >
+                      <CartItemCard
+                        item={item}
+                        onQuantityChange={handleQuantityChange}
+                        onRemove={handleRemove}
+                        onSaveForLater={handleSaveForLater}
+                      />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
 
               <div className="flex items-center justify-between rounded-2xl border border-dashed border-violet-200 bg-white/60 px-4 py-3 text-sm">
@@ -481,7 +563,7 @@ export default function CartPage() {
               </div>
 
               <SavedForLater
-                items={saved}
+                items={visibleSavedItems}
                 onMoveToCart={handleSavedMoveToCart}
                 onRemove={handleSavedRemove}
               />

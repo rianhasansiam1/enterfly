@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, Mail, MailOpen, Archive, Trash2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import {
   formatDateTime,
@@ -8,6 +9,10 @@ import {
   type AdminMessageRow,
   type ContactMessageStatus,
 } from "@/features/admin-messages/api";
+import {
+  LIST_ITEM_TRANSITION,
+  LIST_ITEM_VARIANTS,
+} from "@/lib/motion/list-removal";
 import { cn } from "@/lib/utils";
 
 import MessageActionButton from "./MessageActionButton";
@@ -64,13 +69,20 @@ export default function MessagesTable({
             </tr>
           </thead>
           <tbody>
+            <AnimatePresence initial={false}>
             {messages.map((row) => {
               const isBusy = busyId === row.id;
               const isNew = row.status === "NEW";
 
               return (
-                <tr
+                <motion.tr
                   key={row.id}
+                  layout
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={LIST_ITEM_VARIANTS}
+                  transition={LIST_ITEM_TRANSITION}
                   className={cn(
                     "border-t border-violet-100/70 align-top transition-colors hover:bg-violet-50/40",
                     isNew && "bg-violet-50/30",
@@ -162,9 +174,10 @@ export default function MessagesTable({
                       />
                     </div>
                   </td>
-                </tr>
+                </motion.tr>
               );
             })}
+            </AnimatePresence>
           </tbody>
         </table>
       </div>

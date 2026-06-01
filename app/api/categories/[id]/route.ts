@@ -6,9 +6,8 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/api/guards";
 import { jsonError, ok } from "@/lib/api/response";
 import {
-  categoryHasProducts,
   getCategoryById,
-  softDeleteCategory,
+  hardDeleteCategoryWithProducts,
   updateCategory,
 } from "@/lib/services/category.service";
 import { updateCategorySchema } from "@/lib/validations/category.validation";
@@ -81,9 +80,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 /**
  * DELETE /api/categories/[id]
  *
- * Admin only. Refuses to delete if the category still has products
- * attached, then soft-deletes by flipping status to INACTIVE so any
- * historical references stay intact.
+ * Admin only. Hard delete the category and all products under it.
  */
 export async function DELETE(_request: NextRequest, context: RouteContext) {
   const guard = await requireAdmin();
@@ -94,18 +91,12 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
   const existing = await getCategoryById(id);
   if (!existing) return jsonError(404, "Category not found.");
 
-  if (await categoryHasProducts(id)) {
-    return jsonError(
-      409,
-      "This category still has products. Move or remove them first.",
-    );
-  }
-
   try {
-    const category = await softDeleteCategory(id);
+    const result = await hardDeleteCategoryWithProducts(id);
     revalidateTag("categories", "max");
     revalidateTag("home-categories", "max");
-    return ok(category);
+    revalidateTag("products", "max");
+    return ok(result.category);
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&

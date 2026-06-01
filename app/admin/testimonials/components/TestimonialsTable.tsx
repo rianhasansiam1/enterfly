@@ -1,12 +1,17 @@
 "use client";
 
 import { Loader2, MessageSquareQuote, Pencil, Trash2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import {
   formatDate,
   type AdminTestimonialRow,
   type TestimonialStatus,
 } from "@/features/admin-testimonials/api";
+import {
+  LIST_ITEM_TRANSITION,
+  LIST_ITEM_VARIANTS,
+} from "@/lib/motion/list-removal";
 import { cn } from "@/lib/utils";
 
 import Stars from "./Stars";
@@ -67,11 +72,18 @@ export default function TestimonialsTable({
             </tr>
           </thead>
           <tbody>
+            <AnimatePresence initial={false}>
             {testimonials.map((row) => {
               const isBusy = busyId === row.id;
               return (
-                <tr
+                <motion.tr
                   key={row.id}
+                  layout
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={LIST_ITEM_VARIANTS}
+                  transition={LIST_ITEM_TRANSITION}
                   className="border-t border-violet-100/70 align-top"
                 >
                   <td className="px-4 py-3 text-gray-500">{row.position}</td>
@@ -142,9 +154,10 @@ export default function TestimonialsTable({
                       </button>
                     </div>
                   </td>
-                </tr>
+                </motion.tr>
               );
             })}
+            </AnimatePresence>
           </tbody>
         </table>
       </div>

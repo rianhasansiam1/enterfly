@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 
 import {
@@ -25,6 +24,11 @@ import type {
   ProductStatus,
 } from "@/features/admin-products/api";
 import { readApiError } from "@/features/http/api-envelope";
+import {
+  confirmMajorAction,
+  notifyActionError,
+  notifyActionSuccess,
+} from "@/lib/admin-feedback";
 
 import ProductsToolbar from "./components/ProductsToolbar";
 import ProductsTable from "./components/ProductsTable";
@@ -236,7 +240,9 @@ export default function AdminProductsPage() {
         }
 
         await refreshProducts();
-        setSuccessNote("Product created successfully.");
+        const message = "Product created successfully.";
+        setSuccessNote(message);
+        notifyActionSuccess(message);
         closePanel();
       } else {
         if (!editingProduct) throw new Error("No product selected for editing.");
@@ -275,12 +281,15 @@ export default function AdminProductsPage() {
         }
 
         await refreshProducts();
-        setSuccessNote("Product updated successfully.");
+        const message = "Product updated successfully.";
+        setSuccessNote(message);
+        notifyActionSuccess(message);
         closePanel();
       }
     } catch (mutation) {
       const message = mutation instanceof Error ? mutation.message : "Product mutation failed.";
       setMutationError(message);
+      notifyActionError(mutation, "Product mutation failed.");
     } finally {
       setIsSubmitting(false);
     }
@@ -306,27 +315,30 @@ export default function AdminProductsPage() {
       }
 
       await refreshProducts();
-      setSuccessNote(
+      const message =
         product.status === "ACTIVE"
           ? "Product hidden successfully."
-          : "Product made visible successfully.",
-      );
+          : "Product made visible successfully.";
+      setSuccessNote(message);
+      notifyActionSuccess(message);
     } catch (mutation) {
       const message =
         mutation instanceof Error ? mutation.message : "Failed to update visibility.";
       setMutationError(message);
+      notifyActionError(mutation, "Failed to update visibility.");
     } finally {
       setBusyActionProductId(null);
     }
   };
 
   const handleDelete = async (product: AdminProduct) => {
-    if (typeof window !== "undefined") {
-      const confirmed = window.confirm(
-        `Delete "${product.name}"? This performs a soft delete (status -> INACTIVE).`,
-      );
-      if (!confirmed) return;
-    }
+    const confirmed = await confirmMajorAction({
+      title: `Delete "${product.name}"?`,
+      description: "This will permanently delete the product.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
 
     setMutationError(null);
     setSuccessNote(null);
@@ -343,10 +355,13 @@ export default function AdminProductsPage() {
       }
 
       await refreshProducts();
-      setSuccessNote("Product deleted (hidden) successfully.");
+      const message = "Product deleted successfully.";
+      setSuccessNote(message);
+      notifyActionSuccess(message);
     } catch (mutation) {
       const message = mutation instanceof Error ? mutation.message : "Failed to delete product.";
       setMutationError(message);
+      notifyActionError(mutation, "Failed to delete product.");
     } finally {
       setBusyActionProductId(null);
     }

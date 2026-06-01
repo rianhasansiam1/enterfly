@@ -2,6 +2,8 @@
 
 /* eslint-disable @next/next/no-img-element */
 
+import { AnimatePresence, motion } from "framer-motion";
+
 import {
   formatDate,
   type CarouselBannerRow,
@@ -14,6 +16,10 @@ import {
   resolveBannerBackground,
   resolveColorValue,
 } from "@/components/ui/tailwind-palette";
+import {
+  LIST_ITEM_TRANSITION,
+  LIST_ITEM_VARIANTS,
+} from "@/lib/motion/list-removal";
 import { cn } from "@/lib/utils";
 
 import { EmptyState, RowFooter } from "./RowFooter";
@@ -34,9 +40,16 @@ export function CarouselList({
 
   return (
     <div className="grid gap-3 lg:grid-cols-2">
-      {rows.map((banner) => (
-        <article
+      <AnimatePresence initial={false} mode="popLayout">
+        {rows.map((banner) => (
+        <motion.article
           key={banner.id}
+          layout
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          variants={LIST_ITEM_VARIANTS}
+          transition={LIST_ITEM_TRANSITION}
           className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm"
         >
           <div className="relative h-32 w-full overflow-hidden bg-gray-100">
@@ -106,8 +119,9 @@ export function CarouselList({
               onDelete={() => onDelete(banner)}
             />
           </div>
-        </article>
+        </motion.article>
       ))}
+      </AnimatePresence>
     </div>
   );
 }
@@ -127,9 +141,16 @@ export function CategoryList({
 
   return (
     <div className="grid gap-3 lg:grid-cols-2">
-      {rows.map((banner) => (
-        <article
+      <AnimatePresence initial={false} mode="popLayout">
+        {rows.map((banner) => (
+        <motion.article
           key={banner.id}
+          layout
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          variants={LIST_ITEM_VARIANTS}
+          transition={LIST_ITEM_TRANSITION}
           className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm"
         >
           <div className="relative h-32 w-full overflow-hidden bg-gray-100">
@@ -180,8 +201,9 @@ export function CategoryList({
               onDelete={() => onDelete(banner)}
             />
           </div>
-        </article>
+        </motion.article>
       ))}
+      </AnimatePresence>
     </div>
   );
 }
@@ -201,9 +223,16 @@ export function TopList({
 
   return (
     <div className="grid gap-3 lg:grid-cols-2">
-      {rows.map((banner) => (
-        <article
+      <AnimatePresence initial={false} mode="popLayout">
+        {rows.map((banner) => (
+        <motion.article
           key={banner.id}
+          layout
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          variants={LIST_ITEM_VARIANTS}
+          transition={LIST_ITEM_TRANSITION}
           className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm"
         >
           <div className="relative bg-linear-to-r from-violet-600 via-violet-500 to-indigo-500 px-4 py-3 text-white">
@@ -244,8 +273,9 @@ export function TopList({
               onDelete={() => onDelete(banner)}
             />
           </div>
-        </article>
+        </motion.article>
       ))}
+      </AnimatePresence>
     </div>
   );
 }
@@ -265,9 +295,16 @@ export function DealList({
 
   return (
     <div className="grid gap-3 lg:grid-cols-3">
-      {rows.map((banner) => (
-        <article
+      <AnimatePresence initial={false} mode="popLayout">
+        {rows.map((banner) => (
+        <motion.article
           key={banner.id}
+          layout
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          variants={LIST_ITEM_VARIANTS}
+          transition={LIST_ITEM_TRANSITION}
           className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm"
         >
           <div
@@ -312,8 +349,9 @@ export function DealList({
               onDelete={() => onDelete(banner)}
             />
           </div>
-        </article>
+        </motion.article>
       ))}
+      </AnimatePresence>
     </div>
   );
 }
@@ -333,9 +371,16 @@ export function PromoList({
 
   return (
     <div className="grid gap-3 lg:grid-cols-2">
-      {rows.map((banner) => (
-        <article
+      <AnimatePresence initial={false} mode="popLayout">
+        {rows.map((banner) => (
+        <motion.article
           key={banner.id}
+          layout
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          variants={LIST_ITEM_VARIANTS}
+          transition={LIST_ITEM_TRANSITION}
           className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm"
         >
           <div
@@ -385,8 +430,9 @@ export function PromoList({
               onDelete={() => onDelete(banner)}
             />
           </div>
-        </article>
+        </motion.article>
       ))}
+      </AnimatePresence>
     </div>
   );
 }

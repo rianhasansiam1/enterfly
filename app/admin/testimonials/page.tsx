@@ -22,6 +22,12 @@ import {
   type TestimonialFormState,
   type TestimonialStatus,
 } from "@/features/admin-testimonials/api";
+import {
+  confirmMajorAction,
+  notifyActionError,
+  notifyActionSuccess,
+} from "@/lib/admin-feedback";
+import { useAnimatedRemoval } from "@/lib/hooks/useAnimatedRemoval";
 
 import TestimonialSummaryCards from "./components/TestimonialSummaryCards";
 import TestimonialsToolbar from "./components/TestimonialsToolbar";
@@ -58,6 +64,13 @@ export default function AdminTestimonialsPage() {
 
   // Import-from-reviews panel.
   const [showImport, setShowImport] = useState(false);
+  const {
+    visibleItems: animatedTestimonials,
+    queueRemoval: queueTestimonialRemoval,
+  } = useAnimatedRemoval({
+    items: testimonials,
+    getId: (testimonial) => testimonial.id,
+  });
 
   const refresh = useCallback(async () => {
     dispatch(setAdminTestimonialsLoading(true));
@@ -90,7 +103,7 @@ export default function AdminTestimonialsPage() {
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return testimonials.filter((t) => {
+    return animatedTestimonials.filter((t) => {
       const matchQuery =
         !q ||
         t.name.toLowerCase().includes(q) ||
@@ -99,7 +112,7 @@ export default function AdminTestimonialsPage() {
       const matchStatus = statusFilter === "ALL" || t.status === statusFilter;
       return matchQuery && matchStatus;
     });
-  }, [query, statusFilter, testimonials]);
+  }, [animatedTestimonials, query, statusFilter]);
 
   const openCreate = () => {
     setForm({ ...EMPTY_FORM, position: testimonials.length });
@@ -148,48 +161,65 @@ export default function AdminTestimonialsPage() {
       if (editingId === "new") {
         const created = await createTestimonial(body);
         dispatch(upsertAdminTestimonial(created));
-        setSuccessNote("Testimonial added.");
+        const message = "Testimonial added.";
+        setSuccessNote(message);
+        notifyActionSuccess(message);
       } else if (editingId) {
         const updated = await updateTestimonial(editingId, body);
         dispatch(upsertAdminTestimonial(updated));
-        setSuccessNote("Testimonial updated.");
+        const message = "Testimonial updated.";
+        setSuccessNote(message);
+        notifyActionSuccess(message);
       }
       closeForm();
     } catch (saveError) {
-      setMutationError(
+      const message =
         saveError instanceof Error
           ? saveError.message
-          : "Failed to save the testimonial.",
-      );
+          : "Failed to save the testimonial.";
+      setMutationError(message);
+      notifyActionError(saveError, "Failed to save the testimonial.");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (typeof window !== "undefined") {
-      const confirmed = window.confirm(
-        "Delete this testimonial? This cannot be undone.",
-      );
-      if (!confirmed) return;
-    }
-    setMutationError(null);
-    setSuccessNote(null);
-    setBusyId(id);
-    try {
-      await deleteTestimonial(id);
-      dispatch(removeAdminTestimonial(id));
-      if (editingId === id) closeForm();
-      setSuccessNote("Testimonial deleted.");
-    } catch (deleteError) {
-      setMutationError(
-        deleteError instanceof Error
-          ? deleteError.message
-          : "Failed to delete the testimonial.",
-      );
-    } finally {
-      setBusyId(null);
-    }
+    const confirmed = await confirmMajorAction({
+      title: "Delete this testimonial?",
+      description: "This action cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
+
+    queueTestimonialRemoval(
+      id,
+      async () => {
+        setMutationError(null);
+        setSuccessNote(null);
+        setBusyId(id);
+        try {
+          await deleteTestimonial(id);
+          dispatch(removeAdminTestimonial(id));
+          if (editingId === id) closeForm();
+          setSuccessNote("Testimonial deleted.");
+          notifyActionSuccess("Testimonial deleted.");
+        } catch (deleteError) {
+          const message =
+            deleteError instanceof Error
+              ? deleteError.message
+              : "Failed to delete the testimonial.";
+          setMutationError(message);
+          throw new Error(message);
+        } finally {
+          setBusyId(null);
+        }
+      },
+      (error) => {
+        notifyActionError(error, "Failed to delete the testimonial.");
+      },
+    );
   };
 
   return (
@@ -230,9 +260,14 @@ export default function AdminTestimonialsPage() {
           onClose={() => setShowImport(false)}
           onImported={(row) => {
             dispatch(upsertAdminTestimonial(row));
-            setSuccessNote(`Imported a review from ${row.name}.`);
+            const message = `Imported a review from ${row.name}.`;
+            setSuccessNote(message);
+            notifyActionSuccess(message);
           }}
-          onError={setMutationError}
+          onError={(message) => {
+            setMutationError(message);
+            notifyActionError(message, "Failed to import the review.");
+          }}
         />
       )}
 

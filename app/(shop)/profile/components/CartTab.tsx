@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -10,6 +10,7 @@ import {
   ShoppingBag,
   Trash2,
 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -31,6 +32,12 @@ import {
 } from "@/store/slices/cart.slice";
 import type { AppDispatch, RootState } from "@/store";
 import ColorBadge from "@/components/ui/ColorBadge";
+import { toast } from "@/lib/feedback";
+import { useAnimatedRemoval } from "@/lib/hooks/useAnimatedRemoval";
+import {
+  LIST_ITEM_TRANSITION,
+  LIST_ITEM_VARIANTS,
+} from "@/lib/motion/list-removal";
 
 import { FALLBACK_PRODUCT_IMAGE } from "./constants";
 
@@ -55,8 +62,17 @@ export default function CartTab() {
   const summary = useSelector((state: RootState) => state.cart.summary);
   const isLoading = useSelector((state: RootState) => state.cart.isLoading);
   const error = useSelector((state: RootState) => state.cart.error);
+  const itemsRef = useRef(items);
 
   const canUseServer = canUseServerCart(session?.user?.role, status);
+  const { visibleItems, queueRemoval } = useAnimatedRemoval({
+    items,
+    getId: (item) => item.id,
+  });
+
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -148,29 +164,41 @@ export default function CartTab() {
     );
   };
 
-  const handleRemove = async (item: CartItem) => {
-    dispatch(setCartError(null));
+  const handleRemove = (item: CartItem) => {
+    queueRemoval(
+      item.id,
+      async () => {
+        dispatch(setCartError(null));
 
-    if (canUseServer) {
-      try {
-        await removeCartItemOnServer(item.id);
-        const snapshot = await fetchServerCartSnapshot();
-        dispatch(setCartData(snapshot));
-        writeLocalCart(snapshot.items);
-      } catch (err) {
+        if (canUseServer) {
+          try {
+            await removeCartItemOnServer(item.id);
+            const snapshot = await fetchServerCartSnapshot();
+            dispatch(setCartData(snapshot));
+            writeLocalCart(snapshot.items);
+          } catch (err) {
+            const message =
+              err instanceof Error ? err.message : "Failed to remove cart item.";
+            dispatch(setCartError(message));
+            throw new Error(message);
+          }
+        } else {
+          const next = itemsRef.current.filter((entry) => entry.id !== item.id);
+          writeLocalCart(next);
+          dispatch(setCartData({ items: next, summary: computeCartSummary(next) }));
+        }
+
+        toast.success("Item removed from cart");
+      },
+      (error) => {
         const message =
-          err instanceof Error ? err.message : "Failed to remove cart item.";
-        dispatch(setCartError(message));
-      }
-      return;
-    }
-
-    const next = items.filter((entry) => entry.id !== item.id);
-    writeLocalCart(next);
-    dispatch(setCartData({ items: next, summary: computeCartSummary(next) }));
+          error instanceof Error ? error.message : "Failed to remove cart item.";
+        toast.error(message);
+      },
+    );
   };
 
-  const previewItems = items.slice(0, PROFILE_PREVIEW_LIMIT);
+  const previewItems = visibleItems.slice(0, PROFILE_PREVIEW_LIMIT);
   const hiddenCount = Math.max(0, items.length - PROFILE_PREVIEW_LIMIT);
 
   return (
@@ -234,11 +262,18 @@ export default function CartTab() {
       ) : (
         <>
           <ul className="flex flex-col gap-3">
-            {previewItems.map((item) => (
-              <li
-                key={item.id}
-                className="flex items-center gap-3 rounded-2xl border border-violet-100 bg-white p-3 shadow-sm sm:p-4"
-              >
+            <AnimatePresence initial={false} mode="popLayout">
+              {previewItems.map((item) => (
+                <motion.li
+                  key={item.id}
+                  layout
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={LIST_ITEM_VARIANTS}
+                  transition={LIST_ITEM_TRANSITION}
+                  className="flex items-center gap-3 overflow-hidden rounded-2xl border border-violet-100 bg-white p-3 shadow-sm sm:p-4"
+                >
                 <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-violet-100 bg-violet-50">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -310,8 +345,9 @@ export default function CartTab() {
                 <p className="shrink-0 text-sm font-extrabold text-gray-900">
                   {formatBdt(item.lineTotal)}
                 </p>
-              </li>
-            ))}
+                </motion.li>
+              ))}
+            </AnimatePresence>
           </ul>
 
           {hiddenCount > 0 && (

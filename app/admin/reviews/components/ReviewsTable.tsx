@@ -1,12 +1,17 @@
 "use client";
 
 import { Loader2, MessageSquareText, Phone, Trash2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import {
   formatDateTime,
   type AdminReviewRow,
   type ReviewSource,
 } from "@/features/admin-reviews/api";
+import {
+  LIST_ITEM_TRANSITION,
+  LIST_ITEM_VARIANTS,
+} from "@/lib/motion/list-removal";
 import { cn } from "@/lib/utils";
 
 import Stars from "./Stars";
@@ -65,11 +70,18 @@ export default function ReviewsTable({
             </tr>
           </thead>
           <tbody>
+            <AnimatePresence initial={false}>
             {reviews.map((review) => {
               const isBusy = busyId === review.id;
               return (
-                <tr
+                <motion.tr
                   key={review.id}
+                  layout
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={LIST_ITEM_VARIANTS}
+                  transition={LIST_ITEM_TRANSITION}
                   className="border-t border-violet-100/70 align-top"
                 >
                   <td className="px-4 py-3">
@@ -152,9 +164,10 @@ export default function ReviewsTable({
                       </button>
                     </div>
                   </td>
-                </tr>
+                </motion.tr>
               );
             })}
+            </AnimatePresence>
           </tbody>
         </table>
       </div>

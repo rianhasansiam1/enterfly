@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { ArrowRight, Heart, ShoppingBag, Trash2, Star } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -22,6 +23,12 @@ import {
   setWishlistMode,
 } from "@/store/slices/wishlist.slice";
 import type { AppDispatch, RootState } from "@/store";
+import { toast } from "@/lib/feedback";
+import { useAnimatedRemoval } from "@/lib/hooks/useAnimatedRemoval";
+import {
+  LIST_ITEM_TRANSITION,
+  LIST_ITEM_VARIANTS,
+} from "@/lib/motion/list-removal";
 
 import { FALLBACK_PRODUCT_IMAGE } from "./constants";
 
@@ -43,9 +50,18 @@ export default function WishlistTab() {
   const items = useSelector((state: RootState) => state.wishlist.items);
   const isLoading = useSelector((state: RootState) => state.wishlist.isLoading);
   const error = useSelector((state: RootState) => state.wishlist.error);
+  const itemsRef = useRef(items);
 
   const canUseServer =
     status === "authenticated" && isServerWishlistRole(session?.user?.role);
+  const { visibleItems, queueRemoval } = useAnimatedRemoval({
+    items,
+    getId: (item) => item.id,
+  });
+
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -96,29 +112,37 @@ export default function WishlistTab() {
     };
   }, [canUseServer, dispatch, status]);
 
-  const handleRemove = async (id: string) => {
-    const previous = items;
-    const next = items.filter((item) => item.id !== id);
+  const handleRemove = (id: string) => {
+    queueRemoval(
+      id,
+      async () => {
+        dispatch(setWishlistError(null));
 
-    dispatch(setWishlistError(null));
-    dispatch(setWishlistItems(next));
+        if (canUseServer) {
+          try {
+            await removeWishlistItemOnServer(id);
+          } catch (err) {
+            const message =
+              err instanceof Error ? err.message : "Failed to remove from wishlist.";
+            dispatch(setWishlistError(message));
+            throw new Error(message);
+          }
+        }
 
-    if (canUseServer) {
-      try {
-        await removeWishlistItemOnServer(id);
-      } catch (err) {
-        dispatch(setWishlistItems(previous));
+        const next = itemsRef.current.filter((item) => item.id !== id);
+        dispatch(setWishlistItems(next));
+        writeLocalWishlist(next);
+        toast.success("Removed from wishlist");
+      },
+      (error) => {
         const message =
-          err instanceof Error ? err.message : "Failed to remove from wishlist.";
-        dispatch(setWishlistError(message));
-        return;
-      }
-    }
-
-    writeLocalWishlist(next);
+          error instanceof Error ? error.message : "Failed to remove from wishlist.";
+        toast.error(message);
+      },
+    );
   };
 
-  const previewItems = items.slice(0, PROFILE_PREVIEW_LIMIT);
+  const previewItems = visibleItems.slice(0, PROFILE_PREVIEW_LIMIT);
   const hiddenCount = Math.max(0, items.length - PROFILE_PREVIEW_LIMIT);
 
   return (
@@ -168,7 +192,7 @@ export default function WishlistTab() {
             Your wishlist is empty
           </h3>
           <p className="mt-1 text-sm text-gray-600">
-            Save products you love and they'll show up here.
+            Save products you love and they&apos;ll show up here.
           </p>
           <Link
             href="/products"
@@ -181,11 +205,18 @@ export default function WishlistTab() {
       ) : (
         <>
           <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {previewItems.map((item) => (
-              <li
-                key={item.id}
-                className="group flex gap-3 rounded-2xl border border-violet-100 bg-white p-3 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-md"
-              >
+            <AnimatePresence initial={false} mode="popLayout">
+              {previewItems.map((item) => (
+                <motion.li
+                  key={item.id}
+                  layout
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={LIST_ITEM_VARIANTS}
+                  transition={LIST_ITEM_TRANSITION}
+                  className="group flex gap-3 overflow-hidden rounded-2xl border border-violet-100 bg-white p-3 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-md"
+                >
                 <Link
                   href={`/products/${item.id}`}
                   className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-violet-50"
@@ -225,8 +256,9 @@ export default function WishlistTab() {
                     </button>
                   </div>
                 </div>
-              </li>
-            ))}
+                </motion.li>
+              ))}
+            </AnimatePresence>
           </ul>
 
           {hiddenCount > 0 && (

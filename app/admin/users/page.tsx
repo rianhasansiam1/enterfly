@@ -17,6 +17,7 @@ import {
   type AdminUserRow,
   type Role,
 } from "@/features/admin-users/api";
+import { notifyActionError, notifyActionSuccess } from "@/lib/admin-feedback";
 
 import UserSummaryCards from "./components/UserSummaryCards";
 import UsersToolbar from "./components/UsersToolbar";
@@ -96,7 +97,9 @@ export default function AdminCustomersPage() {
 
   const handleToggleRole = async (user: AdminUserRow) => {
     if (user.id === currentUserId) {
-      setMutationError("You can't change your own role.");
+      const message = "You can't change your own role.";
+      setMutationError(message);
+      notifyActionError(message, message);
       return;
     }
 
@@ -113,11 +116,14 @@ export default function AdminCustomersPage() {
           changes: { role: updated.role, updatedAt: updated.updatedAt },
         }),
       );
-      setSuccessNote(`${user.name || user.email} is now ${next}.`);
+      const message = `${user.name || user.email} is now ${next}.`;
+      setSuccessNote(message);
+      notifyActionSuccess(message);
     } catch (mutation) {
       const message =
         mutation instanceof Error ? mutation.message : "Failed to update role.";
       setMutationError(message);
+      notifyActionError(mutation, "Failed to update role.");
     } finally {
       setBusyUserId(null);
     }

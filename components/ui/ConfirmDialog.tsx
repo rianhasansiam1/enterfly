@@ -150,7 +150,8 @@ export default function ConfirmDialog() {
 
   useEffect(() => {
     const unsub = confirmEmitter.subscribe((req) => {
-      setActive({ ...req });
+      if (!req.resolve) return;
+      setActive({ ...req, resolve: req.resolve });
     });
     return unsub;
   }, []);

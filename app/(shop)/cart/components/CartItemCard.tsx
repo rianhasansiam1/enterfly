@@ -12,7 +12,6 @@ import Image from "next/image";
 import Link from "next/link";
 
 import ColorBadge from "@/components/ui/ColorBadge";
-import { confirm, toast } from "@/lib/feedback";
 
 import QuantityStepper from "./QuantityStepper";
 
@@ -163,7 +162,6 @@ export default function CartItemCard({
                 type="button"
                 onClick={() => {
                   onSaveForLater(item.id);
-                  toast.info("Saved for later");
                 }}
                 className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-gray-600 transition-colors hover:bg-violet-50 hover:text-violet-700"
               >
@@ -173,18 +171,7 @@ export default function CartItemCard({
               </button>
               <button
                 type="button"
-                onClick={async () => {
-                  const ok = await confirm({
-                    title: "Remove item?",
-                    description: `"${item.name}" will be removed from your cart.`,
-                    confirmLabel: "Remove",
-                    variant: "danger",
-                  });
-                  if (ok) {
-                    onRemove(item.id);
-                    toast.success("Item removed from cart");
-                  }
-                }}
+                onClick={() => onRemove(item.id)}
                 aria-label="Remove from cart"
                 className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-rose-600 transition-colors hover:bg-rose-50"
               >

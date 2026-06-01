@@ -5,7 +5,12 @@ import { z } from "zod";
 
 import { requireAdmin } from "@/lib/api/guards";
 import { jsonError, ok } from "@/lib/api/response";
-import {getProductById,serializeProduct,softDeleteProduct,updateProduct,} from "@/lib/services/product.service";
+import {
+  getProductById,
+  hardDeleteProduct,
+  serializeProduct,
+  updateProduct,
+} from "@/lib/services/product.service";
 import { updateProductSchema } from "@/lib/validations/product.validation";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -127,8 +132,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 /**
  * DELETE /api/products/[id]
  *
- * Admin only. Soft delete by flipping status to INACTIVE so order
- * history and reviews keep their FK references intact.
+ * Admin only. Hard delete removes the product permanently.
  */
 export async function DELETE(_request: NextRequest, context: RouteContext) {
   const guard = await requireAdmin();
@@ -140,10 +144,10 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
   if (!existing) return jsonError(404, "Product not found.");
 
   try {
-    const product = await softDeleteProduct(id);
+    await hardDeleteProduct(id);
     revalidateTag("products", "max");
     revalidateTag("home-categories", "max");
-    return ok(serializeProduct(product));
+    return ok(serializeProduct(existing));
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&

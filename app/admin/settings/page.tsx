@@ -32,6 +32,12 @@ import {
   type PromoFormState,
   type SettingsFormState,
 } from "@/features/admin-settings/api";
+import {
+  confirmMajorAction,
+  notifyActionError,
+  notifyActionSuccess,
+} from "@/lib/admin-feedback";
+import { useAnimatedRemoval } from "@/lib/hooks/useAnimatedRemoval";
 
 import SettingsSummaryCards from "./components/SettingsSummaryCards";
 import StorePricingForm from "./components/StorePricingForm";
@@ -61,6 +67,11 @@ export default function AdminSettingsPage() {
   const [promoError, setPromoError] = useState<string | null>(null);
   const [promoNote, setPromoNote] = useState<string | null>(null);
   const [busyPromoId, setBusyPromoId] = useState<string | null>(null);
+  const { visibleItems: visiblePromos, queueRemoval: queuePromoRemoval } =
+    useAnimatedRemoval({
+      items: promos,
+      getId: (promo) => promo.id,
+    });
 
   /* ---------------------------- Hydration ---------------------------- */
 
@@ -135,11 +146,14 @@ export default function AdminSettingsPage() {
       });
       dispatch(setStoreSettings(updated));
       setSettingsForm(buildSettingsForm(updated));
-      setSettingsNote("Store settings saved.");
+      const message = "Store settings saved.";
+      setSettingsNote(message);
+      notifyActionSuccess(message);
     } catch (mutation) {
       const message =
         mutation instanceof Error ? mutation.message : "Failed to save settings.";
       setSettingsError(message);
+      notifyActionError(mutation, "Failed to save settings.");
     } finally {
       setIsSavingSettings(false);
     }
@@ -213,44 +227,57 @@ export default function AdminSettingsPage() {
           ? await createPromoCode(body)
           : await updatePromoCode(editing.promo.id, body);
       dispatch(upsertPromoCode(promo));
-      setPromoNote(
+      const message =
         editing.mode === "create"
           ? `Promo code "${promo.code}" created.`
-          : `Promo code "${promo.code}" updated.`,
-      );
+          : `Promo code "${promo.code}" updated.`;
+      setPromoNote(message);
+      notifyActionSuccess(message);
       closePromoPanel();
     } catch (mutation) {
       const message =
         mutation instanceof Error ? mutation.message : "Failed to save promo.";
       setPromoError(message);
+      notifyActionError(mutation, "Failed to save promo.");
     } finally {
       setIsSubmittingPromo(false);
     }
   };
 
   const handleDeletePromo = async (promo: PromoCodeRow) => {
-    if (typeof window !== "undefined") {
-      const confirmed = window.confirm(
-        `Delete promo code "${promo.code}"? This cannot be undone.`,
-      );
-      if (!confirmed) return;
-    }
+    const confirmed = await confirmMajorAction({
+      title: `Delete promo code "${promo.code}"?`,
+      description: "This action cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
 
-    setPromoError(null);
-    setPromoNote(null);
-    setBusyPromoId(promo.id);
+    queuePromoRemoval(
+      promo.id,
+      async () => {
+        setPromoError(null);
+        setPromoNote(null);
+        setBusyPromoId(promo.id);
 
-    try {
-      await deletePromoCode(promo.id);
-      dispatch(removePromoCode(promo.id));
-      setPromoNote(`Promo code "${promo.code}" deleted.`);
-    } catch (mutation) {
-      const message =
-        mutation instanceof Error ? mutation.message : "Failed to delete promo.";
-      setPromoError(message);
-    } finally {
-      setBusyPromoId(null);
-    }
+        try {
+          await deletePromoCode(promo.id);
+          dispatch(removePromoCode(promo.id));
+          setPromoNote(`Promo code "${promo.code}" deleted.`);
+          notifyActionSuccess(`Promo code "${promo.code}" deleted.`);
+        } catch (mutation) {
+          const message =
+            mutation instanceof Error ? mutation.message : "Failed to delete promo.";
+          setPromoError(message);
+          throw new Error(message);
+        } finally {
+          setBusyPromoId(null);
+        }
+      },
+      (error) => {
+        notifyActionError(error, "Failed to delete promo.");
+      },
+    );
   };
 
   const totals = useMemo(() => {
@@ -355,7 +382,7 @@ export default function AdminSettingsPage() {
         )}
 
         <PromoCodesTable
-          promos={promos}
+          promos={visiblePromos}
           currency={settings?.currency ?? "BDT"}
           busyPromoId={busyPromoId}
           onEdit={openEditPromo}

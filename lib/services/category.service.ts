@@ -321,3 +321,27 @@ export function softDeleteCategory(id: string) {
     select: categorySelect,
   });
 }
+
+/**
+ * Hard delete a category and all products under it.
+ *
+ * Product delete cascades to ProductImage/ProductVariant/CartItem/Wishlist/
+ * Review, while OrderItem keeps snapshots by nulling product/variant FKs.
+ */
+export async function hardDeleteCategoryWithProducts(id: string) {
+  return prisma.$transaction(async (tx) => {
+    const deletedProducts = await tx.product.deleteMany({
+      where: { categoryId: id },
+    });
+
+    const deletedCategory = await tx.category.delete({
+      where: { id },
+      select: categorySelect,
+    });
+
+    return {
+      category: deletedCategory,
+      deletedProducts: deletedProducts.count,
+    };
+  });
+}

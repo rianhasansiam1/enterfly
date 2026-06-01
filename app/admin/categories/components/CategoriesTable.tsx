@@ -3,12 +3,17 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { Eye, EyeOff, FolderTree, Loader2, Pencil, Trash2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import {
   formatDate,
   type AdminCategoryRow,
   type CategoryStatus,
 } from "@/features/admin-categories/api";
+import {
+  LIST_ITEM_TRANSITION,
+  LIST_ITEM_VARIANTS,
+} from "@/lib/motion/list-removal";
 import { cn } from "@/lib/utils";
 
 const STATUS_BADGE: Record<CategoryStatus, string> = {
@@ -68,12 +73,19 @@ export default function CategoriesTable({
             </tr>
           </thead>
           <tbody>
+            <AnimatePresence initial={false}>
             {categories.map((category) => {
               const isBusy = busyId === category.id;
 
               return (
-                <tr
+                <motion.tr
                   key={category.id}
+                  layout
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={LIST_ITEM_VARIANTS}
+                  transition={LIST_ITEM_TRANSITION}
                   className="border-t border-violet-100/70 align-top"
                 >
                   <td className="px-4 py-3">
@@ -152,7 +164,7 @@ export default function CategoriesTable({
                       <button
                         type="button"
                         onClick={() => onDelete(category)}
-                        disabled={isBusy || category.status === "INACTIVE"}
+                        disabled={isBusy}
                         className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {isBusy ? (
@@ -164,9 +176,10 @@ export default function CategoriesTable({
                       </button>
                     </div>
                   </td>
-                </tr>
+                </motion.tr>
               );
             })}
+            </AnimatePresence>
           </tbody>
         </table>
       </div>

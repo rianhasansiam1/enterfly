@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, Pencil, Ticket, Trash2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import {
   formatCurrency,
@@ -9,6 +10,10 @@ import {
   type PromoCodeStatus,
   type PromoDiscountType,
 } from "@/features/admin-settings/api";
+import {
+  LIST_ITEM_TRANSITION,
+  LIST_ITEM_VARIANTS,
+} from "@/lib/motion/list-removal";
 import { cn } from "@/lib/utils";
 
 const STATUS_BADGE: Record<PromoCodeStatus, string> = {
@@ -59,6 +64,7 @@ export default function PromoCodesTable({
             </tr>
           </thead>
           <tbody>
+            <AnimatePresence initial={false}>
             {promos.map((promo) => {
               const isBusy = busyPromoId === promo.id;
               const valueLabel =
@@ -67,8 +73,14 @@ export default function PromoCodesTable({
                   : formatCurrency(promo.value, currency);
 
               return (
-                <tr
+                <motion.tr
                   key={promo.id}
+                  layout
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  variants={LIST_ITEM_VARIANTS}
+                  transition={LIST_ITEM_TRANSITION}
                   className="border-t border-violet-100/70 align-top"
                 >
                   <td className="px-4 py-3">
@@ -162,9 +174,10 @@ export default function PromoCodesTable({
                       </button>
                     </div>
                   </td>
-                </tr>
+                </motion.tr>
               );
             })}
+            </AnimatePresence>
           </tbody>
         </table>
       </div>

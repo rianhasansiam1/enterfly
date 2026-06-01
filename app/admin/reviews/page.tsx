@@ -16,6 +16,12 @@ import {
   fetchAllAdminReviewsSnapshot,
   type ReviewSource,
 } from "@/features/admin-reviews/api";
+import {
+  confirmMajorAction,
+  notifyActionError,
+  notifyActionSuccess,
+} from "@/lib/admin-feedback";
+import { useAnimatedRemoval } from "@/lib/hooks/useAnimatedRemoval";
 
 import ReviewSummaryCards from "./components/ReviewSummaryCards";
 import ReviewsToolbar from "./components/ReviewsToolbar";
@@ -44,6 +50,11 @@ export default function AdminReviewsPage() {
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [successNote, setSuccessNote] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const { visibleItems: animatedReviews, queueRemoval: queueReviewRemoval } =
+    useAnimatedRemoval({
+      items: reviews,
+      getId: (review) => review.id,
+    });
 
   const refreshReviews = useCallback(async () => {
     dispatch(setAdminReviewsLoading(true));
@@ -69,7 +80,7 @@ export default function AdminReviewsPage() {
 
   const visibleReviews = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return reviews.filter((review) => {
+    return animatedReviews.filter((review) => {
       const matchQuery =
         !q ||
         review.authorName.toLowerCase().includes(q) ||
@@ -85,7 +96,7 @@ export default function AdminReviewsPage() {
 
       return matchQuery && matchSource && matchRating;
     });
-  }, [query, ratingFilter, reviews, sourceFilter]);
+  }, [animatedReviews, query, ratingFilter, sourceFilter]);
 
   const stats = useMemo(() => {
     const total = reviews.length;
@@ -96,29 +107,40 @@ export default function AdminReviewsPage() {
   }, [reviews]);
 
   const handleDelete = async (id: string) => {
-    if (typeof window !== "undefined") {
-      const confirmed = window.confirm(
-        "Delete this review? This cannot be undone.",
-      );
-      if (!confirmed) return;
-    }
+    const confirmed = await confirmMajorAction({
+      title: "Delete this review?",
+      description: "This action cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
 
-    setMutationError(null);
-    setSuccessNote(null);
-    setBusyId(id);
-    try {
-      await deleteAdminReview(id);
-      dispatch(removeAdminReview(id));
-      setSuccessNote("Review deleted.");
-    } catch (mutation) {
-      const message =
-        mutation instanceof Error
-          ? mutation.message
-          : "Failed to delete the review.";
-      setMutationError(message);
-    } finally {
-      setBusyId(null);
-    }
+    queueReviewRemoval(
+      id,
+      async () => {
+        setMutationError(null);
+        setSuccessNote(null);
+        setBusyId(id);
+        try {
+          await deleteAdminReview(id);
+          dispatch(removeAdminReview(id));
+          setSuccessNote("Review deleted.");
+          notifyActionSuccess("Review deleted.");
+        } catch (mutation) {
+          const message =
+            mutation instanceof Error
+              ? mutation.message
+              : "Failed to delete the review.";
+          setMutationError(message);
+          throw new Error(message);
+        } finally {
+          setBusyId(null);
+        }
+      },
+      (error) => {
+        notifyActionError(error, "Failed to delete the review.");
+      },
+    );
   };
 
   return (
@@ -156,11 +178,14 @@ export default function AdminReviewsPage() {
           onCreated={(review) => {
             dispatch(prependAdminReview(review));
             setShowAddForm(false);
-            setSuccessNote(
-              `Review added for ${review.product?.name ?? "product"}.`,
-            );
+            const message = `Review added for ${review.product?.name ?? "product"}.`;
+            setSuccessNote(message);
+            notifyActionSuccess(message);
           }}
-          onError={setMutationError}
+          onError={(message) => {
+            setMutationError(message);
+            notifyActionError(message, "Failed to add the review.");
+          }}
         />
       )}
 
