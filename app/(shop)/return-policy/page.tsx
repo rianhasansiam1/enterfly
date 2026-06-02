@@ -1,0 +1,181 @@
+import type { Metadata } from "next";
+
+import PolicyLayout, {
+  PolicyContactBlock,
+  PolicyList,
+  PolicySection,
+} from "../../../components/policy/PolicyLayout";
+import { buildMetadata } from "@/lib/seo/metadata";
+import { siteConfig } from "@/lib/seo/site";
+
+/**
+ * Return Policy page.
+ *
+ * IMPORTANT: This is a professional starting template tailored to the
+ * current EnterFly checkout flow (Cash on Delivery active, online "Pay Now"
+ * coming soon). Please have a qualified legal professional review and
+ * adapt the content to your jurisdiction before going to production.
+ */
+
+export const metadata: Metadata = buildMetadata({
+  title: "Return Policy",
+  description: `Learn about ${siteConfig.name}'s return and refund policy, including eligibility, time limits, and how to request a return or exchange.`,
+  path: "/return-policy",
+  keywords: ["return policy", "refund", "exchange", "returns", siteConfig.name],
+});
+
+const LAST_UPDATED = "2026-06-03";
+
+export default function ReturnPolicyPage() {
+  return (
+    <PolicyLayout
+      title="Return Policy"
+      description={`We want you to love every purchase from ${siteConfig.name}. If something isn't right, this policy explains how returns, exchanges, and refunds work.`}
+      lastUpdated={LAST_UPDATED}
+    >
+      <PolicySection
+        title="1. Overview"
+        intro={`This Return Policy applies to all orders placed on ${siteConfig.name}. By placing an order, you agree to the terms set out below. Specific product categories may have additional rules, which will be noted on the product page or during checkout.`}
+      />
+
+      <PolicySection
+        title="2. Return Eligibility"
+        intro="A product is eligible for return when all of the following conditions are met:"
+      >
+        <PolicyList
+          items={[
+            "The return request is made within the allowed time window (see Section 3)",
+            "The product is unused, undamaged, and in its original condition",
+            "All original tags, labels, accessories, and free items are included",
+            "The product is returned in its original packaging where possible",
+            "Proof of purchase (order ID, invoice, or order confirmation email) is provided",
+          ]}
+        />
+      </PolicySection>
+
+      <PolicySection
+        title="3. Return Request Time Limit"
+        intro="Return requests must be initiated within 7 (seven) days from the date of delivery."
+      >
+        <p>
+          Requests submitted after this window may not be accepted, except in cases of a verified
+          manufacturing defect or where required by applicable law. To start a return, please contact
+          our customer support team with your order ID and a brief description of the issue.
+        </p>
+      </PolicySection>
+
+      <PolicySection
+        title="4. Product Condition Requirements"
+        intro="To keep returns fair for everyone, returned items must arrive at our facility in resellable condition."
+      >
+        <PolicyList
+          items={[
+            "No signs of wear, washing, or use",
+            "No scratches, dents, or damage caused after delivery",
+            "All seals, stickers, and protective films intact where applicable",
+            "Original box, manuals, warranty cards, and accessories included",
+          ]}
+        />
+        <p>
+          If a returned product fails our quality inspection, we reserve the right to refuse the return
+          or apply a partial refund reflecting the reduced condition of the item.
+        </p>
+      </PolicySection>
+
+      <PolicySection
+        title="5. Non-Returnable Items"
+        intro="For hygiene, safety, and product integrity reasons, the following items are not eligible for return or exchange (unless damaged or incorrect on arrival):"
+      >
+        <PolicyList
+          items={[
+            "Innerwear, lingerie, swimwear, and similar personal garments",
+            "Cosmetics, skincare, and personal care items once opened or used",
+            "Food, beverages, and other perishable goods",
+            "Custom-made, personalized, or made-to-order products",
+            "Digital products, downloadable content, and gift cards",
+            'Items marked as "Final Sale" or "Non-returnable" on the product page',
+          ]}
+        />
+      </PolicySection>
+
+      <PolicySection
+        title="6. Damaged, Defective, or Wrong Products"
+        intro="If your order arrives damaged, defective, or different from what you ordered, we're sorry — and we'll make it right."
+      >
+        <PolicyList
+          items={[
+            "Contact our customer support within 48 hours of delivery",
+            "Share your order ID and clear photos or a short video of the issue",
+            "Keep the original packaging until the issue is resolved",
+            "Do not use the item if it appears unsafe or unsealed",
+          ]}
+        />
+        <p>
+          Once verified, we will offer a replacement, exchange, or refund at no extra cost to you,
+          based on stock availability and your preference.
+        </p>
+      </PolicySection>
+
+      <PolicySection
+        title="7. Refund and Exchange Process"
+        intro="Once your return is received and inspected, we'll notify you of the outcome."
+      >
+        <PolicyList
+          items={[
+            "Approved returns are processed within 5–10 business days after inspection",
+            "Refunds are issued to the original payment method where available",
+            "Exchanges are subject to product availability; if unavailable, a refund will be offered",
+            "Shipping fees from the original order are non-refundable, unless the return is due to our error",
+            "Return shipping costs may be borne by the customer, except for damaged, defective, or wrong items",
+          ]}
+        />
+      </PolicySection>
+
+      <PolicySection
+        title="8. Cash on Delivery (COD) Orders"
+        intro="For orders paid via Cash on Delivery, refunds are handled a bit differently since no card or digital payment was made."
+      >
+        <PolicyList
+          items={[
+            "Approved COD refunds are issued through bank transfer, mobile financial services (such as bKash, Nagad, or Rocket), or in-store credit",
+            "You will be asked to provide accurate recipient details so the refund can be sent securely",
+            "Refund timelines may vary depending on the chosen method and your bank or operator",
+            "Identity verification may be requested for higher-value refunds",
+          ]}
+        />
+      </PolicySection>
+
+      <PolicySection
+        title="9. Cancellations"
+        intro="You may request to cancel an order before it has been shipped."
+      >
+        <p>
+          Once an order has been handed over to our courier partner, it can no longer be cancelled but
+          may still be eligible for return under the conditions described above. To request a
+          cancellation, contact our customer support as soon as possible with your order ID.
+        </p>
+      </PolicySection>
+
+      <PolicySection
+        title="10. How to Request a Return"
+        intro="Starting a return is simple."
+      >
+        <PolicyList
+          items={[
+            "Reach out to our customer support team using the contact details below",
+            "Share your order ID, the item(s) you want to return, and the reason for the return",
+            "Attach clear photos if the issue involves damage or a wrong item",
+            "Our team will guide you through the next steps, including pickup or drop-off instructions",
+          ]}
+        />
+      </PolicySection>
+
+      <PolicySection
+        title="11. Customer Support"
+        intro="Our team is here to help with any return-related question."
+      >
+        <PolicyContactBlock />
+      </PolicySection>
+    </PolicyLayout>
+  );
+}

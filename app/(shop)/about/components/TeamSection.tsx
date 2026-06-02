@@ -17,10 +17,10 @@ const team = [
       "/images/raju.jpg",
   },
   {
-    name: "Imtiaz Ahmed",
+    name: "Imtiaj Ahmed",
     role: "Co Founder",
     image:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400",
+      "/images/imtiaj.jpg",
   },
 ];
 

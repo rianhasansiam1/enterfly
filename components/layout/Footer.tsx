@@ -13,11 +13,11 @@ const quickLinks = [
 ];
 
 const supportLinks = [
-  { name: "Any Help", href: "/about" },
-  { name: "Terms & Conditions", href: "/about" },
-  { name: "Privacy & Policy", href: "/about" },
-  { name: "Return Policy", href: "/about" },
-  { name: "FAQS", href: "/about" },
+  { name: "Any Help", href: "/contact" },
+  { name: "Terms & Conditions", href: "/terms-and-conditions" },
+  { name: "Privacy Policy", href: "/privacy-policy" },
+  { name: "Return Policy", href: "/return-policy" },
+  { name: "FAQS", href: "/contact" },
 ];
 
 type SocialLink = {
