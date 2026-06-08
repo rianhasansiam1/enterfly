@@ -11,7 +11,7 @@ import {
 import ImageUploader from "@/components/ui/ImageUploader";
 import { cn } from "@/lib/utils";
 
-import Field from "./Field";
+import Field from "@/app/admin/components/Field";
 
 export default function CategoryFormDrawer({
   open,

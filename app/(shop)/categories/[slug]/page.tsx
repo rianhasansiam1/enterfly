@@ -126,6 +126,7 @@ export default async function CategoryPage({ params }: Props) {
                     product.discountPrice != null ? product.price : undefined
                   }
                   image={product.image ?? FALLBACK_PRODUCT_IMAGE}
+                  variantCount={product.variantCount}
                 />
               ))}
             </div>

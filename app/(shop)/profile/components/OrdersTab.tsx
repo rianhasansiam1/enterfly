@@ -73,17 +73,14 @@ export default function OrdersTab() {
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  // Reset to page 1 whenever the filter changes so we don't ask the
-  // server for an out-of-range page.
-  useEffect(() => {
-    setPage(1);
-  }, [statusFilter]);
-
   useEffect(() => {
     let ignore = false;
-    setState({ status: "loading" });
 
     void (async () => {
+      await Promise.resolve();
+      if (ignore) return;
+      setState({ status: "loading" });
+
       try {
         const result = await fetchMyOrders({
           page,
@@ -113,6 +110,11 @@ export default function OrdersTab() {
   const filteredEmpty = useMemo(() => {
     return state.status === "ready" && orders.length === 0;
   }, [orders.length, state.status]);
+
+  const handleStatusFilterChange = (nextStatus: OrderStatus | "ALL") => {
+    setStatusFilter(nextStatus);
+    setPage(1);
+  };
 
   const handleCancel = async (orderId: string) => {
     if (typeof window !== "undefined") {
@@ -181,7 +183,7 @@ export default function OrdersTab() {
               <button
                 key={filter.id}
                 type="button"
-                onClick={() => setStatusFilter(filter.id)}
+                onClick={() => handleStatusFilterChange(filter.id)}
                 className={
                   active
                     ? "inline-flex items-center gap-1.5 rounded-xl bg-violet-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm"

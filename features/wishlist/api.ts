@@ -15,6 +15,8 @@ export type WishlistItem = {
   addedAt: string;
   priceDropFromAdded?: number;
   badge?: string;
+  /** Purchasable variant count; when > 1 the customer must pick options. */
+  variantCount?: number;
 };
 
 export function isServerWishlistRole(role: string | undefined): boolean {

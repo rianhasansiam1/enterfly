@@ -35,22 +35,19 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
-/** Resolve effective price (sale price when valid) from the primary variant. */
+/** Resolve effective customer price (discount when valid) from the product. */
 function effectivePrice(product: {
-  variants: { price: { toNumber(): number }; salePrice: { toNumber(): number } | null }[];
+  salePrice: { toNumber(): number };
+  discountPrice: { toNumber(): number } | null;
 }) {
-  const variant = product.variants[0];
-  if (!variant) return 0;
-  const price = variant.price.toNumber();
-  const sale = variant.salePrice?.toNumber() ?? null;
-  return sale != null && sale < price ? sale : price;
+  const sale = product.salePrice.toNumber();
+  const discount = product.discountPrice?.toNumber() ?? null;
+  return discount != null && discount < sale ? discount : sale;
 }
 
-/** List price (before discount) from the primary variant. */
-function listPrice(product: {
-  variants: { price: { toNumber(): number } }[];
-}) {
-  return product.variants[0]?.price.toNumber() ?? 0;
+/** Regular sale price (before discount) from the product. */
+function listPrice(product: { salePrice: { toNumber(): number } }) {
+  return product.salePrice.toNumber();
 }
 
 function discountPercent(price: number, originalPrice: number) {
@@ -217,13 +214,17 @@ export default async function ProductDetailsPage({ params }: Props) {
                 productId={product.id}
                 productName={product.name}
                 image={galleryImages[0]}
+                salePrice={product.salePrice.toNumber()}
+                discountPrice={
+                  product.discountPrice != null
+                    ? product.discountPrice.toNumber()
+                    : null
+                }
                 variants={product.variants.map((v) => ({
                   id: v.id,
                   sku: v.sku,
                   color: v.color,
                   size: v.size,
-                  price: v.price.toNumber(),
-                  salePrice: v.salePrice != null ? v.salePrice.toNumber() : null,
                   stock: v.stock,
                 }))}
               />

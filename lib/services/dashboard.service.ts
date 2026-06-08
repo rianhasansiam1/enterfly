@@ -2,7 +2,7 @@ import "server-only";
 
 import type { Prisma } from "@prisma/client";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { round2, toNumber } from "@/lib/money";
 
 /**
@@ -72,6 +72,7 @@ export type DashboardStat = {
 
 export type DashboardStats = {
   revenue: DashboardStat;
+  profit: DashboardStat;
   orders: DashboardStat;
   customers: DashboardStat;
   cancellations: DashboardStat;
@@ -169,6 +170,8 @@ async function loadStats(now: Date): Promise<DashboardStats> {
     customersThis,
     customersPrev,
     customersTotal,
+    costItemsThis,
+    costItemsPrev,
   ] = await Promise.all([
     prisma.order.aggregate({
       where: liveOrderWhere(thisMonthStart, new Date(now.getTime() + 1)),
@@ -203,6 +206,24 @@ async function loadStats(now: Date): Promise<DashboardStats> {
       where: { createdAt: { gte: lastMonthStart, lt: lastMonthEnd } },
     }),
     prisma.user.count(),
+    // Cost of goods sold = sum(buyingPrice * quantity) over live order
+    // items. Prisma can't aggregate a product of two columns, so we
+    // pull the snapshots and fold them in JS. buyingPrice is nullable
+    // for legacy rows; those contribute 0 cost.
+    prisma.orderItem.findMany({
+      where: {
+        buyingPrice: { not: null },
+        order: liveOrderWhere(thisMonthStart, new Date(now.getTime() + 1)),
+      },
+      select: { quantity: true, buyingPrice: true },
+    }),
+    prisma.orderItem.findMany({
+      where: {
+        buyingPrice: { not: null },
+        order: liveOrderWhere(lastMonthStart, lastMonthEnd),
+      },
+      select: { quantity: true, buyingPrice: true },
+    }),
   ]);
 
   const buildStat = (current: number, previous: number): DashboardStat => {
@@ -219,6 +240,20 @@ async function loadStats(now: Date): Promise<DashboardStats> {
   );
 
   const orders = buildStat(ordersThis, ordersPrev);
+
+  // Profit = revenue - cost of goods sold for the same window.
+  const sumCost = (
+    rows: { quantity: number; buyingPrice: Prisma.Decimal | null }[],
+  ): number =>
+    rows.reduce(
+      (total, row) => total + toNumber(row.buyingPrice) * row.quantity,
+      0,
+    );
+
+  const profit = buildStat(
+    money(money(toNumber(revenueThis._sum.totalAmount)) - sumCost(costItemsThis)),
+    money(money(toNumber(revenuePrev._sum.totalAmount)) - sumCost(costItemsPrev)),
+  );
 
   // Customers headline shows the live total; the delta is computed
   // from new sign-ups in each month so it represents growth, not the
@@ -239,7 +274,7 @@ async function loadStats(now: Date): Promise<DashboardStats> {
   // For cancellations, "down" is good; the stat object stays signed
   // and the UI can decide which colour to use.
 
-  return { revenue, orders, customers, cancellations };
+  return { revenue, profit, orders, customers, cancellations };
 }
 
 /* -------------------------------------------------------------------------- */

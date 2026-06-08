@@ -41,7 +41,7 @@ import {
   readLocalSaved,
   writeLocalSaved,
 } from "@/features/cart/saved-storage";
-import { useAnimatedRemoval } from "@/lib/hooks/useAnimatedRemoval";
+import { useAnimatedRemoval } from "@/hooks/useAnimatedRemoval";
 import {
   LIST_ITEM_TRANSITION,
   LIST_ITEM_VARIANTS,

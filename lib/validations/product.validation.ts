@@ -9,6 +9,10 @@ import { z } from "zod";
  *
  * The shapes mirror the Prisma `Product` model and its `ProductStatus`
  * enum — keep them aligned when the schema changes.
+ *
+ * Pricing now lives on the Product (`buyingPrice`/`salePrice`/
+ * `discountPrice`) and each `ProductVariant` is a purchasable
+ * size+color inventory row.
  */
 
 const PRODUCT_STATUS = ["ACTIVE", "INACTIVE"] as const;
@@ -29,13 +33,21 @@ const description = z
   .optional()
   .nullable();
 
-const price = z
-  .number({ error: "Price must be a number." })
+/** Business purchase/source cost. Required, admin-only, never negative. */
+const buyingPrice = z
+  .number({ error: "Buying price must be a number." })
   .finite()
-  .nonnegative("Price cannot be negative.");
+  .nonnegative("Buying price cannot be negative.");
 
+/** Normal customer selling price. Required, never negative. */
+const salePrice = z
+  .number({ error: "Sale price must be a number." })
+  .finite()
+  .nonnegative("Sale price cannot be negative.");
+
+/** Optional discounted selling price. Nullable, never negative. */
 const discountPrice = z
-  .number()
+  .number({ error: "Discount price must be a number." })
   .finite()
   .nonnegative("Discount price cannot be negative.")
   .optional()
@@ -55,58 +67,121 @@ const image = z
 
 const images = z.array(z.string().trim().max(2048)).max(20).optional();
 
-const color = z.string().trim().max(40).optional().nullable();
+/**
+ * A single purchasable size+color variant row. Size and color are
+ * required so each row maps to a concrete combination (e.g. "M / Red").
+ * `sku` is optional but unique when provided (enforced by the DB + the
+ * service). `id` is present only when editing an existing variant.
+ */
+const variantInput = z.object({
+  id: z.string().trim().min(1).optional(),
+  size: z.string().trim().min(1, "Size is required.").max(40),
+  color: z.string().trim().min(1, "Color is required.").max(40),
+  sku: z.string().trim().min(1).max(80).optional().nullable(),
+  stock: stock.default(0),
+  image: image,
+  isActive: z.boolean().default(true),
+});
 
-const size = z.string().trim().max(40).optional().nullable();
+export type ProductVariantInput = z.infer<typeof variantInput>;
+
+/** Cross-field guards shared by create/update. */
+function discountWithinSale(data: {
+  salePrice?: number;
+  discountPrice?: number | null;
+}): boolean {
+  if (data.discountPrice == null || data.salePrice == null) return true;
+  return data.discountPrice <= data.salePrice;
+}
+
+/** No two variant rows may share the same size+color (case-insensitive). */
+function variantsHaveUniqueCombos(
+  variants: ProductVariantInput[] | undefined,
+): boolean {
+  if (!variants || variants.length === 0) return true;
+  const seen = new Set<string>();
+  for (const v of variants) {
+    const key = `${v.size.trim().toLowerCase()}|${v.color.trim().toLowerCase()}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+  }
+  return true;
+}
+
+/** No two provided SKUs may collide (ignores blank/missing SKUs). */
+function variantsHaveUniqueSkus(
+  variants: ProductVariantInput[] | undefined,
+): boolean {
+  if (!variants || variants.length === 0) return true;
+  const seen = new Set<string>();
+  for (const v of variants) {
+    const sku = v.sku?.trim();
+    if (!sku) continue;
+    const key = sku.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+  }
+  return true;
+}
 
 /** Body for `POST /api/products`. */
 export const createProductSchema = z
   .object({
     name,
     description,
-    price,
+    buyingPrice,
+    salePrice,
     discountPrice,
-    stock: stock.default(0),
     image,
     images,
-    color,
-    size,
     status: z.enum(PRODUCT_STATUS).default("ACTIVE"),
     categoryId: z.string().trim().min(1, "Category is required."),
+    variants: z.array(variantInput).min(1, "Add at least one variant."),
   })
-  .refine(
-    (data) =>
-      data.discountPrice == null ||
-      data.discountPrice <= data.price,
-    {
-      path: ["discountPrice"],
-      message: "Discount price cannot exceed the regular price.",
-    },
-  );
+  .refine(discountWithinSale, {
+    path: ["discountPrice"],
+    message: "Discount price cannot exceed the sale price.",
+  })
+  .refine((data) => variantsHaveUniqueCombos(data.variants), {
+    path: ["variants"],
+    message: "Each size + color combination must be unique.",
+  })
+  .refine((data) => variantsHaveUniqueSkus(data.variants), {
+    path: ["variants"],
+    message: "Each SKU must be unique.",
+  });
 
 /**
  * Body for `PATCH /api/products/[id]`.
  *
- * All fields optional. We rebuild from the inner shape (instead of
- * `.partial()` on the refined schema) so the cross-field discount check
- * is re-applied after merging with the existing product in the service.
+ * All fields optional. The cross-field discount check is re-applied
+ * after merging with the existing product in the service/route. When
+ * `variants` is provided it is treated as the full desired set (the
+ * service reconciles create/update/delete).
  */
 export const updateProductSchema = z
   .object({
     name: name.optional(),
     description,
-    price: price.optional(),
+    buyingPrice: buyingPrice.optional(),
+    salePrice: salePrice.optional(),
     discountPrice,
-    stock: stock.optional(),
     image,
     images,
-    color,
-    size,
     status: z.enum(PRODUCT_STATUS).optional(),
     categoryId: z.string().trim().min(1).optional(),
+    variants: z.array(variantInput).min(1).optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "Provide at least one field to update.",
+  })
+  .refine((data) => variantsHaveUniqueCombos(data.variants), {
+    path: ["variants"],
+    message: "Each size + color combination must be unique.",
+  })
+  .refine((data) => variantsHaveUniqueSkus(data.variants), {
+    path: ["variants"],
+    message: "Each SKU must be unique.",
   });
 
 /**

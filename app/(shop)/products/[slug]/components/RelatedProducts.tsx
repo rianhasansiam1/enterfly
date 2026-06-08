@@ -4,6 +4,28 @@ import React, { useState, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ShoppingBag, Loader2 } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { useDispatch } from 'react-redux'
+
+import {
+  canUseServerCart,
+  createCartItemOnServer,
+  fetchServerCartSnapshot,
+  type CartItem,
+} from '@/features/cart/api'
+import { computeCartSummary } from '@/features/cart/summary'
+import {
+  DEFAULT_CART_STOCK,
+  readLocalCart,
+  upsertLocalCartItem,
+  writeLocalCart,
+} from '@/features/cart/storage'
+import { toast } from '@/lib/feedback'
+import type { AppDispatch } from '@/store'
+import {
+  setCartData,
+  setCartError as setCartErrorAction,
+} from '@/store/slices/cart.slice'
 
 type RecentProductItem = {
   id: string
@@ -27,8 +49,11 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
   products,
   title = 'More Relevant Product',
 }) => {
+  const dispatch = useDispatch<AppDispatch>()
+  const { data: session, status } = useSession()
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE)
   const [isLoading, setIsLoading] = useState(false)
+  const [cartBusyId, setCartBusyId] = useState<string | null>(null)
 
   const handleLoadMore = useCallback(() => {
     setIsLoading(true)
@@ -39,12 +64,57 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
     }, 500)
   }, [])
 
-  const handleAddToBag = useCallback((e: React.MouseEvent, productId: string) => {
+  const handleAddToBag = useCallback(async (
+    e: React.MouseEvent,
+    product: RecentProductItem,
+  ) => {
     e.preventDefault()
     e.stopPropagation()
-    // TODO: Implement add to cart functionality
-    console.log('Add to bag:', productId)
-  }, [])
+    if (cartBusyId) return
+
+    const canUseServer = canUseServerCart(session?.user?.role, status)
+    dispatch(setCartErrorAction(null))
+    setCartBusyId(product.id)
+
+    if (canUseServer) {
+      try {
+        await createCartItemOnServer(product.id)
+        const snapshot = await fetchServerCartSnapshot()
+        writeLocalCart(snapshot.items)
+        dispatch(setCartData(snapshot))
+        toast.success('Added to cart')
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'Failed to add item to cart.'
+        dispatch(setCartErrorAction(message))
+        toast.error(message)
+      } finally {
+        setCartBusyId(null)
+      }
+      return
+    }
+
+    const localBefore = readLocalCart()
+    const optimisticItem: CartItem = {
+      id: `local:${product.id}`,
+      productId: product.id,
+      slug: product.slug,
+      name: product.name,
+      image: product.image,
+      quantity: 1,
+      unitPrice: product.price,
+      originalPrice: product.originalPrice ?? product.price,
+      lineTotal: product.price,
+      stock: DEFAULT_CART_STOCK,
+      status: 'ACTIVE',
+    }
+
+    const nextLocal = upsertLocalCartItem(localBefore, optimisticItem)
+    writeLocalCart(nextLocal)
+    dispatch(setCartData({ items: nextLocal, summary: computeCartSummary(nextLocal) }))
+    setCartBusyId(null)
+    toast.success('Added to cart')
+  }, [cartBusyId, dispatch, session?.user?.role, status])
 
   if (!products || products.length === 0) {
     return null
@@ -108,11 +178,18 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
 
               {/* Add to Bag Button */}
               <button 
-                onClick={(e) => handleAddToBag(e, product.id)}
+                onClick={(e) => {
+                  void handleAddToBag(e, product)
+                }}
+                disabled={cartBusyId !== null}
                 className="w-full py-1.5 bg-violet-600 text-white text-xs font-medium rounded-lg hover:bg-violet-700 transition-colors flex items-center justify-center gap-1"
               >
-                <ShoppingBag className="w-3 h-3" />
-                Add to bag
+                {cartBusyId === product.id ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <ShoppingBag className="w-3 h-3" />
+                )}
+                {cartBusyId === product.id ? 'Adding...' : 'Add to bag'}
               </button>
             </div>
           </Link>

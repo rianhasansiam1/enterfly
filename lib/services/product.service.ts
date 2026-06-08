@@ -1,8 +1,9 @@
+
 import "server-only";
 
 import { Prisma } from "@prisma/client";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import type {
   CreateProductInput,
   ProductQueryInput,
@@ -14,6 +15,12 @@ import type {
  *
  * Route handlers stay thin and reusable from anywhere on the server
  * (server actions, scripts, cron) — they all hit these helpers.
+ *
+ * Pricing lives on the Product (`buyingPrice`/`salePrice`/`discountPrice`).
+ * `buyingPrice` is the business source cost and is ADMIN-ONLY: it is only
+ * serialized when `includeBuyingPrice` is explicitly passed by an
+ * authenticated admin route. Each `ProductVariant` is a purchasable
+ * size+color inventory row (no price of its own).
  */
 
 /** Fields the API returns alongside the product. */
@@ -27,31 +34,46 @@ export type ProductWithCategory = Prisma.ProductGetPayload<{
   include: typeof productInclude;
 }>;
 
-/** Effective unit price of a product's primary variant (sale when valid). */
-function primaryVariantPrice(product: ProductWithCategory): number {
-  const variant = product.variants[0];
-  if (!variant) return 0;
-  const price = variant.price;
-  const sale = variant.salePrice;
-  return sale != null && sale.lessThan(price)
-    ? sale.toNumber()
-    : price.toNumber();
+/**
+ * Customer-facing effective price of a product: the discount price when
+ * set (and valid), otherwise the sale price.
+ */
+export function effectiveProductPrice(product: {
+  salePrice: Prisma.Decimal;
+  discountPrice: Prisma.Decimal | null;
+}): number {
+  const sale = product.salePrice.toNumber();
+  const discount = product.discountPrice?.toNumber() ?? null;
+  return discount != null && discount < sale ? discount : sale;
 }
 
+export type SerializeOptions = {
+  /** Admin-only: include the business `buyingPrice`. Default false. */
+  includeBuyingPrice?: boolean;
+};
+
 /**
- * Flatten a variant-based product into the legacy flat shape the API
- * has always exposed (price/discountPrice/image/images/stock), so
- * existing clients keep working. Price/stock come from the primary
- * variant; images come from the ProductImage rows. rating/reviewCount/
- * badge were dropped in the variant migration and default here.
+ * Flatten a product into the shape the API exposes. The public contract
+ * keeps `price` (the regular sale price) and `discountPrice`; `salePrice`
+ * is exposed as an explicit alias of `price`. `buyingPrice` is included
+ * ONLY when `includeBuyingPrice` is true (admin routes) and is never sent
+ * to public clients.
+ *
+ * `stock` is the sum of stock across all variants; `color`/`size` come
+ * from the primary (oldest) variant for legacy single-value consumers.
  */
-export function serializeProduct(product: ProductWithCategory) {
-  const variant = product.variants[0];
-  const listPrice = variant ? variant.price.toNumber() : 0;
-  const sale =
-    variant && variant.salePrice != null ? variant.salePrice.toNumber() : null;
-  const discountPrice = sale != null && sale < listPrice ? sale : null;
+export function serializeProduct(
+  product: ProductWithCategory,
+  options: SerializeOptions = {},
+) {
+  const salePrice = product.salePrice.toNumber();
+  const discountPrice =
+    product.discountPrice != null ? product.discountPrice.toNumber() : null;
+  const effectiveDiscount =
+    discountPrice != null && discountPrice < salePrice ? discountPrice : null;
   const imageUrls = product.images.map((img) => img.url);
+  const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
+  const primary = product.variants[0];
 
   return {
     id: product.id,
@@ -59,15 +81,21 @@ export function serializeProduct(product: ProductWithCategory) {
     name: product.name,
     slug: product.slug,
     description: product.description,
-    price: listPrice,
-    discountPrice,
-    stock: variant?.stock ?? 0,
+    // `price` keeps its long-standing meaning: the regular selling price.
+    price: salePrice,
+    salePrice,
+    discountPrice: effectiveDiscount,
+    ...(options.includeBuyingPrice
+      ? { buyingPrice: product.buyingPrice.toNumber() }
+      : {}),
+    stock: totalStock,
     image: imageUrls[0] ?? null,
     images: imageUrls,
     rating: 0,
     reviewCount: 0,
-    color: variant?.color ?? null,
-    size: variant?.size ?? null,
+    color: primary?.color ?? null,
+    size: primary?.size ?? null,
+    variantCount: product.variants.length,
     status: product.status,
     categoryId: product.categoryId,
     category: {
@@ -75,15 +103,15 @@ export function serializeProduct(product: ProductWithCategory) {
       name: product.category.name,
       image: product.category.image,
     },
-    // Expose the structured data too for clients that want it.
+    // Variants are pure size/color inventory rows — no price exposed.
     variants: product.variants.map((v) => ({
       id: v.id,
       sku: v.sku,
       color: v.color,
       size: v.size,
-      price: v.price.toNumber(),
-      salePrice: v.salePrice != null ? v.salePrice.toNumber() : null,
       stock: v.stock,
+      image: v.image,
+      isActive: v.isActive,
     })),
     createdAt: product.createdAt,
     updatedAt: product.updatedAt,
@@ -162,37 +190,26 @@ function buildWhere(query: ProductQueryInput): Prisma.ProductWhereInput {
   if (query.status) where.status = query.status;
 
   if (query.minPrice != null || query.maxPrice != null) {
-    // Price now lives on the product's variants, so filter by any
-    // variant whose price falls in range.
-    where.variants = {
-      some: {
-        price: {
-          ...(query.minPrice != null ? { gte: query.minPrice } : {}),
-          ...(query.maxPrice != null ? { lte: query.maxPrice } : {}),
-        },
-      },
+    // Price lives on the product now — filter on the regular sale price.
+    where.salePrice = {
+      ...(query.minPrice != null ? { gte: query.minPrice } : {}),
+      ...(query.maxPrice != null ? { lte: query.maxPrice } : {}),
     };
   }
 
   return where;
 }
 
-/**
- * Map our public `sort` value to a Prisma `orderBy`.
- *
- * Price now lives on the to-many `variants` relation, which Prisma
- * can't order a product list by directly. We keep the list query
- * stable by sorting on `createdAt` and re-ordering price-sorted
- * results in `listProducts` after the rows (with their primary
- * variant) are loaded.
- */
+/** Map our public `sort` value to a Prisma `orderBy`. */
 function buildOrderBy(
   sort: ProductQueryInput["sort"],
 ): Prisma.ProductOrderByWithRelationInput {
   switch (sort) {
-    case "latest":
     case "price-low":
+      return { salePrice: "asc" };
     case "price-high":
+      return { salePrice: "desc" };
+    case "latest":
     default:
       return { createdAt: "desc" };
   }
@@ -216,17 +233,8 @@ export async function listProducts(query: ProductQueryInput) {
     prisma.product.count({ where }),
   ]);
 
-  // Price lives on variants, so price sorting is applied after load.
-  let sortedItems = items;
-  if (query.sort === "price-low" || query.sort === "price-high") {
-    const dir = query.sort === "price-low" ? 1 : -1;
-    sortedItems = [...items].sort(
-      (a, b) => (primaryVariantPrice(a) - primaryVariantPrice(b)) * dir,
-    );
-  }
-
   return {
-    items: sortedItems,
+    items,
     meta: {
       page: query.page,
       pageSize: query.pageSize,
@@ -292,24 +300,13 @@ export async function getProductSlugById(id: string): Promise<string | null> {
   return row?.slug ?? null;
 }
 
-/**
- * Parse a size input that may contain comma-separated values (e.g. "M, L, XL"
- * or "10, 24, 90") into an array of individual size strings. Returns an array
- * with a single `null` entry when the input is empty/null.
- */
-function parseSizes(raw: string | null | undefined): (string | null)[] {
-  if (!raw || !raw.trim()) return [null];
-  const parts = raw
-    .split(/[,،]+/) // support both comma and Arabic comma
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
-  return parts.length > 0 ? parts : [null];
+/** Normalize an optional SKU: blank -> null. */
+function normalizeSku(sku: string | null | undefined): string | null {
+  const trimmed = sku?.trim();
+  return trimmed ? trimmed : null;
 }
 
 export async function createProduct(input: CreateProductInput) {
-  // The product holds catalog data; price/stock live on variants and
-  // images become ProductImage rows. We keep the legacy flat input shape
-  // and map it onto the new model here.
   const slug = await uniqueSlug(input.name);
   const imageUrls = [
     ...(input.image ? [input.image] : []),
@@ -318,23 +315,19 @@ export async function createProduct(input: CreateProductInput) {
   // De-dupe while preserving order.
   const uniqueImages = Array.from(new Set(imageUrls));
 
-  // Split comma-separated sizes into individual variants so the
-  // storefront size picker gets real selectable options.
-  const sizes = parseSizes(input.size);
-  const variantsToCreate = sizes.map((size, index) => ({
-    sku: sizes.length > 1
-      ? `SKU-${slug}-${size?.toLowerCase().replace(/\s+/g, "") ?? "def"}-${Math.random().toString(36).slice(2, 6)}`
-      : `SKU-${slug}-${Math.random().toString(36).slice(2, 8)}`,
-    color: input.color ?? null,
-    size,
-    price: input.price,
-    salePrice: input.discountPrice ?? null,
-    stock: index === 0 ? input.stock : input.stock, // Each size variant gets the same stock
+  const variantsToCreate = input.variants.map((v) => ({
+    size: v.size,
+    color: v.color,
+    sku: normalizeSku(v.sku),
+    stock: v.stock,
+    image: v.image ?? null,
+    isActive: v.isActive,
   }));
 
   // Generate a human-readable product code. The unique constraint is the
   // real guard, so on the rare concurrent-create collision (P2002) we
-  // recompute the next code and retry a few times before giving up.
+  // recompute the next code and retry a few times before giving up. The
+  // product and its variants are written together in a single create.
   const MAX_ATTEMPTS = 5;
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
     const productCode = await nextProductCode();
@@ -347,6 +340,9 @@ export async function createProduct(input: CreateProductInput) {
           description: input.description ?? null,
           status: input.status,
           categoryId: input.categoryId,
+          buyingPrice: input.buyingPrice,
+          salePrice: input.salePrice,
+          discountPrice: input.discountPrice ?? null,
           variants: {
             create: variantsToCreate,
           },
@@ -374,8 +370,9 @@ export async function createProduct(input: CreateProductInput) {
 }
 
 export async function updateProduct(id: string, input: UpdateProductInput) {
-  // Catalog-level fields go on the product; price/stock map onto the
-  // primary variant; image changes replace the ProductImage set.
+  // Catalog + pricing fields go on the product; image changes replace the
+  // ProductImage set; when `variants` is supplied it is reconciled
+  // (update existing / create new / delete removed) inside the transaction.
   const productData: Prisma.ProductUpdateInput = {};
   if (input.name !== undefined) productData.name = input.name;
   if (input.description !== undefined) {
@@ -385,77 +382,53 @@ export async function updateProduct(id: string, input: UpdateProductInput) {
   if (input.categoryId !== undefined) {
     productData.category = { connect: { id: input.categoryId } };
   }
-
-  // Determine whether size contains comma-separated values that need to
-  // be expanded into multiple variants (one per size).
-  const newSizes = input.size !== undefined ? parseSizes(input.size) : null;
-  const needsVariantRebuild = newSizes !== null && newSizes.length > 1;
-
-  // Resolve the primary variant for price/stock updates (single-variant path).
-  const needsPrimaryUpdate =
-    !needsVariantRebuild &&
-    (input.price !== undefined ||
-      input.discountPrice !== undefined ||
-      input.stock !== undefined ||
-      input.color !== undefined ||
-      input.size !== undefined);
-
-  const primaryVariant = needsPrimaryUpdate
-    ? await prisma.productVariant.findFirst({
-        where: { productId: id },
-        orderBy: { createdAt: "asc" },
-        select: { id: true },
-      })
-    : null;
+  if (input.buyingPrice !== undefined) productData.buyingPrice = input.buyingPrice;
+  if (input.salePrice !== undefined) productData.salePrice = input.salePrice;
+  if (input.discountPrice !== undefined) {
+    productData.discountPrice = input.discountPrice;
+  }
 
   return prisma.$transaction(async (tx) => {
     await tx.product.update({ where: { id }, data: productData });
 
-    if (needsVariantRebuild && newSizes) {
-      // Multi-size path: replace all existing variants with one per size.
-      // Fetch the current product to preserve color/price/stock defaults.
-      const current = await tx.product.findUniqueOrThrow({
-        where: { id },
-        include: { variants: { orderBy: { createdAt: "asc" } } },
+    if (input.variants !== undefined) {
+      const existing = await tx.productVariant.findMany({
+        where: { productId: id },
+        select: { id: true },
       });
-      const baseVariant = current.variants[0];
-      const color = input.color ?? baseVariant?.color ?? null;
-      const price = input.price ?? (baseVariant ? baseVariant.price.toNumber() : 0);
-      const salePrice = input.discountPrice !== undefined
-        ? input.discountPrice
-        : baseVariant?.salePrice != null
-          ? baseVariant.salePrice.toNumber()
-          : null;
-      const stock = input.stock ?? baseVariant?.stock ?? 0;
-      const slug = current.slug;
+      const existingIds = new Set(existing.map((v) => v.id));
+      const keptIds = new Set<string>();
 
-      // Delete existing variants and create new ones per size.
-      await tx.productVariant.deleteMany({ where: { productId: id } });
-      await tx.productVariant.createMany({
-        data: newSizes.map((size) => ({
-          productId: id,
-          sku: `SKU-${slug}-${size?.toLowerCase().replace(/\s+/g, "") ?? "def"}-${Math.random().toString(36).slice(2, 6)}`,
-          color,
-          size,
-          price,
-          salePrice,
-          stock,
-        })),
-      });
-    } else if (primaryVariant) {
-      // Single-variant path: update existing primary variant fields.
-      const variantData: Prisma.ProductVariantUpdateInput = {};
-      if (input.price !== undefined) variantData.price = input.price;
-      if (input.discountPrice !== undefined) {
-        variantData.salePrice = input.discountPrice;
+      for (const variant of input.variants) {
+        const data = {
+          size: variant.size,
+          color: variant.color,
+          sku: normalizeSku(variant.sku),
+          stock: variant.stock,
+          image: variant.image ?? null,
+          isActive: variant.isActive,
+        };
+
+        if (variant.id && existingIds.has(variant.id)) {
+          keptIds.add(variant.id);
+          await tx.productVariant.update({
+            where: { id: variant.id },
+            data,
+          });
+        } else {
+          await tx.productVariant.create({
+            data: { productId: id, ...data },
+          });
+        }
       }
-      if (input.stock !== undefined) variantData.stock = input.stock;
-      if (input.color !== undefined) variantData.color = input.color;
-      if (input.size !== undefined) variantData.size = input.size;
-      await tx.productVariant.update({
-        where: { id: primaryVariant.id },
-        data: variantData,
-      });
+
+      // Delete variants the caller dropped from the set.
+      const toDelete = [...existingIds].filter((vid) => !keptIds.has(vid));
+      if (toDelete.length > 0) {
+        await tx.productVariant.deleteMany({
+          where: { id: { in: toDelete } },
+        });
+      }
     }
 
     // Replace the image set when the caller provided image fields.

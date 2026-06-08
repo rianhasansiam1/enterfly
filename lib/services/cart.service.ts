@@ -3,7 +3,7 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { multiply, round2, subtractClamped, sumDecimals, toDecimal } from "@/lib/money";
 import { ServiceError } from "@/lib/services/service-error";
 import type {
@@ -50,6 +50,8 @@ const cartItemProductSelect = {
   name: true,
   slug: true,
   status: true,
+  salePrice: true,
+  discountPrice: true,
   images: {
     orderBy: { position: "asc" },
     take: 1,
@@ -57,14 +59,12 @@ const cartItemProductSelect = {
   },
 } satisfies Prisma.ProductSelect;
 
-/** The exact selected variant carries price + stock for the line. */
+/** The exact selected variant carries the size/color + stock for the line. */
 const cartItemVariantSelect = {
   id: true,
   sku: true,
   color: true,
   size: true,
-  price: true,
-  salePrice: true,
   stock: true,
 } satisfies Prisma.ProductVariantSelect;
 
@@ -81,18 +81,22 @@ type CartItemWithRelations = Prisma.CartItemGetPayload<{
 /*  Helpers                                                                   */
 /* -------------------------------------------------------------------------- */
 
-/** Pick the unit price the customer should pay (sale price when valid). */
-function effectiveVariantPrice(variant: {
-  price: Prisma.Decimal;
-  salePrice: Prisma.Decimal | null;
+/**
+ * Pick the unit price the customer should pay. Pricing lives on the
+ * product now: use the discount price when set and lower than the sale
+ * price, otherwise the sale price.
+ */
+function effectiveProductPrice(product: {
+  salePrice: Prisma.Decimal;
+  discountPrice: Prisma.Decimal | null;
 }): Prisma.Decimal {
   if (
-    variant.salePrice != null &&
-    toDecimal(variant.salePrice).lessThan(toDecimal(variant.price))
+    product.discountPrice != null &&
+    toDecimal(product.discountPrice).lessThan(toDecimal(product.salePrice))
   ) {
-    return toDecimal(variant.salePrice);
+    return toDecimal(product.discountPrice);
   }
-  return toDecimal(variant.price);
+  return toDecimal(product.salePrice);
 }
 
 /** Shape returned to the client for one cart row. */
@@ -101,7 +105,7 @@ type CartLine = {
   productId: string;
   slug: string;
   variantId: string;
-  sku: string;
+  sku: string | null;
   color: string | null;
   size: string | null;
   name: string;
@@ -132,8 +136,8 @@ function toLine(row: CartItemWithRelations): {
 } {
   const p = row.product;
   const variant = row.variant;
-  const listPrice = toDecimal(variant.price);
-  const unitPrice = effectiveVariantPrice(variant);
+  const listPrice = toDecimal(p.salePrice);
+  const unitPrice = effectiveProductPrice(p);
   const stock = variant.stock;
   const line: CartLine = {
     id: row.id,
@@ -219,6 +223,17 @@ async function resolveVariant(
   if (!product) throw new CartError(404, "Product not found.");
   if (product.status !== "ACTIVE") {
     throw new CartError(409, `"${product.name}" is no longer available.`);
+  }
+
+  // When the product has more than one variant, the caller MUST specify
+  // which size+color they want. We only fall back to the single variant
+  // when there is exactly one (an unambiguous choice).
+  if (!variantId && product.variants.length > 1) {
+    throw new CartError(
+      400,
+      `Please select a size and color for "${product.name}" before adding to the cart.`,
+      { productId: product.id, requiresVariantSelection: true },
+    );
   }
 
   const variant = variantId

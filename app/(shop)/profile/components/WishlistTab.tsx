@@ -24,7 +24,7 @@ import {
 } from "@/store/slices/wishlist.slice";
 import type { AppDispatch, RootState } from "@/store";
 import { toast } from "@/lib/feedback";
-import { useAnimatedRemoval } from "@/lib/hooks/useAnimatedRemoval";
+import { useAnimatedRemoval } from "@/hooks/useAnimatedRemoval";
 import {
   LIST_ITEM_TRANSITION,
   LIST_ITEM_VARIANTS,

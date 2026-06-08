@@ -12,6 +12,11 @@ import {
 } from "@/lib/motion/list-removal";
 import { cn } from "@/lib/utils";
 
+/** Consistent BDT currency formatting for the admin table. */
+function formatBDT(value: number): string {
+  return `BDT ${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+}
+
 export default function ProductsTable({
   products,
   isLoading,
@@ -58,7 +63,9 @@ export default function ProductsTable({
               <th className="px-4 py-3">Category</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Stock</th>
-              <th className="px-4 py-3">Price</th>
+              <th className="px-4 py-3">Buying Price</th>
+              <th className="px-4 py-3">Sale Price</th>
+              <th className="px-4 py-3">Discount Price</th>
               <th className="px-4 py-3">Created</th>
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
@@ -113,12 +120,21 @@ export default function ProductsTable({
                   <td className="px-4 py-3 text-gray-700">{product.stock}</td>
                   <td className="px-4 py-3">
                     <p className="font-semibold text-gray-900">
-                      BDT {product.price.toLocaleString()}
+                      {formatBDT(product.buyingPrice)}
                     </p>
-                    {typeof product.discountPrice === "number" && (
-                      <p className="text-xs text-emerald-700">
-                        Discount BDT {product.discountPrice.toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="font-semibold text-gray-900">
+                      {formatBDT(product.salePrice)}
+                    </p>
+                  </td>
+                  <td className="px-4 py-3">
+                    {typeof product.discountPrice === "number" ? (
+                      <p className="font-semibold text-emerald-700">
+                        {formatBDT(product.discountPrice)}
                       </p>
+                    ) : (
+                      <span className="text-xs text-gray-400">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-500">

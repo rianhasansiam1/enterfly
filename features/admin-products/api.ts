@@ -2,21 +2,36 @@ import { readApiError } from "@/features/http/api-envelope";
 
 export type ProductStatus = "ACTIVE" | "INACTIVE";
 
+/** A purchasable size+color inventory row, as the admin sees/edits it. */
+export type AdminVariant = {
+  id?: string;
+  size: string;
+  color: string;
+  sku: string | null;
+  stock: number;
+  image: string | null;
+  isActive: boolean;
+};
+
 export type AdminProduct = {
   id: string;
   productCode: string;
   name: string;
   description: string | null;
-  price: number;
+  /** Business source cost — admin-only, never shown to customers. */
+  buyingPrice: number;
+  /** Regular customer selling price. */
+  salePrice: number;
+  /** Optional discounted selling price. */
   discountPrice: number | null;
   image: string | null;
   images: string[];
   rating: number;
   reviewCount: number;
-  color: string | null;
-  size: string | null;
   status: ProductStatus;
+  /** Total stock summed across all variants. */
   stock: number;
+  variants: AdminVariant[];
   createdAt: string;
   categoryId: string;
   category: {
@@ -45,36 +60,56 @@ export type ApiEnvelope<T> = {
   meta?: ApiMeta;
 };
 
+/** A single editable variant row in the product form. */
+export type VariantFormRow = {
+  id?: string;
+  size: string;
+  color: string;
+  sku: string;
+  stock: string;
+  image: string;
+  isActive: boolean;
+};
+
 export type ProductFormState = {
   name: string;
   description: string;
-  price: string;
+  buyingPrice: string;
+  salePrice: string;
   discountPrice: string;
-  stock: string;
   image: string;
   images: string;
-  color: string;
-  size: string;
   status: ProductStatus;
   categoryId: string;
+  variants: VariantFormRow[];
 };
 
 export const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400";
 export const API_PAGE_SIZE = 100;
 
+export function makeEmptyVariant(): VariantFormRow {
+  return {
+    size: "",
+    color: "",
+    sku: "",
+    stock: "0",
+    image: "",
+    isActive: true,
+  };
+}
+
 export const EMPTY_FORM: ProductFormState = {
   name: "",
   description: "",
-  price: "",
+  buyingPrice: "",
+  salePrice: "",
   discountPrice: "",
-  stock: "0",
   image: "",
   images: "",
-  color: "",
-  size: "",
   status: "ACTIVE",
   categoryId: "",
+  variants: [makeEmptyVariant()],
 };
 
 type UnknownRecord = Record<string, unknown>;
@@ -136,6 +171,25 @@ function readCategory(
   return { id: categoryIdFromRow, name: "Uncategorized", image: null };
 }
 
+function readVariants(value: unknown): AdminVariant[] {
+  if (!Array.isArray(value)) return [];
+  const out: AdminVariant[] = [];
+  for (const entry of value) {
+    const rec = asRecord(entry);
+    if (!rec) continue;
+    out.push({
+      id: readString(rec.id) ?? undefined,
+      size: readString(rec.size) ?? "",
+      color: readString(rec.color) ?? "",
+      sku: readString(rec.sku),
+      stock: readNumber(rec.stock) ?? 0,
+      image: readString(rec.image),
+      isActive: rec.isActive === false ? false : true,
+    });
+  }
+  return out;
+}
+
 export function parseProductsPayload(payload: unknown): AdminProduct[] {
   const envelope = payload as ApiEnvelope<unknown>;
   if (!envelope?.success || !Array.isArray(envelope.data)) {
@@ -151,45 +205,30 @@ export function parseProductsPayload(payload: unknown): AdminProduct[] {
     const category = readCategory(row);
     const images = readStringArray(row.images);
     const image = readString(row.image) ?? images[0] ?? null;
-    const price = readNumber(row.price) ?? 0;
+    // `price` is the public alias of the regular selling price; prefer the
+    // explicit `salePrice` when present.
+    const salePrice = readNumber(row.salePrice) ?? readNumber(row.price) ?? 0;
     const discountPrice = readNumber(row.discountPrice);
+    // buyingPrice is admin-only: present only when an admin fetched the row.
+    const buyingPrice = readNumber(row.buyingPrice) ?? 0;
     const stock = readNumber(row.stock) ?? 0;
-
-    // color comes from the primary variant; size is collected from ALL
-    // variants and joined so the admin edit form shows the full set
-    // (e.g. "S, M, L") that was originally entered.
-    const variantsArr = Array.isArray(row.variants) ? row.variants : [];
-    const primaryVariant = asRecord(variantsArr[0]);
-    const color = primaryVariant ? readString(primaryVariant.color) : null;
-
-    // Collect unique sizes from all variants, preserving order.
-    const allSizes: string[] = [];
-    const seenSizes = new Set<string>();
-    for (const v of variantsArr) {
-      const vRec = asRecord(v);
-      const s = vRec ? readString(vRec.size) : null;
-      if (s && !seenSizes.has(s)) {
-        seenSizes.add(s);
-        allSizes.push(s);
-      }
-    }
-    const size = allSizes.length > 0 ? allSizes.join(", ") : null;
+    const variants = readVariants(row.variants);
 
     return {
       id: readString(row.id) ?? "",
       productCode: readString(row.productCode) ?? "",
       name: readString(row.name) ?? "Untitled Product",
       description: readString(row.description),
-      price,
+      buyingPrice,
+      salePrice,
       discountPrice,
       image,
       images,
       rating: readNumber(row.rating) ?? 0,
       reviewCount: readNumber(row.reviewCount) ?? 0,
-      color,
-      size,
       status: row.status === "INACTIVE" ? "INACTIVE" : "ACTIVE",
       stock,
+      variants,
       createdAt: readString(row.createdAt) ?? new Date(0).toISOString(),
       categoryId: readString(row.categoryId) ?? category.id,
       category,
@@ -296,19 +335,31 @@ export function normalizeImagesInput(input: string): string[] {
 }
 
 export function buildFormFromProduct(product: AdminProduct): ProductFormState {
+  const variants: VariantFormRow[] =
+    product.variants.length > 0
+      ? product.variants.map((v) => ({
+          id: v.id,
+          size: v.size,
+          color: v.color,
+          sku: v.sku ?? "",
+          stock: String(v.stock),
+          image: v.image ?? "",
+          isActive: v.isActive,
+        }))
+      : [makeEmptyVariant()];
+
   return {
     name: product.name,
     description: product.description ?? "",
-    price: String(product.price),
+    buyingPrice: String(product.buyingPrice),
+    salePrice: String(product.salePrice),
     discountPrice:
       typeof product.discountPrice === "number" ? String(product.discountPrice) : "",
-    stock: String(product.stock),
     image: product.image ?? "",
     images: product.images.join("\n"),
-    color: product.color ?? "",
-    size: product.size ?? "",
     status: product.status,
     categoryId: product.categoryId,
+    variants,
   };
 }
 

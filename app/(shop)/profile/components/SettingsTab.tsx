@@ -1,7 +1,7 @@
 "use client";
 import { toast } from "@/lib/feedback";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -115,12 +115,6 @@ export default function SettingsTab({ user, onUpdated }: SettingsTabProps) {
   const [submitState, setSubmitState] = useState<SubmitState>({
     status: "idle",
   });
-
-  // Re-sync the form whenever the parent hands us a fresh user (e.g.
-  // after a successful save round-trips back through the dashboard).
-  useEffect(() => {
-    setForm(toFormState(user));
-  }, [user]);
 
   const validity = useMemo(() => validate(form), [form]);
   const patch = useMemo(() => buildPatch(user, form), [user, form]);

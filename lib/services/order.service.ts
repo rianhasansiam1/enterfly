@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 import type { OrderStatus } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { multiply, round2, sumDecimals, toDecimal, toNumber } from "@/lib/money";
 import { ServiceError } from "@/lib/services/service-error";
 import type {
@@ -136,18 +136,18 @@ export function serializeOrderOrNull<T extends OrderWithItems>(
 /*  Helpers                                                                   */
 /* -------------------------------------------------------------------------- */
 
-/** Pick the effective unit price (sale price when valid) as a Decimal. */
-function effectiveVariantPrice(variant: {
-  price: Prisma.Decimal;
-  salePrice: Prisma.Decimal | null;
+/** Pick the effective unit price (discount when valid) as a Decimal. */
+function effectiveProductPrice(product: {
+  salePrice: Prisma.Decimal;
+  discountPrice: Prisma.Decimal | null;
 }): Prisma.Decimal {
   if (
-    variant.salePrice != null &&
-    toDecimal(variant.salePrice).lessThan(toDecimal(variant.price))
+    product.discountPrice != null &&
+    toDecimal(product.discountPrice).lessThan(toDecimal(product.salePrice))
   ) {
-    return toDecimal(variant.salePrice);
+    return toDecimal(product.discountPrice);
   }
-  return toDecimal(variant.price);
+  return toDecimal(product.salePrice);
 }
 
 /**
@@ -211,6 +211,9 @@ export async function createOrder(userId: string, input: CreateOrderInput) {
       id: true,
       name: true,
       status: true,
+      salePrice: true,
+      discountPrice: true,
+      buyingPrice: true,
       images: {
         orderBy: { position: "asc" },
         take: 1,
@@ -223,8 +226,6 @@ export async function createOrder(userId: string, input: CreateOrderInput) {
           sku: true,
           color: true,
           size: true,
-          price: true,
-          salePrice: true,
           stock: true,
         },
       },
@@ -246,6 +247,14 @@ export async function createOrder(userId: string, input: CreateOrderInput) {
         { productId: product.id },
       );
     }
+    // Multi-variant products require an explicit size+color selection.
+    if (!line.variantId && product.variants.length > 1) {
+      throw new OrderError(
+        409,
+        `Please select a size and color for "${product.name}" before ordering.`,
+        { productId: product.id, requiresVariantSelection: true },
+      );
+    }
     const variant = line.variantId
       ? product.variants.find((v) => v.id === line.variantId)
       : product.variants[0];
@@ -265,7 +274,7 @@ export async function createOrder(userId: string, input: CreateOrderInput) {
         { productId: product.id, available: variant.stock },
       );
     }
-    const unitPrice = effectiveVariantPrice(variant);
+    const unitPrice = effectiveProductPrice(product);
     return {
       productId: product.id,
       variantId: variant.id,
@@ -277,6 +286,7 @@ export async function createOrder(userId: string, input: CreateOrderInput) {
       quantity: line.quantity,
       unitPrice,
       lineTotal: multiply(unitPrice, line.quantity),
+      buyingPrice: toDecimal(product.buyingPrice),
     };
   });
 
@@ -351,6 +361,7 @@ export async function createOrder(userId: string, input: CreateOrderInput) {
               quantity: l.quantity,
               unitPrice: round2(l.unitPrice),
               totalPrice: round2(l.lineTotal),
+              buyingPrice: round2(l.buyingPrice),
             })),
           },
         },

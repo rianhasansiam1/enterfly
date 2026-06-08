@@ -12,7 +12,7 @@ import {
   type AdminReviewRow,
 } from "@/features/admin-reviews/api";
 
-import Stars from "./Stars";
+import Stars from "@/app/admin/components/Stars";
 
 /**
  * Import-from-reviews panel.
@@ -41,7 +41,6 @@ export default function ImportReviewsPanel({
 
   useEffect(() => {
     let ignore = false;
-    setLoading(true);
     void (async () => {
       try {
         const rows = await fetchAllAdminReviewsSnapshot();

@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 
 import { hashPassword, verifyPassword } from "@/lib/auth/passwords";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { ServiceError } from "@/lib/services/service-error";
 import type {
   AdminUserQueryInput,

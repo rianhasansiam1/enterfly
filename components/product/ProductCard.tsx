@@ -3,6 +3,7 @@
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -53,6 +54,12 @@ type ProductCardProps = {
   rating?: number;
   reviewCount?: number;
   badge?: string;
+  /**
+   * Number of purchasable variants. When > 1, the customer must choose a
+   * size/color, so "Add to cart" routes to the product page instead of a
+   * blind quick-add. Defaults to 1 (single variant -> direct add).
+   */
+  variantCount?: number;
 };
 
 export default function ProductCard({
@@ -65,8 +72,10 @@ export default function ProductCard({
   rating = 0,
   reviewCount = 0,
   badge,
+  variantCount = 1,
 }: ProductCardProps) {
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
   const { data: session, status } = useSession();
   const [isBusy, setIsBusy] = useState(false);
   const [isCartBusy, setIsCartBusy] = useState(false);
@@ -161,6 +170,13 @@ export default function ProductCard({
 
   const handleAddToCart = async () => {
     if (isCartBusy) return;
+
+    // Products with multiple size/color variants can't be blindly added —
+    // send the customer to the product page to choose a variant.
+    if (variantCount > 1) {
+      router.push(productHref);
+      return;
+    }
 
     const canUseServer = canUseServerCart(session?.user?.role, status);
 

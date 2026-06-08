@@ -38,6 +38,16 @@ export async function requireAdmin(): Promise<AuthGuard> {
   return { ok: true, session };
 }
 
+/**
+ * Soft admin check for public routes that should reveal admin-only fields
+ * (e.g. `buyingPrice`) when an admin is signed in, without rejecting
+ * anonymous/regular callers. Returns a plain boolean.
+ */
+export async function isAdminRequest(): Promise<boolean> {
+  const session = (await auth()) as Session | null;
+  return session?.user?.role === "ADMIN";
+}
+
 /** Logged-in users only — no role check. */
 export async function requireUser(): Promise<AuthGuard> {
   const session = (await auth()) as Session | null;

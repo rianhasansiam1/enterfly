@@ -4,6 +4,7 @@ import ProductCard from "@/components/product/ProductCard";
 import { Heart, ShoppingCart, Star, PackageX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
@@ -123,6 +124,7 @@ export default function ProductsGrid({
             rating={p.rating}
             reviewCount={p.reviewCount}
             badge={p.badge ?? undefined}
+            variantCount={p.variantCount}
           />
         </div>
       ))}
@@ -132,6 +134,7 @@ export default function ProductsGrid({
 
 function ListItem({ product }: { product: Product }) {
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
   const { data: session, status } = useSession();
   const [isCartBusy, setIsCartBusy] = useState(false);
 
@@ -143,6 +146,12 @@ function ListItem({ product }: { product: Product }) {
 
   const handleAddToCart = async () => {
     if (isCartBusy) return;
+
+    // Multi-variant products require choosing a size/color on the PDP.
+    if (product.variantCount > 1) {
+      router.push(`/products/${product.slug}`);
+      return;
+    }
 
     const canUseServer = canUseServerCart(session?.user?.role, status);
 

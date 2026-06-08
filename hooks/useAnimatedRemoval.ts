@@ -13,7 +13,9 @@ type UseAnimatedRemovalOptions<TItem, TId extends RemovableId> = {
 };
 
 type RemoveCommit = () => Promise<void> | void;
-type RemoveBatchCommit<TId extends RemovableId> = (ids: TId[]) => Promise<void> | void;
+type RemoveBatchCommit<TId extends RemovableId> = (
+  ids: TId[],
+) => Promise<void> | void;
 
 export function useAnimatedRemoval<TItem, TId extends RemovableId>({
   items,
@@ -149,4 +151,3 @@ export function useAnimatedRemoval<TItem, TId extends RemovableId>({
     visibleItems,
   };
 }
-

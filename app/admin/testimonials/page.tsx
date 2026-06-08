@@ -27,7 +27,7 @@ import {
   notifyActionError,
   notifyActionSuccess,
 } from "@/lib/admin-feedback";
-import { useAnimatedRemoval } from "@/lib/hooks/useAnimatedRemoval";
+import { useAnimatedRemoval } from "@/hooks/useAnimatedRemoval";
 
 import TestimonialSummaryCards from "./components/TestimonialSummaryCards";
 import TestimonialsToolbar from "./components/TestimonialsToolbar";

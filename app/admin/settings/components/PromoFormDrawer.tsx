@@ -11,7 +11,7 @@ import {
 } from "@/features/admin-settings/api";
 import { cn } from "@/lib/utils";
 
-import Field from "./Field";
+import Field from "@/app/admin/components/Field";
 
 export default function PromoFormDrawer({
   open,

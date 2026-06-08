@@ -6,25 +6,18 @@ datasource db {
   provider = "postgresql"
 }
 
-
-
-
-
-
-
- //Users & auth
+//Users & auth
 model User {
   id       String  @id @default(cuid())
   name     String
   email    String  @unique
-  password String? 
+  password String?
   phone    String?
   city     String?
-  image    String? 
+  image    String?
   role     Role    @default(USER)
 
-  
-  provider AuthProvider @default(CREDENTIAL)
+  provider        AuthProvider @default(CREDENTIAL)
   termsAcceptedAt DateTime?
 
   orders          Order[]
@@ -48,12 +41,7 @@ enum AuthProvider {
   GOOGLE
 }
 
-
-
-
-
-
- // Catalog
+// Catalog
 model Category {
   id          String         @id @default(cuid())
   name        String
@@ -86,6 +74,16 @@ model Product {
   description String?
   status      ProductStatus @default(ACTIVE)
 
+  // Pricing lives on the product (variants are pure size/color inventory).
+  //   buyingPrice   = business purchase/source cost. ADMIN-ONLY — never
+  //                   exposed on public product APIs/pages.
+  //   salePrice     = normal customer selling price (required).
+  //   discountPrice = optional discounted selling price; when set it must
+  //                   be <= salePrice and becomes the customer's price.
+  buyingPrice   Decimal  @db.Decimal(10, 2)
+  salePrice     Decimal  @db.Decimal(10, 2)
+  discountPrice Decimal? @db.Decimal(10, 2)
+
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
 
@@ -102,6 +100,7 @@ model Product {
 
   @@index([categoryId, status])
   @@index([status, createdAt])
+  @@index([salePrice])
 }
 
 enum ProductStatus {
@@ -109,19 +108,22 @@ enum ProductStatus {
   INACTIVE
 }
 
-
-
+// One purchasable size-color combination of a product. Pricing lives on
+// the parent Product; a variant only carries inventory data (stock/sku/
+// image) for its specific size+color. `@@unique([productId, size, color])`
+// guarantees the same product can't have a duplicate combination.
 model ProductVariant {
   id        String  @id @default(cuid())
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  sku       String   @unique
-  color     String?
-  size      String?
-  price     Decimal  @db.Decimal(10, 2)
-  salePrice Decimal? @db.Decimal(10, 2)
-  stock     Int      @default(0)
+  size  String
+  color String
+  sku   String? @unique
+  stock Int     @default(0)
+  image String?
+
+  isActive Boolean @default(true)
 
   cartItems     CartItem[]
   orderItems    OrderItem[]
@@ -130,12 +132,12 @@ model ProductVariant {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([productId, size, color])
   @@index([productId])
+  @@index([size])
+  @@index([color])
   @@index([stock])
-  @@index([price])
-  @@index([salePrice])
 }
-
 
 model ProductImage {
   id        String  @id @default(cuid())
@@ -296,8 +298,12 @@ model OrderItem {
   color        String?
   size         String?
   quantity     Int
-  unitPrice    Decimal @db.Decimal(10, 2)
-  totalPrice   Decimal @db.Decimal(10, 2)
+  unitPrice    Decimal  @db.Decimal(10, 2)
+  totalPrice   Decimal  @db.Decimal(10, 2)
+  // Admin-only snapshot of the product's buying (source) cost at order
+  // time, kept for future profit/revenue analytics. Never exposed to
+  // customers. Nullable so legacy/imported rows stay valid.
+  buyingPrice  Decimal? @db.Decimal(10, 2)
 
   createdAt DateTime @default(now())
 

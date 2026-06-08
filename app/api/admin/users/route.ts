@@ -1,11 +1,10 @@
-import type { NextRequest } from "next/server";
-import { z } from "zod";
+import type { z } from "zod";
 
-import { requireAdmin } from "@/lib/api/guards";
-import { jsonError, ok } from "@/lib/api/response";
+import { adminRoute } from "@/lib/api/handlers";
 import { listUsersForAdminCached } from "@/lib/services/user.service";
-import { handleServiceError } from "@/lib/services/service-error";
 import { adminUserQuerySchema } from "@/lib/validations/user.validation";
+
+type AdminUserQuery = z.infer<typeof adminUserQuerySchema>;
 
 /**
  * GET /api/admin/users
@@ -15,22 +14,11 @@ import { adminUserQuerySchema } from "@/lib/validations/user.validation";
  * last order date) so the customer table can render meaningful data
  * without follow-up requests.
  */
-export async function GET(request: NextRequest) {
-  const guard = await requireAdmin();
-  if (!guard.ok) return guard.response;
-
-  const params = Object.fromEntries(request.nextUrl.searchParams);
-  const parsed = adminUserQuerySchema.safeParse(params);
-  if (!parsed.success) {
-    return jsonError(400, "Invalid query parameters.", {
-      fieldErrors: z.flattenError(parsed.error).fieldErrors,
-    });
-  }
-
-  try {
-    const { items, meta } = await listUsersForAdminCached(parsed.data);
-    return ok(items, meta);
-  } catch (error) {
-    return handleServiceError("admin.users.GET", error);
-  }
-}
+export const GET = adminRoute({
+  scope: "admin.users.GET",
+  querySchema: adminUserQuerySchema,
+  handler: async ({ query }) => {
+    const { items, meta } = await listUsersForAdminCached(query as AdminUserQuery);
+    return { data: items, meta };
+  },
+});

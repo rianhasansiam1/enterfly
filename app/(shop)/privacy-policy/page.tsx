@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 
-import PolicyLayout, {
-  PolicyContactBlock,
-  PolicyList,
-  PolicySection,
-} from "../../../components/policy/PolicyLayout";
+import PolicyContactBlock from "@/components/policy/PolicyContactBlock";
+import PolicyLayout from "@/components/policy/PolicyLayout";
+import PolicyList from "@/components/policy/PolicyList";
+import PolicySection from "@/components/policy/PolicySection";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { siteConfig } from "@/lib/seo/site";
 
@@ -33,6 +32,7 @@ export default function PrivacyPolicyPage() {
       title="Privacy Policy"
       description={`At ${siteConfig.name}, your privacy matters. This policy explains what information we collect, how we use it, and the choices you have when shopping with us.`}
       lastUpdated={LAST_UPDATED}
+      currentPath="/privacy-policy"
     >
       <PolicySection
         title="1. Introduction"

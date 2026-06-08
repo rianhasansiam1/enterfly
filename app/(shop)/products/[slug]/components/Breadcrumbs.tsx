@@ -1,18 +1,12 @@
-'use client'
-
-import React, { useState } from 'react'
-import { ChevronRight, Home, ArrowRight } from 'lucide-react'
+import { Fragment } from 'react'
+import { ChevronRight, Home } from 'lucide-react'
 import Link from 'next/link'
-
-const tabs = ['Latest', 'Offer', 'Popular']
 
 const Breadcrumbs = ({
   items,
 }: {
   items: { label: string; href?: string }[]
 }) => {
-  const [activeTab, setActiveTab] = useState('Latest')
-
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-gray-100">
       {/* Breadcrumb Navigation */}
@@ -25,7 +19,7 @@ const Breadcrumbs = ({
           <span className="hidden sm:inline">Home</span>
         </Link>
         {items.map((item, index) => (
-          <React.Fragment key={index}>
+          <Fragment key={index}>
             <ChevronRight className="w-4 h-4 text-gray-300 shrink-0" />
             {item.href ? (
               <Link
@@ -37,7 +31,7 @@ const Breadcrumbs = ({
             ) : (
               <span className="text-violet-700 font-medium truncate">{item.label}</span>
             )}
-          </React.Fragment>
+          </Fragment>
         ))}
       </nav>
 

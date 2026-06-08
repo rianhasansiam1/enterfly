@@ -1,11 +1,10 @@
-import type { NextRequest } from "next/server";
-import { z } from "zod";
+import type { z } from "zod";
 
-import { requireAdmin } from "@/lib/api/guards";
-import { jsonError, ok } from "@/lib/api/response";
+import { adminRoute } from "@/lib/api/handlers";
 import { listOrdersForAdminCached } from "@/lib/services/order.service";
-import { handleServiceError } from "@/lib/services/service-error";
 import { adminOrderQuerySchema } from "@/lib/validations/order.validation";
+
+type AdminOrderQuery = z.infer<typeof adminOrderQuerySchema>;
 
 /**
  * GET /api/admin/orders
@@ -17,22 +16,11 @@ import { adminOrderQuerySchema } from "@/lib/validations/order.validation";
 
 
 
-export async function GET(request: NextRequest) {
-  const guard = await requireAdmin();
-  if (!guard.ok) return guard.response;
-
-  const params = Object.fromEntries(request.nextUrl.searchParams);
-  const parsed = adminOrderQuerySchema.safeParse(params);
-  if (!parsed.success) {
-    return jsonError(400, "Invalid query parameters.", {
-      fieldErrors: z.flattenError(parsed.error).fieldErrors,
-    });
-  }
-
-  try {
-    const { items, meta } = await listOrdersForAdminCached(parsed.data);
-    return ok(items, meta);
-  } catch (error) {
-    return handleServiceError("admin.orders.GET", error);
-  }
-}
+export const GET = adminRoute({
+  scope: "admin.orders.GET",
+  querySchema: adminOrderQuerySchema,
+  handler: async ({ query }) => {
+    const { items, meta } = await listOrdersForAdminCached(query as AdminOrderQuery);
+    return { data: items, meta };
+  },
+});

@@ -1,7 +1,5 @@
-import { requireAdmin } from "@/lib/api/guards";
-import { ok } from "@/lib/api/response";
+import { adminRoute } from "@/lib/api/handlers";
 import { getDashboardOverview } from "@/lib/services/dashboard.service";
-import { handleServiceError } from "@/lib/services/service-error";
 
 /**
  * GET /api/admin/dashboard
@@ -11,14 +9,10 @@ import { handleServiceError } from "@/lib/services/service-error";
  * products, activity feed) so the UI loads with one request and one
  * spinner.
  */
-export async function GET() {
-  const guard = await requireAdmin();
-  if (!guard.ok) return guard.response;
-
-  try {
+export const GET = adminRoute({
+  scope: "admin.dashboard.GET",
+  handler: async () => {
     const overview = await getDashboardOverview();
-    return ok(overview);
-  } catch (error) {
-    return handleServiceError("admin.dashboard.GET", error);
-  }
-}
+    return { data: overview };
+  },
+});

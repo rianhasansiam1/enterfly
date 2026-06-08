@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
-import { requireAdmin } from "@/lib/api/guards";
+import { isAdminRequest, requireAdmin } from "@/lib/api/guards";
 import { jsonError, ok } from "@/lib/api/response";
 import {
   getProductById,
@@ -28,7 +28,8 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   try {
     const product = await getProductById(id);
     if (!product) return jsonError(404, "Product not found.");
-    return ok(serializeProduct(product));
+    const includeBuyingPrice = await isAdminRequest();
+    return ok(serializeProduct(product, { includeBuyingPrice }));
   } catch (error) {
     console.error("[products/[id].GET] failed", error);
     return jsonError(500, "Failed to fetch product.");
@@ -75,27 +76,23 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     });
   }
 
-  // Cross-field check: if either price or discountPrice is being updated,
-  // the resulting pair must still satisfy discount <= price. Price now
-  // lives on the product's primary variant.
+  // Cross-field check: if either salePrice or discountPrice is being
+  // updated, the resulting pair must still satisfy discount <= sale.
   const existing = await getProductById(id);
   if (!existing) return jsonError(404, "Product not found.");
 
-  const primaryVariant = existing.variants[0];
-  const existingPrice = primaryVariant ? primaryVariant.price.toNumber() : 0;
+  const existingSale = existing.salePrice.toNumber();
   const existingDiscount =
-    primaryVariant && primaryVariant.salePrice != null
-      ? primaryVariant.salePrice.toNumber()
-      : null;
+    existing.discountPrice != null ? existing.discountPrice.toNumber() : null;
 
-  const nextPrice = parsed.data.price ?? existingPrice;
+  const nextSale = parsed.data.salePrice ?? existingSale;
   const nextDiscount =
     parsed.data.discountPrice !== undefined
       ? parsed.data.discountPrice
       : existingDiscount;
-  if (nextDiscount != null && nextDiscount > nextPrice) {
-    return jsonError(400, "Discount price cannot exceed the regular price.", {
-      fieldErrors: { discountPrice: ["Discount price exceeds price."] },
+  if (nextDiscount != null && nextDiscount > nextSale) {
+    return jsonError(400, "Discount price cannot exceed the sale price.", {
+      fieldErrors: { discountPrice: ["Discount price exceeds sale price."] },
     });
   }
 
@@ -103,13 +100,27 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const product = await updateProduct(id, parsed.data);
     revalidateTag("products", "max");
     revalidateTag("home-categories", "max");
-    return ok(serializeProduct(product));
+    return ok(serializeProduct(product, { includeBuyingPrice: true }));
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2025"
     ) {
       return jsonError(404, "Product not found.");
+    }
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      const target = (error.meta?.target as string[] | undefined) ?? [];
+      if (target.includes("sku")) {
+        return jsonError(409, "A variant SKU must be unique.", {
+          fieldErrors: { variants: ["Duplicate SKU."] },
+        });
+      }
+      return jsonError(409, "Each size + color combination must be unique.", {
+        fieldErrors: { variants: ["Duplicate size + color combination."] },
+      });
     }
     console.error("[products/[id].PATCH] failed", error);
     return jsonError(500, "Failed to update product.");

@@ -1,30 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-type ProductStatus = "ACTIVE" | "INACTIVE";
-
-type AdminProduct = {
-  id: string;
-  productCode: string;
-  name: string;
-  description: string | null;
-  price: number;
-  discountPrice: number | null;
-  image: string | null;
-  images: string[];
-  rating: number;
-  reviewCount: number;
-  color: string | null;
-  size: string | null;
-  status: ProductStatus;
-  stock: number;
-  createdAt: string;
-  categoryId: string;
-  category: {
-    id: string;
-    name: string;
-    image: string | null;
-  };
-};
+import type { AdminProduct } from "@/features/admin-products/api";
 
 type AdminProductsState = {
   items: AdminProduct[];

@@ -2,7 +2,7 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import {
   greaterThanOrEqual,
   minDecimal,
@@ -12,7 +12,6 @@ import {
   subtractClamped,
   sumDecimals,
   toDecimal,
-  toNumber,
 } from "@/lib/money";
 import { ServiceError } from "@/lib/services/service-error";
 import {
@@ -56,21 +55,21 @@ export class CheckoutError extends ServiceError {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Pick the effective unit price for a variant as an exact Decimal:
- * the sale price when it's set and lower than the list price,
- * otherwise the list price.
+ * Pick the effective unit price for a product as an exact Decimal:
+ * the discount price when set and lower than the sale price, otherwise
+ * the sale price. Pricing lives on the product (variants are inventory).
  */
-function effectiveVariantPrice(variant: {
-  price: Prisma.Decimal;
-  salePrice: Prisma.Decimal | null;
+function effectiveProductPrice(product: {
+  salePrice: Prisma.Decimal;
+  discountPrice: Prisma.Decimal | null;
 }): Prisma.Decimal {
   if (
-    variant.salePrice != null &&
-    toDecimal(variant.salePrice).lessThan(toDecimal(variant.price))
+    product.discountPrice != null &&
+    toDecimal(product.discountPrice).lessThan(toDecimal(product.salePrice))
   ) {
-    return toDecimal(variant.salePrice);
+    return toDecimal(product.discountPrice);
   }
-  return toDecimal(variant.price);
+  return toDecimal(product.salePrice);
 }
 
 function generateOrderNumber(): string {
@@ -151,7 +150,7 @@ async function resolveItems(
 type PricedLine = {
   productId: string;
   variantId: string;
-  sku: string;
+  sku: string | null;
   color: string | null;
   size: string | null;
   name: string;
@@ -162,6 +161,8 @@ type PricedLine = {
   unitPrice: Prisma.Decimal;
   originalPrice: Prisma.Decimal;
   lineTotal: Prisma.Decimal;
+  /** Admin-only source cost snapshot for OrderItem profit analytics. */
+  buyingPrice: Prisma.Decimal;
   stock: number;
 };
 
@@ -173,6 +174,9 @@ async function priceLines(items: ResolvedItem[]): Promise<PricedLine[]> {
       id: true,
       name: true,
       status: true,
+      salePrice: true,
+      discountPrice: true,
+      buyingPrice: true,
       images: {
         orderBy: { position: "asc" },
         take: 1,
@@ -185,8 +189,6 @@ async function priceLines(items: ResolvedItem[]): Promise<PricedLine[]> {
           sku: true,
           color: true,
           size: true,
-          price: true,
-          salePrice: true,
           stock: true,
         },
       },
@@ -204,6 +206,14 @@ async function priceLines(items: ResolvedItem[]): Promise<PricedLine[]> {
         409,
         `"${product.name}" is no longer available.`,
         { productId: product.id },
+      );
+    }
+    // Multi-variant products require an explicit size+color selection.
+    if (!line.variantId && product.variants.length > 1) {
+      throw new CheckoutError(
+        409,
+        `Please select a size and color for "${product.name}" before checkout.`,
+        { productId: product.id, requiresVariantSelection: true },
       );
     }
     // Use the exact selected variant when provided, else the primary one.
@@ -226,7 +236,7 @@ async function priceLines(items: ResolvedItem[]): Promise<PricedLine[]> {
         { productId: product.id, available: variant.stock },
       );
     }
-    const unitPrice = effectiveVariantPrice(variant);
+    const unitPrice = effectiveProductPrice(product);
     return {
       productId: product.id,
       variantId: variant.id,
@@ -237,8 +247,9 @@ async function priceLines(items: ResolvedItem[]): Promise<PricedLine[]> {
       image: product.images[0]?.url ?? null,
       quantity: line.quantity,
       unitPrice,
-      originalPrice: toDecimal(variant.price),
+      originalPrice: toDecimal(product.salePrice),
       lineTotal: multiply(unitPrice, line.quantity),
+      buyingPrice: toDecimal(product.buyingPrice),
       stock: variant.stock,
     };
   });
@@ -554,6 +565,7 @@ export async function placeOrder(userId: string, input: CheckoutInput) {
               quantity: line.quantity,
               unitPrice: round2(line.unitPrice),
               totalPrice: round2(line.lineTotal),
+              buyingPrice: round2(line.buyingPrice),
             })),
           },
         },

@@ -2,7 +2,7 @@ import "server-only";
 
 import { unstable_cache } from "next/cache";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 
 type HomeCategoryProduct = {
   id: string;
@@ -16,6 +16,7 @@ type HomeCategoryProduct = {
   rating: number;
   reviewCount: number;
   badge: string | null;
+  variantCount: number;
 };
 
 type HomeCategoryBanner = {
@@ -67,14 +68,12 @@ const getCachedHomeCategories = unstable_cache(
             slug: true,
             name: true,
             description: true,
+            salePrice: true,
+            discountPrice: true,
+            _count: { select: { variants: true } },
             images: {
               orderBy: { position: "asc" },
               select: { url: true },
-            },
-            variants: {
-              orderBy: { createdAt: "asc" },
-              take: 1,
-              select: { price: true, salePrice: true },
             },
           },
         },
@@ -102,9 +101,8 @@ const getCachedHomeCategories = unstable_cache(
         slug: category.slug,
         image: category.image,
         products: category.products.map((product) => {
-          const variant = product.variants[0];
-          const price = variant ? variant.price.toNumber() : 0;
-          const sale = variant?.salePrice?.toNumber() ?? null;
+          const price = product.salePrice.toNumber();
+          const sale = product.discountPrice?.toNumber() ?? null;
           const discountPrice = sale != null && sale < price ? sale : null;
           const imageUrls = product.images.map((img) => img.url);
           return {
@@ -116,6 +114,7 @@ const getCachedHomeCategories = unstable_cache(
             discountPrice,
             image: imageUrls[0] ?? FALLBACK_PRODUCT_IMAGE,
             images: imageUrls,
+            variantCount: product._count.variants,
             // rating/reviewCount/badge were dropped in the variant
             // migration; default them so the UI keeps rendering.
             rating: 0,

@@ -3,7 +3,7 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import type {
   CategoryQueryInput,
   CreateCategoryInput,
@@ -168,6 +168,7 @@ export type PublicCategoryProduct = {
   discountPrice: number | null;
   image: string | null;
   inStock: boolean;
+  variantCount: number;
 };
 
 export type PublicCategory = Category & {
@@ -189,11 +190,12 @@ async function loadActiveCategoryBySlug(
           slug: true,
           name: true,
           description: true,
+          salePrice: true,
+          discountPrice: true,
           images: { orderBy: { position: "asc" }, take: 1, select: { url: true } },
           variants: {
             orderBy: { createdAt: "asc" },
-            take: 1,
-            select: { price: true, salePrice: true, stock: true },
+            select: { stock: true },
           },
         },
       },
@@ -207,10 +209,10 @@ async function loadActiveCategoryBySlug(
   return {
     ...category,
     products: products.map((product) => {
-      const variant = product.variants[0];
-      const price = variant ? variant.price.toNumber() : 0;
-      const sale = variant?.salePrice?.toNumber() ?? null;
+      const price = product.salePrice.toNumber();
+      const sale = product.discountPrice?.toNumber() ?? null;
       const discountPrice = sale != null && sale < price ? sale : null;
+      const stock = product.variants.reduce((sum, v) => sum + v.stock, 0);
       return {
         id: product.id,
         slug: product.slug,
@@ -219,7 +221,8 @@ async function loadActiveCategoryBySlug(
         price,
         discountPrice,
         image: product.images[0]?.url ?? null,
-        inStock: (variant?.stock ?? 0) > 0,
+        inStock: stock > 0,
+        variantCount: product.variants.length,
       };
     }),
   };

@@ -37,11 +37,9 @@ function colorIsHex(value: string | null): boolean {
 
 export type ProductVariantOption = {
   id: string;
-  sku: string;
+  sku: string | null;
   color: string | null;
   size: string | null;
-  price: number;
-  salePrice: number | null;
   stock: number;
 };
 
@@ -109,12 +107,6 @@ function sizeHeading(type: SizeType): string {
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-function effectivePrice(variant: ProductVariantOption): number {
-  return variant.salePrice != null && variant.salePrice < variant.price
-    ? variant.salePrice
-    : variant.price;
-}
-
 /**
  * Build a human label for a variant, e.g. "Black / Large".
  * Hex colors are omitted from the text (a swatch is shown beside the label
@@ -123,7 +115,7 @@ function effectivePrice(variant: ProductVariantOption): number {
 function variantLabel(variant: ProductVariantOption): string {
   const textColor = colorIsHex(variant.color) ? null : variant.color;
   const parts = [textColor, variant.size].filter(Boolean);
-  return parts.length > 0 ? parts.join(" / ") : variant.sku;
+  return parts.length > 0 ? parts.join(" / ") : variant.sku ?? "Option";
 }
 
 /* ================================================================== */
@@ -135,11 +127,17 @@ const ProductActions = ({
   productName,
   image,
   variants,
+  salePrice,
+  discountPrice,
 }: {
   productId: string;
   productName: string;
   image?: string | null;
   variants: ProductVariantOption[];
+  /** Regular selling price (product-level). */
+  salePrice: number;
+  /** Optional discounted price; when set it's the price the customer pays. */
+  discountPrice: number | null;
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
@@ -239,8 +237,10 @@ const ProductActions = ({
 
   const stockCount = selectedVariant?.stock ?? 0;
   const inStock = stockCount > 0;
-  const unitPrice = selectedVariant ? effectivePrice(selectedVariant) : 0;
-  const currentListPrice = selectedVariant?.price ?? 0;
+  // Pricing lives on the product: discount price when valid, else sale price.
+  const currentListPrice = salePrice;
+  const unitPrice =
+    discountPrice != null && discountPrice < salePrice ? discountPrice : salePrice;
   const discount =
     currentListPrice > unitPrice
       ? Math.round(((currentListPrice - unitPrice) / currentListPrice) * 100)

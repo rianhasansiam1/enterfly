@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 
-import PolicyLayout, {
-  PolicyContactBlock,
-  PolicyList,
-  PolicySection,
-} from "../../../components/policy/PolicyLayout";
+import PolicyContactBlock from "@/components/policy/PolicyContactBlock";
+import PolicyLayout from "@/components/policy/PolicyLayout";
+import PolicyList from "@/components/policy/PolicyList";
+import PolicySection from "@/components/policy/PolicySection";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { siteConfig } from "@/lib/seo/site";
 
@@ -33,6 +32,7 @@ export default function TermsAndConditionsPage() {
       title="Terms & Conditions"
       description={`Welcome to ${siteConfig.name}. These Terms & Conditions govern your access to and use of our website, products, and services. Please read them carefully before placing an order.`}
       lastUpdated={LAST_UPDATED}
+      currentPath="/terms-and-conditions"
     >
       <PolicySection
         title="1. Acceptance of Terms"

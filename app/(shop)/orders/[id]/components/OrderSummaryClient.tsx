@@ -85,33 +85,29 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
   // the live request resolves on the post-checkout redirect.
   useEffect(() => {
     if (authStatus === "loading") return;
-
-    if (authStatus !== "authenticated") {
-      setState({
-        status: "error",
-        message: "Sign in to view this order.",
-      });
-      return;
-    }
+    if (authStatus !== "authenticated") return;
 
     let ignore = false;
 
-    // First paint: if the checkout page just stashed a snapshot for
-    // this order, render it immediately so the receipt appears with
-    // no loading spinner. The fetch below still runs and replaces it
-    // with authoritative data.
-    const snapshot = readOrderSnapshot(orderId);
-    if (snapshot) {
-      setState({
-        status: "ready",
-        order: snapshot.order,
-        source: "snapshot",
-      });
-    } else {
-      setState({ status: "loading" });
-    }
-
     void (async () => {
+      await Promise.resolve();
+      if (ignore) return;
+
+      // First paint: if the checkout page just stashed a snapshot for
+      // this order, render it immediately so the receipt appears with
+      // no loading spinner. The fetch below still runs and replaces it
+      // with authoritative data.
+      const snapshot = readOrderSnapshot(orderId);
+      if (snapshot) {
+        setState({
+          status: "ready",
+          order: snapshot.order,
+          source: "snapshot",
+        });
+      } else {
+        setState({ status: "loading" });
+      }
+
       try {
         const order = await fetchOrderDetail(orderId);
         if (ignore) return;
@@ -171,7 +167,10 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
     }
   };
 
-  if (state.status === "loading") {
+  if (
+    authStatus === "loading" ||
+    (authStatus === "authenticated" && state.status === "loading")
+  ) {
     return (
       <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
         <div className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6">
@@ -183,7 +182,13 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
     );
   }
 
-  if (state.status === "error" || !order) {
+  if (authStatus !== "authenticated" || state.status === "error" || !order) {
+    const message =
+      authStatus !== "authenticated"
+        ? "Sign in to view this order."
+        : state.status === "error"
+          ? state.message
+          : "Sign in or open the original checkout link to view this order.";
     return (
       <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
         <div className="mx-auto w-full max-w-2xl px-4 py-16 sm:px-6">
@@ -195,9 +200,7 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
               Order not available
             </h1>
             <p className="mt-2 text-sm text-gray-600">
-              {state.status === "error"
-                ? state.message
-                : "Sign in or open the original checkout link to view this order."}
+              {message}
             </p>
             <div className="mt-6 flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-3">
               <Link

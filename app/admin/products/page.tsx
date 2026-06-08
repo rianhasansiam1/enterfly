@@ -168,22 +168,22 @@ export default function AdminProductsPage() {
       return;
     }
 
-    let price: number;
-    let stock: number;
+    let buyingPrice: number;
+    let salePrice: number;
     try {
-      price = parseNumericField(form.price, "Price");
-      stock = parseNumericField(form.stock, "Stock");
+      buyingPrice = parseNumericField(form.buyingPrice, "Buying price");
+      salePrice = parseNumericField(form.salePrice, "Sale price");
     } catch (parseError) {
       setMutationError(parseError instanceof Error ? parseError.message : "Invalid number.");
       return;
     }
 
-    if (price < 0) {
-      setMutationError("Price cannot be negative.");
+    if (buyingPrice < 0) {
+      setMutationError("Buying price cannot be negative.");
       return;
     }
-    if (!Number.isInteger(stock) || stock < 0) {
-      setMutationError("Stock must be a non-negative whole number.");
+    if (salePrice < 0) {
+      setMutationError("Sale price cannot be negative.");
       return;
     }
 
@@ -199,17 +199,82 @@ export default function AdminProductsPage() {
         setMutationError("Discount price cannot be negative.");
         return;
       }
-      if (discountPrice > price) {
-        setMutationError("Discount price cannot exceed regular price.");
+      if (discountPrice > salePrice) {
+        setMutationError("Discount price cannot exceed the sale price.");
         return;
       }
+    }
+
+    // Build + validate the variant rows.
+    if (form.variants.length === 0) {
+      setMutationError("Add at least one variant (size + color).");
+      return;
+    }
+
+    const comboSeen = new Set<string>();
+    const skuSeen = new Set<string>();
+    const variantPayload: {
+      id?: string;
+      size: string;
+      color: string;
+      sku: string | null;
+      stock: number;
+      image: string | null;
+      isActive: boolean;
+    }[] = [];
+
+    for (const [index, row] of form.variants.entries()) {
+      const size = row.size.trim();
+      const color = row.color.trim();
+      if (!size || !color) {
+        setMutationError(`Variant ${index + 1}: size and color are required.`);
+        return;
+      }
+      const comboKey = `${size.toLowerCase()}|${color.toLowerCase()}`;
+      if (comboSeen.has(comboKey)) {
+        setMutationError(
+          `Duplicate size + color combination: "${size} / ${color}".`,
+        );
+        return;
+      }
+      comboSeen.add(comboKey);
+
+      let stock: number;
+      try {
+        stock = parseNumericField(row.stock, `Variant ${index + 1} stock`);
+      } catch (parseError) {
+        setMutationError(parseError instanceof Error ? parseError.message : "Invalid stock.");
+        return;
+      }
+      if (!Number.isInteger(stock) || stock < 0) {
+        setMutationError(`Variant ${index + 1}: stock must be a non-negative whole number.`);
+        return;
+      }
+
+      const sku = row.sku.trim() || null;
+      if (sku) {
+        const skuKey = sku.toLowerCase();
+        if (skuSeen.has(skuKey)) {
+          setMutationError(`Duplicate SKU: "${sku}".`);
+          return;
+        }
+        skuSeen.add(skuKey);
+      }
+
+      variantPayload.push({
+        ...(row.id ? { id: row.id } : {}),
+        size,
+        color,
+        sku,
+        stock,
+        image: row.image.trim() || null,
+        isActive: row.isActive,
+      });
     }
 
     const description = form.description.trim() || null;
     const image = form.image.trim() || null;
     const images = normalizeImagesInput(form.images);
-    const color = form.color.trim() || null;
-    const size = form.size.trim() || null;
 
     setIsSubmitting(true);
     try {
@@ -217,15 +282,14 @@ export default function AdminProductsPage() {
         const body = {
           name,
           description,
-          price,
+          buyingPrice,
+          salePrice,
           discountPrice,
-          stock,
           image,
           images,
-          color,
-          size,
           status: form.status,
           categoryId: form.categoryId,
+          variants: variantPayload,
         };
 
         const response = await fetch("/api/products", {
@@ -250,12 +314,10 @@ export default function AdminProductsPage() {
         const patch: Record<string, unknown> = {};
         if (name !== editingProduct.name) patch.name = name;
         if (description !== (editingProduct.description ?? null)) patch.description = description;
-        if (price !== editingProduct.price) patch.price = price;
+        if (buyingPrice !== editingProduct.buyingPrice) patch.buyingPrice = buyingPrice;
+        if (salePrice !== editingProduct.salePrice) patch.salePrice = salePrice;
         if (discountPrice !== editingProduct.discountPrice) patch.discountPrice = discountPrice;
-        if (stock !== editingProduct.stock) patch.stock = stock;
         if (image !== (editingProduct.image ?? null)) patch.image = image;
-        if (color !== (editingProduct.color ?? null)) patch.color = color;
-        if (size !== (editingProduct.size ?? null)) patch.size = size;
         if (form.status !== editingProduct.status) patch.status = form.status;
         if (form.categoryId !== editingProduct.categoryId) patch.categoryId = form.categoryId;
 
@@ -263,6 +325,32 @@ export default function AdminProductsPage() {
           images.length === editingProduct.images.length &&
           images.every((value, index) => value === editingProduct.images[index]);
         if (!sameImages) patch.images = images;
+
+        // Variants are reconciled server-side; send them whenever the set
+        // differs from what we loaded.
+        const currentVariants = editingProduct.variants.map((v) => ({
+          id: v.id,
+          size: v.size,
+          color: v.color,
+          sku: v.sku,
+          stock: v.stock,
+          image: v.image,
+          isActive: v.isActive,
+        }));
+        const nextVariants = variantPayload.map((v) => ({
+          id: v.id ?? null,
+          size: v.size,
+          color: v.color,
+          sku: v.sku,
+          stock: v.stock,
+          image: v.image,
+          isActive: v.isActive,
+        }));
+        const variantsChanged =
+          JSON.stringify(
+            currentVariants.map((v) => ({ ...v, id: v.id ?? null })),
+          ) !== JSON.stringify(nextVariants);
+        if (variantsChanged) patch.variants = variantPayload;
 
         if (Object.keys(patch).length === 0) {
           setMutationError("No changes to save.");

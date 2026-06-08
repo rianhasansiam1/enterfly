@@ -2,7 +2,7 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { ServiceError } from "@/lib/services/service-error";
 import type {
   AddWishlistItemInput,
@@ -27,6 +27,8 @@ const wishlistInclude = {
       name: true,
       slug: true,
       status: true,
+      salePrice: true,
+      discountPrice: true,
       images: {
         orderBy: { position: "asc" },
         take: 1,
@@ -34,8 +36,7 @@ const wishlistInclude = {
       },
       variants: {
         orderBy: { createdAt: "asc" },
-        take: 1,
-        select: { price: true, salePrice: true, stock: true },
+        select: { stock: true },
       },
       category: {
         select: { name: true },
@@ -60,6 +61,7 @@ export type WishlistUiItem = {
   reviewCount: number;
   category: string;
   inStock: boolean;
+  variantCount: number;
   addedAt: string;
   priceDropFromAdded?: number;
   badge?: string;
@@ -68,21 +70,21 @@ export type WishlistUiItem = {
 const FALLBACK_PRODUCT_IMAGE =
   "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400";
 
-function effectivePrice(variant: {
-  price: Prisma.Decimal;
-  salePrice: Prisma.Decimal | null;
+function effectivePrice(product: {
+  salePrice: Prisma.Decimal;
+  discountPrice: Prisma.Decimal | null;
 }) {
-  const price = variant.price.toNumber();
-  const sale = variant.salePrice?.toNumber() ?? null;
-  return sale != null && sale < price ? sale : price;
+  const sale = product.salePrice.toNumber();
+  const discount = product.discountPrice?.toNumber() ?? null;
+  return discount != null && discount < sale ? discount : sale;
 }
 
 function toWishlistUiItem(row: WishlistWithProduct): WishlistUiItem {
-  const variant = row.product.variants[0];
-  const listPrice = variant ? variant.price.toNumber() : 0;
-  const currentPrice = variant ? effectivePrice(variant) : 0;
+  const product = row.product;
+  const listPrice = product.salePrice.toNumber();
+  const currentPrice = effectivePrice(product);
   const hasValidDiscount = currentPrice < listPrice;
-  const stock = variant?.stock ?? 0;
+  const stock = product.variants.reduce((sum, v) => sum + v.stock, 0);
 
   return {
     id: row.product.id,
@@ -97,6 +99,7 @@ function toWishlistUiItem(row: WishlistWithProduct): WishlistUiItem {
     reviewCount: 0,
     category: row.product.category.name,
     inStock: row.product.status === "ACTIVE" && stock > 0,
+    variantCount: row.product.variants.length,
     addedAt: row.createdAt.toISOString(),
     badge: undefined,
   };
@@ -198,4 +201,3 @@ export async function syncWishlistProducts(
 
   return getMyWishlist(userId);
 }
-

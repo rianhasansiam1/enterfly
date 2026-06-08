@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -43,9 +44,10 @@ import {
 } from "@/features/wishlist/storage";
 import {
   readLocalSaved,
+  type SavedItem,
   writeLocalSaved,
 } from "@/features/cart/saved-storage";
-import { useAnimatedRemoval } from "@/lib/hooks/useAnimatedRemoval";
+import { useAnimatedRemoval } from "@/hooks/useAnimatedRemoval";
 import {
   LIST_ITEM_TRANSITION,
   LIST_ITEM_VARIANTS,
@@ -63,6 +65,7 @@ type WishlistSort =
 
 export default function WishlistPage() {
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
   const { data: session, status } = useSession();
 
   const items = useSelector((state: RootState) => state.wishlist.items);
@@ -78,12 +81,7 @@ export default function WishlistPage() {
   const itemsRef = useRef(items);
 
   // Saved-for-later items are shared with the cart page via localStorage.
-  const [saved, setSaved] = useState<import("@/features/cart/saved-storage").SavedItem[]>([]);
-
-  // Hydrate saved-for-later from localStorage on mount.
-  useEffect(() => {
-    setSaved(readLocalSaved());
-  }, []);
+  const [saved, setSaved] = useState<SavedItem[]>(() => readLocalSaved());
 
   const canUseServer =
     status === "authenticated" && isServerWishlistRole(session?.user?.role);
@@ -116,6 +114,9 @@ export default function WishlistPage() {
 
     const hydrate = async () => {
       const localItems = readLocalWishlist();
+
+      await Promise.resolve();
+      if (ignore) return;
 
       dispatch(setWishlistError(null));
       dispatch(setWishlistLoading(true));
@@ -325,10 +326,32 @@ export default function WishlistPage() {
   };
 
   const moveItemsToCart = async (itemIds: string[]) => {
-    const toMove = items.filter(
+    const selectedInStock = items.filter(
       (item) => itemIds.includes(item.id) && item.inStock,
     );
-    if (toMove.length === 0) return;
+    if (selectedInStock.length === 0) return;
+
+    // Products with multiple variants need a size/color choice — they
+    // can't be blindly added. Route a lone item to its page; for a mixed
+    // batch, add the single-variant items and nudge the rest.
+    const needsSelection = selectedInStock.filter(
+      (item) => (item.variantCount ?? 1) > 1,
+    );
+    const toMove = selectedInStock.filter(
+      (item) => (item.variantCount ?? 1) <= 1,
+    );
+
+    if (needsSelection.length > 0) {
+      if (selectedInStock.length === 1) {
+        const target = needsSelection[0];
+        router.push(`/products/${target.slug ?? target.id}`);
+        return;
+      }
+      toast.info(
+        "Some items need a size or color — open them to choose options.",
+      );
+      if (toMove.length === 0) return;
+    }
 
     dispatch(setCartErrorAction(null));
 

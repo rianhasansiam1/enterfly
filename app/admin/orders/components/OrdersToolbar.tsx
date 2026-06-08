@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, RotateCcw, Search } from "lucide-react";
+import { RotateCcw, Search } from "lucide-react";
 
 import {
   ORDER_STATUS_VALUES,

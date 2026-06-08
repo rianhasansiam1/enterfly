@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 import type { BannerType } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { ServiceError } from "@/lib/services/service-error";
 import type {
   CreateCarouselBannerInput,
@@ -92,6 +92,7 @@ export type TopBannerRow = {
   description: string;
   tag: string;
   tagIcon: string;
+  link: string | null;
   position: number;
   status: BannerStatus;
   createdAt: Date;
@@ -244,6 +245,7 @@ function toTopRow(b: BannerRow): TopBannerRow {
     description: b.description ?? "",
     tag: metaStr(meta, "tag"),
     tagIcon: metaStr(meta, "tagIcon"),
+    link: b.link,
     position: b.position,
     status: b.status,
     createdAt: b.createdAt,
@@ -539,6 +541,7 @@ export async function createTopBanner(input: CreateTopBannerInput) {
     data: {
       type: "TOP",
       description: input.description,
+      link: input.link ?? null,
       position: input.position,
       status: input.status,
       metadata: cleanMeta({
@@ -565,6 +568,7 @@ export async function updateTopBanner(id: string, input: UpdateTopBannerInput) {
 
   const data: Prisma.BannerUpdateInput = {};
   if (input.description !== undefined) data.description = input.description;
+  if (input.link !== undefined) data.link = input.link;
   if (input.position !== undefined) data.position = input.position;
   if (input.status !== undefined) data.status = input.status;
 

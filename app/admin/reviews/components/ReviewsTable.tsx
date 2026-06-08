@@ -14,7 +14,7 @@ import {
 } from "@/lib/motion/list-removal";
 import { cn } from "@/lib/utils";
 
-import Stars from "./Stars";
+import Stars from "@/app/admin/components/Stars";
 
 const SOURCE_BADGE: Record<ReviewSource, string> = {
   CUSTOMER: "bg-emerald-50 text-emerald-700 ring-emerald-200",

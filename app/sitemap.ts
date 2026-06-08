@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { absoluteUrl } from "@/lib/seo/site";
 
 /**

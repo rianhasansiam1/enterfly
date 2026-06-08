@@ -1,26 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-type AllProductsItem = {
-  id: string;
-  slug: string;
-  productCode: string;
-  name: string;
-  description: string | null;
-  price: number;
-  discountPrice: number | null;
-  image: string;
-  images: string[];
-  rating: number;
-  reviewCount: number;
-  badge: string | null;
-  categoryId: string;
-  category: string;
-  categoryImage: string | null;
-  brand?: string;
-  stock: number;
-  inStock: boolean;
-  createdAt: string;
-};
+import type { Product as AllProductsItem } from "@/features/products/api";
 
 type AllProductsState = {
   items: AllProductsItem[];

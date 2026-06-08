@@ -48,23 +48,12 @@ export default function ProfileClient() {
   const { status: authStatus, update: updateSession } = useSession();
 
   const tabFromUrl = searchParams.get("tab");
-  const [activeTab, setActiveTab] = useState<ProfileTabId>(() =>
-    isProfileTabId(tabFromUrl) ? tabFromUrl : "overview",
-  );
+  const activeTab = isProfileTabId(tabFromUrl) ? tabFromUrl : "overview";
 
   const [state, setState] = useState<LoadState>({ status: "loading" });
 
-  // Sync the active tab with the URL whenever the user uses the
-  // browser's back/forward buttons.
-  useEffect(() => {
-    if (isProfileTabId(tabFromUrl) && tabFromUrl !== activeTab) {
-      setActiveTab(tabFromUrl);
-    }
-  }, [tabFromUrl, activeTab]);
-
   const handleTabChange = useCallback(
     (tabId: ProfileTabId) => {
-      setActiveTab(tabId);
       const params = new URLSearchParams(searchParams.toString());
       params.set("tab", tabId);
       router.replace(`/profile?${params.toString()}`, { scroll: false });
@@ -77,19 +66,15 @@ export default function ProfileClient() {
   // sign-in page with a callback that brings them right back.
   useEffect(() => {
     if (authStatus === "loading") return;
-
-    if (authStatus !== "authenticated") {
-      setState({
-        status: "error",
-        message: "Sign in to view your profile.",
-      });
-      return;
-    }
+    if (authStatus !== "authenticated") return;
 
     let ignore = false;
-    setState({ status: "loading" });
 
     void (async () => {
+      await Promise.resolve();
+      if (ignore) return;
+      setState({ status: "loading" });
+
       try {
         const overview = await fetchProfileOverview();
         if (ignore) return;
@@ -137,7 +122,10 @@ export default function ProfileClient() {
     [updateSession],
   );
 
-  if (authStatus === "loading" || state.status === "loading") {
+  if (
+    authStatus === "loading" ||
+    (authStatus === "authenticated" && state.status === "loading")
+  ) {
     return (
       <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
         <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
@@ -149,8 +137,13 @@ export default function ProfileClient() {
     );
   }
 
-  if (state.status === "error") {
+  if (authStatus !== "authenticated" || state.status === "error") {
     const isUnauth = authStatus !== "authenticated";
+    const message = isUnauth
+      ? "Sign in to view your profile."
+      : state.status === "error"
+        ? state.message
+        : "Failed to load your profile. Please try again.";
     return (
       <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
         <div className="mx-auto w-full max-w-2xl px-4 py-16 sm:px-6">
@@ -161,7 +154,7 @@ export default function ProfileClient() {
             <h1 className="mt-4 text-2xl font-extrabold text-gray-900">
               Profile unavailable
             </h1>
-            <p className="mt-2 text-sm text-gray-600">{state.message}</p>
+            <p className="mt-2 text-sm text-gray-600">{message}</p>
             <div className="mt-6 flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-3">
               {isUnauth ? (
                 <Link
@@ -181,6 +174,18 @@ export default function ProfileClient() {
                 </button>
               )}
             </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (state.status !== "ready") {
+    return (
+      <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
+        <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
+          <div className="rounded-3xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700 shadow-sm">
+            Loading your profile...
           </div>
         </div>
       </main>

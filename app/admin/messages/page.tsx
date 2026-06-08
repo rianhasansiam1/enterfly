@@ -23,7 +23,7 @@ import {
   notifyActionError,
   notifyActionSuccess,
 } from "@/lib/admin-feedback";
-import { useAnimatedRemoval } from "@/lib/hooks/useAnimatedRemoval";
+import { useAnimatedRemoval } from "@/hooks/useAnimatedRemoval";
 
 import MessageSummaryCards from "./components/MessageSummaryCards";
 import MessagesToolbar from "./components/MessagesToolbar";

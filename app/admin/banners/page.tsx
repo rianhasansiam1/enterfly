@@ -69,7 +69,7 @@ import {
   notifyActionError,
   notifyActionSuccess,
 } from "@/lib/admin-feedback";
-import { useAnimatedRemoval } from "@/lib/hooks/useAnimatedRemoval";
+import { useAnimatedRemoval } from "@/hooks/useAnimatedRemoval";
 
 import BannerSummaryCards from "./components/BannerSummaryCards";
 import BannerTabsBar from "./components/BannerTabsBar";
@@ -328,6 +328,7 @@ export default function AdminBannersPage() {
           description: topForm.description.trim(),
           tag: topForm.tag.trim(),
           tagIcon: topForm.tagIcon.trim(),
+          link: topForm.link.trim() || null,
           position,
           status: topForm.status,
         };

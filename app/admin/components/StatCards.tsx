@@ -4,8 +4,8 @@ import {
   ArrowDownRight,
   ArrowRight,
   ArrowUpRight,
- 
   ShoppingBag,
+  TrendingUp,
   Undo2,
   Users,
   type LucideIcon,
@@ -73,6 +73,15 @@ const CARDS: readonly CardConfig[] = [
     positiveTrend: "up",
   },
   {
+    id: "profit",
+    label: "Profit (this month)",
+    hint: "revenue − cost",
+    accent: "emerald",
+    icon: TrendingUp,
+    format: formatBdt,
+    positiveTrend: "up",
+  },
+  {
     id: "orders",
     label: "Orders (this month)",
     hint: "vs last month",
@@ -108,7 +117,7 @@ type StatCardsProps = {
 
 export default function StatCards({ stats, loading }: StatCardsProps) {
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
       {CARDS.map((card) => {
         const stat = stats?.[card.id] ?? null;
         return (

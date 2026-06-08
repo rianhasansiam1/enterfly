@@ -1,8 +1,9 @@
 import type { NextRequest } from "next/server";
+import { Prisma } from "@prisma/client";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
-import { requireAdmin } from "@/lib/api/guards";
+import { isAdminRequest, requireAdmin } from "@/lib/api/guards";
 import { jsonError, created, ok } from "@/lib/api/response";
 import {
   createProduct,
@@ -34,7 +35,12 @@ export async function GET(request: NextRequest) {
 
   try {
     const { items, meta } = await listProductsCached(parsed.data);
-    return ok(items.map(serializeProduct), meta);
+    // Reveal admin-only fields (buyingPrice) only to signed-in admins.
+    const includeBuyingPrice = await isAdminRequest();
+    return ok(
+      items.map((item) => serializeProduct(item, { includeBuyingPrice })),
+      meta,
+    );
   } catch (error) {
     console.error("[products.GET] failed", error);
     return jsonError(500, "Failed to fetch products.");
@@ -85,8 +91,22 @@ export async function POST(request: NextRequest) {
     const product = await createProduct(parsed.data);
     revalidateTag("products", "max");
     revalidateTag("home-categories", "max");
-    return created(serializeProduct(product));
+    return created(serializeProduct(product, { includeBuyingPrice: true }));
   } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      const target = (error.meta?.target as string[] | undefined) ?? [];
+      if (target.includes("sku")) {
+        return jsonError(409, "A variant SKU must be unique.", {
+          fieldErrors: { variants: ["Duplicate SKU."] },
+        });
+      }
+      return jsonError(409, "Each size + color combination must be unique.", {
+        fieldErrors: { variants: ["Duplicate size + color combination."] },
+      });
+    }
     console.error("[products.POST] failed", error);
     return jsonError(500, "Failed to create product.");
   }

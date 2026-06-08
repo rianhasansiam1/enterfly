@@ -19,6 +19,7 @@ export type Product = {
   brand?: string;
   stock: number;
   inStock: boolean;
+  variantCount: number;
   createdAt: string;
 };
 
@@ -135,6 +136,8 @@ function mapApiProduct(item: unknown): Product {
   const price = readNumber(row.price) ?? 0;
   const discountPrice = readNumber(row.discountPrice);
   const stock = readNumber(row.stock) ?? 0;
+  const variantCount =
+    Array.isArray(row.variants) ? row.variants.length : readNumber(row.variantCount) ?? 1;
 
   return {
     id: readString(row.id) ?? "",
@@ -154,6 +157,7 @@ function mapApiProduct(item: unknown): Product {
     categoryImage: category.image,
     stock,
     inStock: stock > 0 && status === "ACTIVE",
+    variantCount,
     createdAt: readString(row.createdAt) ?? new Date(0).toISOString(),
     brand: readString(row.brand) ?? undefined,
   };

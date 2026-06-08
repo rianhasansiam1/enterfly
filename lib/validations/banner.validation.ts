@@ -142,6 +142,7 @@ const topBannerFields = {
   description: mediumText,
   tag: shortText,
   tagIcon: shortText,
+  link: optionalUrl,
   position: z.coerce.number().int().min(0).max(9999).default(0),
   status: z.enum(STATUS).default("ACTIVE"),
 };
@@ -156,6 +157,7 @@ export const updateTopBannerSchema = z
     description: mediumText.optional(),
     tag: shortText.optional(),
     tagIcon: shortText.optional(),
+    link: optionalUrl,
     position: z.coerce.number().int().min(0).max(9999).optional(),
     status: z.enum(STATUS).optional(),
   })

@@ -12,6 +12,7 @@ type HomeCategoryProduct = {
   rating: number;
   reviewCount: number;
   badge: string | null;
+  variantCount: number;
 };
 
 type HomeCategoryBanner = {

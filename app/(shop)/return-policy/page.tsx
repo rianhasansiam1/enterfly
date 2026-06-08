@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 
-import PolicyLayout, {
-  PolicyContactBlock,
-  PolicyList,
-  PolicySection,
-} from "../../../components/policy/PolicyLayout";
+import PolicyContactBlock from "@/components/policy/PolicyContactBlock";
+import PolicyLayout from "@/components/policy/PolicyLayout";
+import PolicyList from "@/components/policy/PolicyList";
+import PolicySection from "@/components/policy/PolicySection";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { siteConfig } from "@/lib/seo/site";
 
@@ -32,6 +31,7 @@ export default function ReturnPolicyPage() {
       title="Return Policy"
       description={`We want you to love every purchase from ${siteConfig.name}. If something isn't right, this policy explains how returns, exchanges, and refunds work.`}
       lastUpdated={LAST_UPDATED}
+      currentPath="/return-policy"
     >
       <PolicySection
         title="1. Overview"

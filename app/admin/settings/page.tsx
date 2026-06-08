@@ -37,7 +37,7 @@ import {
   notifyActionError,
   notifyActionSuccess,
 } from "@/lib/admin-feedback";
-import { useAnimatedRemoval } from "@/lib/hooks/useAnimatedRemoval";
+import { useAnimatedRemoval } from "@/hooks/useAnimatedRemoval";
 
 import SettingsSummaryCards from "./components/SettingsSummaryCards";
 import StorePricingForm from "./components/StorePricingForm";
@@ -52,8 +52,8 @@ export default function AdminSettingsPage() {
   const isLoading = useSelector((s: RootState) => s.adminSettings.isLoading);
   const error = useSelector((s: RootState) => s.adminSettings.error);
 
-  const [settingsForm, setSettingsForm] = useState<SettingsFormState>(
-    EMPTY_SETTINGS_FORM,
+  const [settingsForm, setSettingsForm] = useState<SettingsFormState>(() =>
+    settings ? buildSettingsForm(settings) : EMPTY_SETTINGS_FORM,
   );
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
@@ -76,6 +76,8 @@ export default function AdminSettingsPage() {
   /* ---------------------------- Hydration ---------------------------- */
 
   const refresh = useCallback(async () => {
+    await Promise.resolve();
+
     dispatch(setAdminSettingsLoading(true));
     dispatch(setAdminSettingsError(null));
     try {
@@ -96,14 +98,11 @@ export default function AdminSettingsPage() {
 
   useEffect(() => {
     if (isHydrated) return;
-    void refresh();
+    const timer = window.setTimeout(() => {
+      void refresh();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [isHydrated, refresh]);
-
-  // Keep the form synced with the store the first time settings arrive.
-  useEffect(() => {
-    if (!settings) return;
-    setSettingsForm(buildSettingsForm(settings));
-  }, [settings]);
 
   /* ---------------------------- Settings form ------------------------ */
 

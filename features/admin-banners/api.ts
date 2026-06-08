@@ -63,6 +63,7 @@ export type TopBannerRow = {
   description: string;
   tag: string;
   tagIcon: string;
+  link: string | null;
   position: number;
   status: BannerStatus;
   createdAt: string;
@@ -175,6 +176,7 @@ export type TopFormState = {
   description: string;
   tag: string;
   tagIcon: string;
+  link: string;
   position: string;
   status: BannerStatus;
 };
@@ -186,6 +188,7 @@ export const EMPTY_TOP_FORM: TopFormState = {
   description: "",
   tag: "",
   tagIcon: "Sparkles",
+  link: "",
   position: "0",
   status: "ACTIVE",
 };
@@ -312,6 +315,7 @@ function parseTop(entry: unknown): TopBannerRow {
     description: asString(item.description),
     tag: asString(item.tag),
     tagIcon: asString(item.tagIcon),
+    link: asNullableString(item.link),
     position: Number(item.position ?? 0),
     status: parseStatus(item.status),
     createdAt: asString(item.createdAt),
@@ -532,6 +536,7 @@ type TopCreateBody = {
   description: string;
   tag: string;
   tagIcon: string;
+  link: string | null;
   position: number;
   status: BannerStatus;
 };
@@ -756,6 +761,7 @@ export function buildTopForm(banner: TopBannerRow): TopFormState {
     description: banner.description,
     tag: banner.tag,
     tagIcon: banner.tagIcon,
+    link: banner.link ?? "",
     position: String(banner.position),
     status: banner.status,
   };

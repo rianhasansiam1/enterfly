@@ -14,7 +14,7 @@ import {
 } from "@/lib/motion/list-removal";
 import { cn } from "@/lib/utils";
 
-import Stars from "./Stars";
+import Stars from "@/app/admin/components/Stars";
 
 const STATUS_BADGE: Record<TestimonialStatus, string> = {
   ACTIVE: "bg-emerald-50 text-emerald-700 ring-emerald-200",

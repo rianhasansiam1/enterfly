@@ -1,9 +1,5 @@
-import type { NextRequest } from "next/server";
-
-import { requireAdmin } from "@/lib/api/guards";
-import { ok } from "@/lib/api/response";
+import { adminRoute } from "@/lib/api/handlers";
 import { listAllBannersForAdminCached } from "@/lib/services/banner.service";
-import { handleServiceError } from "@/lib/services/service-error";
 
 /**
  * GET /api/admin/banners
@@ -13,14 +9,10 @@ import { handleServiceError } from "@/lib/services/service-error";
  * single request. Reads pass through `unstable_cache` (tag:
  * `admin-banners`) so the round trip stays cheap on the hot path.
  */
-export async function GET(_request: NextRequest) {
-  const guard = await requireAdmin();
-  if (!guard.ok) return guard.response;
-
-  try {
+export const GET = adminRoute({
+  scope: "admin.banners.GET",
+  handler: async () => {
     const data = await listAllBannersForAdminCached();
-    return ok(data);
-  } catch (error) {
-    return handleServiceError("admin.banners.GET", error);
-  }
-}
+    return { data };
+  },
+});

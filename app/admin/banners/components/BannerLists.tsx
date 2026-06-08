@@ -256,6 +256,11 @@ export function TopList({
             <p className="text-[11px] opacity-90">
               {banner.tagIcon} · {banner.tag}
             </p>
+            {banner.link && (
+              <p className="truncate text-[11px] font-mono opacity-90">
+                {banner.link}
+              </p>
+            )}
           </div>
           <div className="space-y-2 p-4">
             <p className="text-[11px] text-gray-400">

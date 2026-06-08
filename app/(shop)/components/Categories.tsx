@@ -23,6 +23,7 @@ type HomeCategoryProduct = {
   rating: number;
   reviewCount: number;
   badge: string | null;
+  variantCount: number;
 };
 
 type HomeCategoryBanner = {
@@ -117,6 +118,7 @@ export default function Categories({ initialCategories }: CategoriesProps) {
                   rating={item.rating}
                   reviewCount={item.reviewCount}
                   badge={item.badge ?? undefined}
+                  variantCount={item.variantCount}
                 />
               ))}
             </div>

@@ -24,9 +24,7 @@ const TopBanner = async () => {
     description: banner.description,
     tag: banner.tag,
     tagIcon: banner.tagIcon,
-    // The unified Banner model carries an optional `link`; TopBannerRow
-    // doesn't expose it, so default the CTA to the products page.
-    link: null,
+    link: banner.link,
   }));
 
   if (slides.length === 0) return null;

@@ -1,5 +1,18 @@
 "use client";
 
+/**
+ * Shared admin form field wrapper.
+ *
+ * Consolidates the previously duplicated `Field.tsx` files in:
+ *   - app/admin/settings/components/Field.tsx   (superset — source of truth)
+ *   - app/admin/categories/components/Field.tsx
+ *   - app/admin/banners/components/Field.tsx
+ *
+ * NOTE: `app/admin/products/components/Field.tsx` is intentionally NOT
+ * consolidated here — it uses a deliberately different visual style
+ * (uppercase tracked label) and a different outer layout. Migrating it
+ * would silently change the products form's appearance.
+ */
 export default function Field({
   label,
   hint,

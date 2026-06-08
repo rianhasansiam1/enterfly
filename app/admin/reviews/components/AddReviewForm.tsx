@@ -29,7 +29,6 @@ export default function AddReviewForm({
 
   useEffect(() => {
     let ignore = false;
-    setProductsLoading(true);
     void (async () => {
       try {
         const items = await fetchAllActiveProductsFromApi();

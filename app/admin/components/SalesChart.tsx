@@ -20,6 +20,10 @@ type SalesChartProps = {
   loading?: boolean;
 };
 
+const CHART_WIDTH = 600;
+const CHART_HEIGHT = 220;
+const CHART_PAD = { l: 44, r: 16, t: 16, b: 28 } as const;
+
 /**
  * Sales overview chart for the admin dashboard.
  *
@@ -51,11 +55,8 @@ export default function SalesChart({ sales, loading }: SalesChartProps) {
 
   // SVG plotting maths kept intentionally simple: one viewBox, the
   // outer container handles responsive scaling via Tailwind classes.
-  const W = 600;
-  const H = 220;
-  const PAD = { l: 44, r: 16, t: 16, b: 28 };
-  const innerW = W - PAD.l - PAD.r;
-  const innerH = H - PAD.t - PAD.b;
+  const innerW = CHART_WIDTH - CHART_PAD.l - CHART_PAD.r;
+  const innerH = CHART_HEIGHT - CHART_PAD.t - CHART_PAD.b;
 
   const max = useMemo(() => {
     const peak = points.reduce((m, p) => (p.revenue > m ? p.revenue : m), 0);
@@ -68,8 +69,8 @@ export default function SalesChart({ sales, loading }: SalesChartProps) {
     if (points.length === 0) return [];
     const denominator = Math.max(1, points.length - 1);
     return points.map((point, index) => {
-      const x = PAD.l + (innerW * index) / denominator;
-      const y = PAD.t + innerH - (point.revenue / max) * innerH;
+      const x = CHART_PAD.l + (innerW * index) / denominator;
+      const y = CHART_PAD.t + innerH - (point.revenue / max) * innerH;
       return { ...point, x, y };
     });
   }, [innerH, innerW, max, points]);
@@ -83,9 +84,9 @@ export default function SalesChart({ sales, loading }: SalesChartProps) {
   const areaPath =
     plotted.length === 0
       ? ""
-      : `M ${plotted[0].x.toFixed(1)} ${(PAD.t + innerH).toFixed(1)} ` +
+      : `M ${plotted[0].x.toFixed(1)} ${(CHART_PAD.t + innerH).toFixed(1)} ` +
         plotted.map((p) => `L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ") +
-        ` L ${plotted[plotted.length - 1].x.toFixed(1)} ${(PAD.t + innerH).toFixed(1)} Z`;
+        ` L ${plotted[plotted.length - 1].x.toFixed(1)} ${(CHART_PAD.t + innerH).toFixed(1)} Z`;
 
   const yTicks = 4;
   const tickValues = Array.from({ length: yTicks + 1 }, (_, i) =>
@@ -159,7 +160,7 @@ export default function SalesChart({ sales, loading }: SalesChartProps) {
           </div>
         ) : (
           <svg
-            viewBox={`0 0 ${W} ${H}`}
+            viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
             className="h-56 w-full"
             role="img"
             aria-label="Revenue trend"
@@ -177,19 +178,19 @@ export default function SalesChart({ sales, loading }: SalesChartProps) {
 
             {/* Y grid + labels */}
             {tickValues.map((value, i) => {
-              const y = PAD.t + (innerH * i) / yTicks;
+              const y = CHART_PAD.t + (innerH * i) / yTicks;
               return (
                 <g key={`tick-${i}`}>
                   <line
-                    x1={PAD.l}
-                    x2={W - PAD.r}
+                    x1={CHART_PAD.l}
+                    x2={CHART_WIDTH - CHART_PAD.r}
                     y1={y}
                     y2={y}
                     stroke="#ede9fe"
                     strokeDasharray="3 4"
                   />
                   <text
-                    x={PAD.l - 6}
+                    x={CHART_PAD.l - 6}
                     y={y + 4}
                     textAnchor="end"
                     className="fill-gray-400"
@@ -226,7 +227,7 @@ export default function SalesChart({ sales, loading }: SalesChartProps) {
                 />
                 <text
                   x={p.x}
-                  y={H - 8}
+                  y={CHART_HEIGHT - 8}
                   textAnchor="middle"
                   className="fill-gray-500"
                   fontSize="10"

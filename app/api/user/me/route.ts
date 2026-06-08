@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { requireUser } from "@/lib/api/guards";
 import { jsonError, ok } from "@/lib/api/response";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import {
   getProfileOverview,
   updateOwnProfile,

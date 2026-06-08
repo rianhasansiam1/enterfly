@@ -1,9 +1,9 @@
 import type { NextRequest } from "next/server";
-import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
 import { requireAdmin } from "@/lib/api/guards";
 import { jsonError, ok } from "@/lib/api/response";
+import { revalidateCacheTags } from "@/lib/cache/revalidation";
 import { updateUserRole } from "@/lib/services/user.service";
 import { handleServiceError } from "@/lib/services/service-error";
 import { updateUserRoleSchema } from "@/lib/validations/user.validation";
@@ -49,7 +49,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   try {
     const user = await updateUserRole(id, parsed.data);
-    revalidateTag("admin-users", "max");
+    revalidateCacheTags(["admin-users"]);
     return ok(user);
   } catch (error) {
     return handleServiceError("admin.users/[id].role.PATCH", error);

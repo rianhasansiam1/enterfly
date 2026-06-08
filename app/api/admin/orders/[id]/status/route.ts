@@ -1,14 +1,8 @@
-import type { NextRequest } from "next/server";
-import { revalidateTag } from "next/cache";
-import { z } from "zod";
-
-import { requireAdmin } from "@/lib/api/guards";
-import { jsonError, ok } from "@/lib/api/response";
+import { adminJsonRoute } from "@/lib/api/handlers";
 import { updateOrderStatus } from "@/lib/services/order.service";
-import { handleServiceError } from "@/lib/services/service-error";
 import { updateOrderStatusSchema } from "@/lib/validations/order.validation";
 
-type RouteContext = { params: Promise<{ id: string }> };
+type Params = { id: string };
 
 /**
  * PATCH /api/admin/orders/[id]/status
@@ -17,36 +11,16 @@ type RouteContext = { params: Promise<{ id: string }> };
  * transition graph, and — when moving to CANCELLED — restores stock
  * inside the same transaction.
  */
-export async function PATCH(request: NextRequest, context: RouteContext) {
-  const guard = await requireAdmin();
-  if (!guard.ok) return guard.response;
-
-  const { id } = await context.params;
-
-  const contentType = request.headers.get("content-type") ?? "";
-  if (!contentType.toLowerCase().includes("application/json")) {
-    return jsonError(415, "Content-Type must be application/json.");
-  }
-
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return jsonError(400, "Invalid JSON payload.");
-  }
-
-  const parsed = updateOrderStatusSchema.safeParse(body);
-  if (!parsed.success) {
-    return jsonError(400, "Please review the highlighted fields and try again.", {
-      fieldErrors: z.flattenError(parsed.error).fieldErrors,
-    });
-  }
-
-  try {
-    const order = await updateOrderStatus(id, parsed.data);
-    revalidateTag("admin-orders", "max");
-    return ok(order);
-  } catch (error) {
-    return handleServiceError("admin.orders/[id].status.PATCH", error);
-  }
-}
+export const PATCH = adminJsonRoute<
+  typeof updateOrderStatusSchema,
+  unknown,
+  Params
+>({
+  schema: updateOrderStatusSchema,
+  scope: "admin.orders/[id].status.PATCH",
+  revalidate: ["admin-orders"],
+  handler: async ({ body, params }) => {
+    const order = await updateOrderStatus(params.id, body);
+    return { data: order };
+  },
+});

@@ -44,6 +44,7 @@ type TopBannerRow = {
   description: string;
   tag: string;
   tagIcon: string;
+  link: string | null;
   position: number;
   status: BannerStatus;
   createdAt: string;

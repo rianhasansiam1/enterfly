@@ -2,7 +2,7 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { round2, toNumber } from "@/lib/money";
 import { ServiceError } from "@/lib/services/service-error";
 import type { ReportQueryInput } from "@/lib/validations/report.validation";
@@ -342,11 +342,11 @@ async function buildProductsReport(window: Window, limit: number) {
       id: true,
       name: true,
       status: true,
+      salePrice: true,
+      discountPrice: true,
       category: { select: { id: true, name: true } },
       variants: {
-        orderBy: { createdAt: "asc" },
-        take: 1,
-        select: { price: true, salePrice: true, stock: true },
+        select: { stock: true },
       },
     },
   });
@@ -355,15 +355,23 @@ async function buildProductsReport(window: Window, limit: number) {
   const rows = Array.from(productMap.entries())
     .map(([productId, agg]) => {
       const info = productInfo.get(productId);
-      const variant = info?.variants[0];
+      const currentPrice = info
+        ? info.discountPrice != null &&
+          info.discountPrice.lessThan(info.salePrice)
+          ? info.discountPrice
+          : info.salePrice
+        : null;
+      const currentStock = info
+        ? info.variants.reduce((sum, v) => sum + v.stock, 0)
+        : null;
       return {
         productId,
         name: info?.name ?? "Deleted product",
         category: info?.category?.name ?? "—",
         unitsSold: agg.units,
         revenue: money(agg.revenue),
-        currentPrice: variant ? money(variant.price) : null,
-        currentStock: variant?.stock ?? null,
+        currentPrice: currentPrice != null ? money(currentPrice) : null,
+        currentStock,
         status: info?.status ?? null,
       };
     })
@@ -393,17 +401,19 @@ async function buildProductsReport(window: Window, limit: number) {
  * always reported "as of now".
  */
 async function buildInventoryReport(limit: number) {
-  // Stock and price now live on ProductVariant. We load products with
-  // their variants and aggregate per product.
+  // Pricing lives on the product; stock lives on its variants. Load each
+  // product with its pricing + variant stock and aggregate per product.
   const products = await prisma.product.findMany({
     select: {
       id: true,
       name: true,
       status: true,
+      salePrice: true,
+      discountPrice: true,
       category: { select: { id: true, name: true } },
       updatedAt: true,
       variants: {
-        select: { price: true, salePrice: true, stock: true },
+        select: { stock: true },
       },
     },
   });
@@ -425,26 +435,18 @@ async function buildInventoryReport(limit: number) {
   let inventoryValue = 0;
 
   const allRows: Row[] = products.map((p) => {
-    // Aggregate stock across variants; use the primary variant for the
-    // representative price columns.
     const stock = p.variants.reduce((sum, v) => sum + v.stock, 0);
-    const primary = p.variants[0];
-    const price = primary ? toNumber(primary.price) : 0;
-    const sale =
-      primary && primary.salePrice != null ? toNumber(primary.salePrice) : null;
+    const price = toNumber(p.salePrice);
+    const sale = p.discountPrice != null ? toNumber(p.discountPrice) : null;
     const discountPrice = sale != null && sale < price ? sale : null;
+    const unit = discountPrice != null ? discountPrice : price;
 
     totalUnits += stock;
     if (stock === 0) outOfStock += 1;
     else if (stock <= 5) lowStock += 1;
 
-    // Inventory value uses each variant's effective price * its stock.
-    for (const v of p.variants) {
-      const vPrice = toNumber(v.price);
-      const vSale = v.salePrice != null ? toNumber(v.salePrice) : null;
-      const unit = vSale != null && vSale < vPrice ? vSale : vPrice;
-      inventoryValue += unit * v.stock;
-    }
+    // Inventory value uses the effective selling price * total stock.
+    inventoryValue += unit * stock;
 
     return {
       id: p.id,

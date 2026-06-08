@@ -4,7 +4,7 @@ import { CircleDollarSign, Loader2, Percent, RotateCcw, Truck } from "lucide-rea
 
 import type { SettingsFormState } from "@/features/admin-settings/api";
 
-import Field from "./Field";
+import Field from "@/app/admin/components/Field";
 
 export default function StorePricingForm({
   form,

@@ -36,6 +36,8 @@ export default function AdminDashboardPage() {
 
   const load = useCallback(
     async (mode: "initial" | "refresh") => {
+      await Promise.resolve();
+
       setState((current) => {
         const previous =
           current.status === "ready"
@@ -70,7 +72,10 @@ export default function AdminDashboardPage() {
   );
 
   useEffect(() => {
-    void load("initial");
+    const timer = window.setTimeout(() => {
+      void load("initial");
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [load]);
 
   const overview =

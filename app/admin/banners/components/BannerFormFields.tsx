@@ -15,7 +15,7 @@ import type { CategoryOption } from "@/features/admin-products/api";
 import ImageUploader from "@/components/ui/ImageUploader";
 import AdvancedColorPicker from "@/components/ui/AdvancedColorPicker";
 
-import Field from "./Field";
+import Field from "@/app/admin/components/Field";
 
 export function CarouselFormFields({
   form,
@@ -473,6 +473,14 @@ export function TopFormFields({
           onChange={(e) => update("tag", e.target.value)}
           className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           placeholder="Limited Time Only"
+        />
+      </Field>
+      <Field label="Link">
+        <input
+          value={form.link}
+          onChange={(e) => update("link", e.target.value)}
+          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
+          placeholder="/products?sort=deals"
         />
       </Field>
       <div className="grid grid-cols-2 gap-3">

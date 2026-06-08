@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import {
   Star,
@@ -19,9 +19,6 @@ import {
   type Review,
   type ReviewSummary,
 } from '@/features/reviews/api'
-
-const FALLBACK_AVATAR =
-  'https://api.dicebear.com/7.x/initials/svg?seed=Customer'
 
 function avatarFor(review: Review): string {
   if (review.authorImage) return review.authorImage
@@ -68,28 +65,28 @@ export default function ReviewSection({ productId }: { productId: string }) {
   const [sortBy, setSortBy] = useState<SortKey>('newest')
   const [showForm, setShowForm] = useState(false)
 
-  const loadReviews = useMemo(
-    () =>
-      async function load() {
-        setLoading(true)
-        setLoadError(null)
-        try {
-          const page = await fetchProductReviews(productId, { pageSize: 100 })
-          setReviews(page.items)
-          setSummary(page.summary)
-        } catch (error) {
-          setLoadError(
-            error instanceof Error ? error.message : 'Failed to load reviews.',
-          )
-        } finally {
-          setLoading(false)
-        }
-      },
-    [productId],
-  )
+  const loadReviews = useCallback(async () => {
+    await Promise.resolve()
+    setLoading(true)
+    setLoadError(null)
+    try {
+      const page = await fetchProductReviews(productId, { pageSize: 100 })
+      setReviews(page.items)
+      setSummary(page.summary)
+    } catch (error) {
+      setLoadError(
+        error instanceof Error ? error.message : 'Failed to load reviews.',
+      )
+    } finally {
+      setLoading(false)
+    }
+  }, [productId])
 
   useEffect(() => {
-    void loadReviews()
+    const timer = window.setTimeout(() => {
+      void loadReviews()
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [loadReviews])
 
   const visibleReviews = useMemo(() => {

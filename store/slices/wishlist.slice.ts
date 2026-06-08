@@ -1,20 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-type WishlistItem = {
-  id: string;
-  name: string;
-  brand: string;
-  image: string;
-  price: number;
-  originalPrice?: number;
-  rating: number;
-  reviewCount: number;
-  category: string;
-  inStock: boolean;
-  addedAt: string;
-  priceDropFromAdded?: number;
-  badge?: string;
-};
+import type { WishlistItem } from "@/features/wishlist/api";
 
 type WishlistMode = "local" | "server";
 
