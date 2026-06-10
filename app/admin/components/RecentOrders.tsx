@@ -4,27 +4,11 @@ import Link from "next/link";
 import { ArrowRight, ShoppingBag } from "lucide-react";
 
 import type {
-  DashboardOrderStatus,
   DashboardPaymentStatus,
   DashboardRecentOrder,
 } from "@/features/admin-dashboard/api";
+import { ORDER_STATUS_META } from "@/lib/orders/status";
 import { cn } from "@/lib/utils";
-
-const STATUS_STYLES: Record<DashboardOrderStatus, string> = {
-  PENDING: "bg-amber-50 text-amber-700 ring-amber-200",
-  PROCESSING: "bg-indigo-50 text-indigo-700 ring-indigo-200",
-  SHIPPED: "bg-violet-50 text-violet-700 ring-violet-200",
-  DELIVERED: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  CANCELLED: "bg-rose-50 text-rose-700 ring-rose-200",
-};
-
-const STATUS_LABELS: Record<DashboardOrderStatus, string> = {
-  PENDING: "Pending",
-  PROCESSING: "Processing",
-  SHIPPED: "Shipped",
-  DELIVERED: "Delivered",
-  CANCELLED: "Cancelled",
-};
 
 const PAYMENT_STYLES: Record<DashboardPaymentStatus, string> = {
   PAID: "bg-emerald-50 text-emerald-700",
@@ -122,10 +106,10 @@ export default function RecentOrders({ orders, loading }: RecentOrdersProps) {
                       <span
                         className={cn(
                           "inline-flex w-fit rounded-full px-2.5 py-0.5 text-[11px] font-bold ring-1 ring-inset",
-                          STATUS_STYLES[order.status],
+                          ORDER_STATUS_META[order.status].tone.ring,
                         )}
                       >
-                        {STATUS_LABELS[order.status]}
+                        {ORDER_STATUS_META[order.status].label}
                       </span>
                       <span
                         className={cn(

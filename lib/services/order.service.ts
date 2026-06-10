@@ -6,6 +6,11 @@ import { unstable_cache } from "next/cache";
 
 import { prisma } from "@/lib/db/prisma";
 import { multiply, round2, sumDecimals, toDecimal, toNumber } from "@/lib/money";
+import {
+  CUSTOMER_CANCELLABLE_STATUSES,
+  STATUS_TRANSITIONS,
+} from "@/lib/orders/status";
+import { notifyOrderStatusChange } from "@/lib/orders/notifications";
 import { ServiceError } from "@/lib/services/service-error";
 import type {
   AdminOrderQueryInput,
@@ -71,6 +76,9 @@ const orderItemInclude = {
 
 const orderInclude = {
   items: { include: orderItemInclude },
+  // Full audit trail, oldest first, so the customer tracker and admin
+  // timeline render chronologically without a client-side sort.
+  statusHistory: { orderBy: { createdAt: "asc" } },
 } satisfies Prisma.OrderInclude;
 
 const orderWithUserInclude = {
@@ -364,6 +372,16 @@ export async function createOrder(userId: string, input: CreateOrderInput) {
               buyingPrice: round2(l.buyingPrice),
             })),
           },
+          // Seed the audit trail with the initial PENDING entry so the
+          // tracker has a timestamped first step from the moment the
+          // order exists.
+          statusHistory: {
+            create: {
+              status: "PENDING",
+              note: "Order placed.",
+              updatedBy: userId,
+            },
+          },
         },
         include: orderInclude,
       });
@@ -440,7 +458,49 @@ export function getOrderForUser(orderId: string, userId: string) {
 /*  Cancellation                                                              */
 /* -------------------------------------------------------------------------- */
 
-const CUSTOMER_CANCELLABLE: readonly OrderStatus[] = ["PENDING", "PROCESSING"];
+const CUSTOMER_CANCELLABLE: readonly OrderStatus[] = CUSTOMER_CANCELLABLE_STATUSES;
+
+/**
+ * Append a row to the order's status audit trail. Always called inside
+ * the same transaction that updates `Order.status` so the history can
+ * never drift from the live status.
+ */
+function recordStatusHistory(
+  tx: Prisma.TransactionClient,
+  orderId: string,
+  status: OrderStatus,
+  options: { note?: string | null; updatedBy?: string | null } = {},
+) {
+  return tx.orderStatusHistory.create({
+    data: {
+      orderId,
+      status,
+      note: options.note ?? null,
+      updatedBy: options.updatedBy ?? null,
+    },
+  });
+}
+
+/**
+ * Fire a best-effort status-change notification for an already-committed
+ * order. Kept outside the DB transaction so a delivery hiccup can't roll
+ * back the status update; `notifyOrderStatusChange` itself never throws.
+ */
+async function fireStatusNotification(order: {
+  orderNumber: string;
+  status: OrderStatus;
+  customerName: string;
+  customerEmail: string | null;
+  customerPhone: string | null;
+}) {
+  await notifyOrderStatusChange({
+    orderNumber: order.orderNumber,
+    status: order.status,
+    customerName: order.customerName,
+    customerEmail: order.customerEmail,
+    customerPhone: order.customerPhone,
+  });
+}
 
 /**
  * Restore stock for an order's items onto their variants.
@@ -491,7 +551,7 @@ async function restoreStockForItems(
 }
 
 export async function cancelOrderAsCustomer(orderId: string, userId: string) {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const order = await tx.order.findFirst({
       where: { id: orderId, userId },
       include: { items: true },
@@ -513,8 +573,15 @@ export async function cancelOrderAsCustomer(orderId: string, userId: string) {
       data: { status: "CANCELLED" },
       include: orderInclude,
     });
+    await recordStatusHistory(tx, order.id, "CANCELLED", {
+      note: "Cancelled by customer.",
+      updatedBy: userId,
+    });
     return serializeOrder(updated);
   });
+
+  await fireStatusNotification(result);
+  return result;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -624,24 +691,21 @@ export function getOrderForAdmin(orderId: string) {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Allowed status transitions. We keep the rules simple:
- *   - Any non-terminal order can be moved to CANCELLED.
- *   - Otherwise we follow the natural order pipeline.
- *   - Terminal states (DELIVERED, CANCELLED) cannot change.
+ * Update an order's status.
+ *
+ * Transition rules live in `@/lib/orders/status` (shared with the UI).
+ * Stock is restored when an order leaves a live state into CANCELLED or
+ * is RETURNED, and every change appends to the audit trail — all inside
+ * one transaction so status, stock, and history can't drift apart.
+ *
+ * `updatedBy` is the admin id from the session (recorded in the trail).
  */
-const STATUS_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
-  PENDING: ["PROCESSING", "CANCELLED"],
-  PROCESSING: ["SHIPPED", "CANCELLED"],
-  SHIPPED: ["DELIVERED", "CANCELLED"],
-  DELIVERED: [],
-  CANCELLED: [],
-};
-
 export async function updateOrderStatus(
   orderId: string,
   input: UpdateOrderStatusInput,
+  updatedBy?: string | null,
 ) {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const order = await tx.order.findUnique({
       where: { id: orderId },
       include: { items: true },
@@ -661,8 +725,9 @@ export async function updateOrderStatus(
       );
     }
 
-    // Restore stock when an order moves into CANCELLED from a live state.
-    if (next === "CANCELLED") {
+    // Restore stock when an order moves out of a live state: an admin
+    // cancellation or a completed return both put the units back.
+    if (next === "CANCELLED" || next === "RETURNED") {
       await restoreStockForItems(tx, order.items, order.orderNumber);
     }
 
@@ -671,8 +736,15 @@ export async function updateOrderStatus(
       data: { status: next },
       include: orderWithUserInclude,
     });
+    await recordStatusHistory(tx, order.id, next, {
+      note: input.note ?? null,
+      updatedBy: updatedBy ?? null,
+    });
     return serializeOrder(updated);
   });
+
+  await fireStatusNotification(result);
+  return result;
 }
 
 export async function updatePaymentStatus(

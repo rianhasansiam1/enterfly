@@ -1,4 +1,5 @@
 import { readApiData } from "@/features/http/api-envelope";
+import type { OrderStatus } from "@/lib/orders/status";
 
 /**
  * Client-side types and fetcher for the admin dashboard.
@@ -39,12 +40,7 @@ export type DashboardSalesSeries = {
   totalOrders: number;
 };
 
-export type DashboardOrderStatus =
-  | "PENDING"
-  | "PROCESSING"
-  | "SHIPPED"
-  | "DELIVERED"
-  | "CANCELLED";
+export type DashboardOrderStatus = OrderStatus;
 
 export type DashboardPaymentStatus = "PAID" | "UNPAID";
 

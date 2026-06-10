@@ -4,6 +4,7 @@ import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
 import { round2, toNumber } from "@/lib/money";
+import type { OrderStatus } from "@/lib/orders/status";
 
 /**
  * Aggregations powering the admin dashboard page.
@@ -94,7 +95,7 @@ export type DashboardRecentOrder = {
   customerEmail: string | null;
   totalAmount: number;
   itemsCount: number;
-  status: "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+  status: OrderStatus;
   paymentStatus: "PAID" | "UNPAID";
   createdAt: string;
 };

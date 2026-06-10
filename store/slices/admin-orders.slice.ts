@@ -1,11 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-type OrderStatus =
-  | "PENDING"
-  | "PROCESSING"
-  | "SHIPPED"
-  | "DELIVERED"
-  | "CANCELLED";
+import type { OrderStatus } from "@/lib/orders/status";
 
 type PaymentStatus = "PAID" | "UNPAID";
 

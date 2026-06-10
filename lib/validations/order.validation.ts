@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { ORDER_STATUSES } from "@/lib/orders/status";
+
 /**
  * Zod schemas for the Order API.
  *
@@ -8,16 +10,11 @@ import { z } from "zod";
  *  - `items` is optional on create: when omitted, the order is built
  *    from the user's current cart. When provided, it overrides the
  *    cart (e.g. "Buy now" flow).
- *  - Mirror Prisma enums so a schema rename here is a TS error.
+ *  - Order statuses come from `@/lib/orders/status`, the single source
+ *    of truth shared with the service layer and the UI.
  */
 
-const ORDER_STATUS = [
-  "PENDING",
-  "PROCESSING",
-  "SHIPPED",
-  "DELIVERED",
-  "CANCELLED",
-] as const;
+const ORDER_STATUS = ORDER_STATUSES;
 
 const PAYMENT_STATUS = ["PAID", "UNPAID"] as const;
 
@@ -97,6 +94,9 @@ export const adminOrderQuerySchema = z.object({
 /** Body for `PATCH /api/admin/orders/[id]/status`. */
 export const updateOrderStatusSchema = z.object({
   status: z.enum(ORDER_STATUS),
+  // Optional free-text note recorded alongside the status change in the
+  // order's audit trail (e.g. courier name, reason for cancellation).
+  note: z.string().trim().max(500).optional(),
 });
 
 /** Body for `PATCH /api/admin/orders/[id]/payment-status`. */

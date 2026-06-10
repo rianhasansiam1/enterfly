@@ -1,4 +1,5 @@
 import { readApiData } from "@/features/http/api-envelope";
+import type { OrderStatus } from "@/lib/orders/status";
 
 /**
  * Client-side types and fetchers for the customer "My Profile" page.
@@ -29,9 +30,7 @@ export type ProfileStats = {
   totalSpend: number;
   totalOrders: number;
   lastOrderAt: string | null;
-  ordersByStatus: Partial<
-    Record<"PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED", number>
-  >;
+  ordersByStatus: Partial<Record<OrderStatus, number>>;
   cartCount: number;
   wishlistCount: number;
 };

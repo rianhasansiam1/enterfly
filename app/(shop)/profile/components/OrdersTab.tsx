@@ -23,23 +23,40 @@ import {
   type OrderStatus,
 } from "@/features/orders/api";
 import {
+  CUSTOMER_CANCELLABLE_STATUSES,
+  ORDER_STATUS_META,
+} from "@/lib/orders/status";
+import {
   LIST_ITEM_TRANSITION,
   LIST_ITEM_VARIANTS,
 } from "@/lib/motion/list-removal";
 
 import { FALLBACK_PRODUCT_IMAGE, ORDER_STATUS_TONE } from "./constants";
 
+// Curated milestone filters for the order history. Covers the key
+// fulfillment stages plus the return/cancel branches without flooding
+// the bar with all thirteen statuses.
+const FILTER_STATUSES: readonly OrderStatus[] = [
+  "PENDING",
+  "PAYMENT_CONFIRMED",
+  "PACKED",
+  "IN_TRANSIT",
+  "OUT_FOR_DELIVERY",
+  "DELIVERED",
+  "CANCELLED",
+  "RETURNED",
+];
+
 const STATUS_FILTERS: ReadonlyArray<{ id: OrderStatus | "ALL"; label: string }> = [
   { id: "ALL", label: "All" },
-  { id: "PENDING", label: "Pending" },
-  { id: "PROCESSING", label: "Processing" },
-  { id: "SHIPPED", label: "Shipped" },
-  { id: "DELIVERED", label: "Delivered" },
-  { id: "CANCELLED", label: "Cancelled" },
+  ...FILTER_STATUSES.map((status) => ({
+    id: status,
+    label: ORDER_STATUS_META[status].label,
+  })),
 ];
 
 const PAGE_SIZE = 8;
-const CANCELLABLE_STATUSES = new Set<OrderStatus>(["PENDING", "PROCESSING"]);
+const CANCELLABLE_STATUSES = new Set<OrderStatus>(CUSTOMER_CANCELLABLE_STATUSES);
 
 type LoadState =
   | { status: "loading" }

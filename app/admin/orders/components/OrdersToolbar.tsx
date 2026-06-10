@@ -8,6 +8,7 @@ import {
   type OrderStatus,
   type PaymentStatus,
 } from "@/features/admin-orders/api";
+import { ORDER_STATUS_META } from "@/lib/orders/status";
 
 type StatusFilter = "ALL" | OrderStatus;
 type PaymentFilter = "ALL" | PaymentStatus;
@@ -58,7 +59,7 @@ export default function OrdersToolbar({
             <option value="ALL">All status</option>
             {ORDER_STATUS_VALUES.map((status) => (
               <option key={status} value={status}>
-                {status}
+                {ORDER_STATUS_META[status].label}
               </option>
             ))}
           </select>

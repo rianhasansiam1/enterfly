@@ -1,4 +1,5 @@
 import { readApiData } from "@/features/http/api-envelope";
+import type { OrderStatus } from "@/lib/orders/status";
 
 /**
  * Client-side types and fetchers for order detail / summary screens.
@@ -9,16 +10,20 @@ import { readApiData } from "@/features/http/api-envelope";
  * import it without circular dependencies.
  */
 
-export type OrderStatus =
-  | "PENDING"
-  | "PROCESSING"
-  | "SHIPPED"
-  | "DELIVERED"
-  | "CANCELLED";
+export type { OrderStatus } from "@/lib/orders/status";
 
 export type PaymentStatus = "PAID" | "UNPAID";
 
 export type OrderPaymentMethod = "CASH_ON_DELIVERY" | "ONLINE";
+
+/** One entry in an order's status audit trail / tracking timeline. */
+export type OrderStatusHistoryEntry = {
+  id: string;
+  status: OrderStatus;
+  note: string | null;
+  updatedBy: string | null;
+  createdAt: string;
+};
 
 export type OrderItem = {
   id: string;
@@ -68,6 +73,8 @@ export type OrderDetail = {
   updatedAt: string;
 
   items: OrderItem[];
+  // Full status timeline, oldest first. Powers the order tracker.
+  statusHistory: OrderStatusHistoryEntry[];
 };
 
 /**

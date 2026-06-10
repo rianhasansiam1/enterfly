@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import type { OrderStatus } from "@/features/orders/api";
+import { ORDER_STATUS_META } from "@/lib/orders/status";
 
 /**
  * Tab definitions for the My Profile dashboard.
@@ -73,13 +74,11 @@ export const PROFILE_TABS: readonly ProfileTab[] = [
 export const ORDER_STATUS_TONE: Record<
   OrderStatus,
   { label: string; pill: string }
-> = {
-  PENDING: { label: "Pending", pill: "bg-amber-100 text-amber-700" },
-  PROCESSING: { label: "Processing", pill: "bg-indigo-100 text-indigo-700" },
-  SHIPPED: { label: "Shipped", pill: "bg-violet-100 text-violet-700" },
-  DELIVERED: { label: "Delivered", pill: "bg-emerald-100 text-emerald-700" },
-  CANCELLED: { label: "Cancelled", pill: "bg-rose-100 text-rose-700" },
-};
+> = Object.fromEntries(
+  (Object.entries(ORDER_STATUS_META) as [OrderStatus, (typeof ORDER_STATUS_META)[OrderStatus]][]).map(
+    ([status, meta]) => [status, { label: meta.label, pill: meta.tone.pill }],
+  ),
+) as Record<OrderStatus, { label: string; pill: string }>;
 
 export const FALLBACK_PRODUCT_IMAGE =
   "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400";

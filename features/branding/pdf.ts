@@ -117,6 +117,7 @@ export function badgeFor(status: string): BadgeStyle {
       "DELIVERED",
       "PAID",
       "CONFIRMED",
+      "PAYMENT_CONFIRMED",
       "COMPLETED",
       "SUCCESS",
       "SHIPPED",
@@ -126,14 +127,33 @@ export function badgeFor(status: string): BadgeStyle {
     return { bg: PDF_COLORS.successBg, fg: PDF_COLORS.successText };
   }
   if (
-    ["CANCELLED", "CANCELED", "FAILED", "REFUNDED", "DECLINED", "INACTIVE"].includes(
-      s,
-    )
+    [
+      "CANCELLED",
+      "CANCELED",
+      "FAILED",
+      "REFUNDED",
+      "RETURNED",
+      "RETURN_REQUESTED",
+      "DECLINED",
+      "INACTIVE",
+    ].includes(s)
   ) {
     return { bg: PDF_COLORS.dangerBg, fg: PDF_COLORS.dangerText };
   }
   if (
-    ["PENDING", "PROCESSING", "UNPAID", "COD", "CASH_ON_DELIVERY"].includes(s)
+    [
+      "PENDING",
+      "PROCESSING",
+      "SELLER_TO_PACK",
+      "PACKED",
+      "READY_TO_SHIP",
+      "WAREHOUSE",
+      "IN_TRANSIT",
+      "OUT_FOR_DELIVERY",
+      "UNPAID",
+      "COD",
+      "CASH_ON_DELIVERY",
+    ].includes(s)
   ) {
     return { bg: PDF_COLORS.warnBg, fg: PDF_COLORS.warnText };
   }

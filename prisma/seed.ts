@@ -658,6 +658,46 @@ async function seedOrders(
 
   const promoUsageCounts = new Map<string, number>();
 
+  // Linear fulfillment pipeline used to synthesize a realistic audit
+  // trail for each seeded order.
+  const HAPPY_PATH = [
+    "PENDING",
+    "PAYMENT_CONFIRMED",
+    "SELLER_TO_PACK",
+    "PACKED",
+    "READY_TO_SHIP",
+    "WAREHOUSE",
+    "IN_TRANSIT",
+    "OUT_FOR_DELIVERY",
+    "DELIVERED",
+  ] as const;
+
+  type SeedOrderStatus =
+    | (typeof HAPPY_PATH)[number]
+    | "CANCELLED"
+    | "RETURN_REQUESTED"
+    | "RETURNED"
+    | "REFUNDED";
+
+  // The full sequence of statuses an order passed through to reach its
+  // final state — drives the OrderStatusHistory rows.
+  function statusPath(final: SeedOrderStatus): SeedOrderStatus[] {
+    const happyIndex = (HAPPY_PATH as readonly string[]).indexOf(final);
+    if (happyIndex >= 0) {
+      return HAPPY_PATH.slice(0, happyIndex + 1) as SeedOrderStatus[];
+    }
+    if (final === "CANCELLED") {
+      return ["PENDING", "PAYMENT_CONFIRMED", "CANCELLED"];
+    }
+    const tail: SeedOrderStatus[] =
+      final === "RETURN_REQUESTED"
+        ? ["RETURN_REQUESTED"]
+        : final === "RETURNED"
+          ? ["RETURN_REQUESTED", "RETURNED"]
+          : ["RETURN_REQUESTED", "RETURNED", "REFUNDED"];
+    return [...(HAPPY_PATH as readonly SeedOrderStatus[]), ...tail];
+  }
+
   for (let i = 1; i <= CONFIG.orderCount; i++) {
     const user = pick(customers);
     const userAddresses = addressesByUserId.get(user.id) ?? [];
@@ -715,9 +755,53 @@ async function seedOrders(
     }
 
     const totalAmount = subtotal + deliveryCharge + taxAmount - discountAmount;
-    const status = pick(["PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"] as const);
+    const status = pick([
+      "PENDING",
+      "PAYMENT_CONFIRMED",
+      "SELLER_TO_PACK",
+      "PACKED",
+      "READY_TO_SHIP",
+      "WAREHOUSE",
+      "IN_TRANSIT",
+      "OUT_FOR_DELIVERY",
+      "DELIVERED",
+      "DELIVERED",
+      "DELIVERED",
+      "CANCELLED",
+      "RETURN_REQUESTED",
+      "RETURNED",
+      "REFUNDED",
+    ] as const) as SeedOrderStatus;
     const paymentMethod = i % 7 === 0 ? "ONLINE" : "CASH_ON_DELIVERY";
-    const paymentStatus = paymentMethod === "ONLINE" && status !== "CANCELLED" && i % 3 !== 0 ? "PAID" : "UNPAID";
+    // Anything past payment confirmation has, by definition, been paid.
+    const paidByLifecycle =
+      status !== "PENDING" && status !== "CANCELLED";
+    const paymentStatus =
+      status === "CANCELLED"
+        ? "UNPAID"
+        : paidByLifecycle || (paymentMethod === "ONLINE" && i % 3 !== 0)
+          ? "PAID"
+          : "UNPAID";
+
+    // Build the timestamped audit trail. The order "started" a random
+    // number of days ago and each subsequent step advances by a few
+    // hours so the tracker shows a believable progression.
+    const path = statusPath(status);
+    const startedAt = new Date(
+      Date.now() - randomInt(1, 25) * 24 * 60 * 60 * 1000,
+    );
+    const historyRows = path.map((stepStatus, stepIndex) => ({
+      status: stepStatus as Prisma.OrderStatusHistoryCreateManyOrderInput["status"],
+      createdAt: new Date(startedAt.getTime() + stepIndex * 8 * 60 * 60 * 1000),
+      note:
+        stepIndex === 0
+          ? "Order placed."
+          : stepStatus === "CANCELLED"
+            ? "Order cancelled."
+            : null,
+      updatedBy: stepIndex === 0 ? user.id : null,
+    }));
+    const orderCreatedAt = startedAt;
 
     const order = await prisma.order.create({
       data: {
@@ -740,8 +824,12 @@ async function seedOrders(
         status,
         paymentMethod,
         paymentStatus,
+        createdAt: orderCreatedAt,
         items: {
           create: orderItemsInput,
+        },
+        statusHistory: {
+          create: historyRows,
         },
       },
       include: { items: true },
@@ -754,7 +842,7 @@ async function seedOrders(
         transactionId: paymentMethod === "ONLINE" ? `TXN-${String(i).padStart(8, "0")}` : null,
         amount: money(totalAmount),
         currency: "BDT",
-        status: paymentStatus === "PAID" ? "SUCCESS" : status === "CANCELLED" ? "CANCELLED" : "PENDING",
+        status: paymentStatus === "PAID" ? "SUCCESS" : status === "CANCELLED" ? "CANCELLED" : status === "REFUNDED" ? "REFUNDED" : "PENDING",
         rawResponse: {
           seeded: true,
           orderNumber: order.orderNumber,

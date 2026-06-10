@@ -40,11 +40,13 @@ export default function OverviewTab({
   stats,
   onJumpToTab,
 }: OverviewTabProps) {
+  // Headline milestones for the overview widget (fits the 5-col grid).
+  // The full per-status breakdown lives on the Orders tab.
   const ordered = (
     [
       "PENDING",
-      "PROCESSING",
-      "SHIPPED",
+      "PAYMENT_CONFIRMED",
+      "IN_TRANSIT",
       "DELIVERED",
       "CANCELLED",
     ] as const

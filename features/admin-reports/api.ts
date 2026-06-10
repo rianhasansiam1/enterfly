@@ -1,4 +1,5 @@
 import { readApiError } from "@/features/http/api-envelope";
+import type { OrderStatus } from "@/lib/orders/status";
 
 /**
  * Client-side helpers for the admin Reports page.
@@ -21,12 +22,7 @@ export const REPORT_TYPES = [
 
 export type ReportType = (typeof REPORT_TYPES)[number];
 
-export type OrderStatus =
-  | "PENDING"
-  | "PROCESSING"
-  | "SHIPPED"
-  | "DELIVERED"
-  | "CANCELLED";
+export type { OrderStatus } from "@/lib/orders/status";
 
 export type PaymentStatus = "PAID" | "UNPAID";
 export type PaymentMethod = "CASH_ON_DELIVERY";

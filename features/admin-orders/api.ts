@@ -1,11 +1,11 @@
 import { readApiError } from "@/features/http/api-envelope";
+import {
+  ORDER_STATUSES,
+  STATUS_TRANSITIONS as ORDER_STATUS_TRANSITIONS,
+  type OrderStatus,
+} from "@/lib/orders/status";
 
-export type OrderStatus =
-  | "PENDING"
-  | "PROCESSING"
-  | "SHIPPED"
-  | "DELIVERED"
-  | "CANCELLED";
+export type { OrderStatus } from "@/lib/orders/status";
 
 export type PaymentStatus = "PAID" | "UNPAID";
 
@@ -52,28 +52,17 @@ export type ApiEnvelope<T> = {
 
 export const API_PAGE_SIZE = 100;
 
-export const ORDER_STATUS_VALUES: readonly OrderStatus[] = [
-  "PENDING",
-  "PROCESSING",
-  "SHIPPED",
-  "DELIVERED",
-  "CANCELLED",
-];
+export const ORDER_STATUS_VALUES: readonly OrderStatus[] = ORDER_STATUSES;
 
 export const PAYMENT_STATUS_VALUES: readonly PaymentStatus[] = ["PAID", "UNPAID"];
 
 /**
- * Allowed forward transitions per status. Mirrors the server-side
- * STATUS_TRANSITIONS in `order.service` so the UI never offers an
- * invalid action and the API stays the source of truth on rejection.
+ * Allowed forward transitions per status. Re-exported from the shared
+ * `@/lib/orders/status` module so the UI never offers an invalid action
+ * and the API stays the source of truth on rejection.
  */
-export const STATUS_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
-  PENDING: ["PROCESSING", "CANCELLED"],
-  PROCESSING: ["SHIPPED", "CANCELLED"],
-  SHIPPED: ["DELIVERED", "CANCELLED"],
-  DELIVERED: [],
-  CANCELLED: [],
-};
+export const STATUS_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> =
+  ORDER_STATUS_TRANSITIONS;
 
 function parseUser(value: unknown): AdminOrderUser {
   if (value == null) return null;

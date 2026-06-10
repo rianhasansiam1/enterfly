@@ -11,15 +11,8 @@ import {
   type OrderStatus,
   type PaymentStatus,
 } from "@/features/admin-orders/api";
+import { ORDER_STATUS_META } from "@/lib/orders/status";
 import { cn } from "@/lib/utils";
-
-const STATUS_BADGE: Record<OrderStatus, string> = {
-  PENDING: "bg-amber-50 text-amber-700 ring-amber-200",
-  PROCESSING: "bg-sky-50 text-sky-700 ring-sky-200",
-  SHIPPED: "bg-indigo-50 text-indigo-700 ring-indigo-200",
-  DELIVERED: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  CANCELLED: "bg-rose-50 text-rose-700 ring-rose-200",
-};
 
 const PAYMENT_BADGE: Record<PaymentStatus, string> = {
   PAID: "bg-emerald-50 text-emerald-700 ring-emerald-200",
@@ -155,10 +148,10 @@ export default function OrdersTable({
                       <span
                         className={cn(
                           "inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold ring-1 ring-inset",
-                          STATUS_BADGE[order.status],
+                          ORDER_STATUS_META[order.status].tone.ring,
                         )}
                       >
-                        {order.status}
+                        {ORDER_STATUS_META[order.status].label}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -195,7 +188,7 @@ export default function OrdersTable({
                             <option value="">Change status</option>
                             {allowedNext.map((status) => (
                               <option key={status} value={status}>
-                                Move to {status}
+                                Move to {ORDER_STATUS_META[status].label}
                               </option>
                             ))}
                           </select>

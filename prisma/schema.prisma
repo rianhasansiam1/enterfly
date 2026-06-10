@@ -249,6 +249,7 @@ model Order {
 
   payments        PaymentTransaction[]
   promoCodeUsages PromoCodeUsage[]
+  statusHistory   OrderStatusHistory[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -258,12 +259,43 @@ model Order {
   @@index([paymentStatus, createdAt])
 }
 
+// Detailed shipment lifecycle, modeled on major marketplaces (Amazon,
+// Daraz). The happy path advances PENDING → ... → DELIVERED; CANCELLED
+// branches off any pre-delivery state and RETURN_REQUESTED → RETURNED →
+// REFUNDED branches off DELIVERED. Transition rules live in
+// `lib/orders/status.ts` (the single source of truth shared by the
+// service layer and the UI).
 enum OrderStatus {
-  PENDING
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELLED
+  PENDING // Order placed successfully
+  PAYMENT_CONFIRMED // Payment verified
+  SELLER_TO_PACK // Seller needs to prepare the order
+  PACKED // Seller packed the order
+  READY_TO_SHIP // Ready for courier pickup
+  WAREHOUSE // Received at warehouse / sorting center
+  IN_TRANSIT // Moving between facilities
+  OUT_FOR_DELIVERY // Assigned to a delivery agent
+  DELIVERED // Successfully delivered
+  CANCELLED // Order cancelled
+  RETURN_REQUESTED // Customer requested a return
+  RETURNED // Returned successfully
+  REFUNDED // Refund completed
+}
+
+// Append-only audit trail of every order status change. One row is
+// written on order creation (the initial PENDING) and on each
+// subsequent transition, preserving who changed it and when so the
+// customer tracker and admin timeline can be rebuilt at any time.
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  status    OrderStatus
+  note      String?
+  updatedBy String? // Admin/User id that triggered the change (null = system)
+  createdAt DateTime    @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
 }
 
 enum PaymentMethod {

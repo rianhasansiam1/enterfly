@@ -23,7 +23,9 @@ import {
   clearOrderSnapshot,
   readOrderSnapshot,
 } from "@/features/orders/storage";
+import { ORDER_STATUS_META } from "@/lib/orders/status";
 import ColorBadge from "@/components/ui/ColorBadge";
+import OrderTracker from "./OrderTracker";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400";
@@ -52,13 +54,12 @@ function paymentLabel(method: OrderDetail["paymentMethod"]): string {
 const STATUS_TONE: Record<
   OrderDetail["status"],
   { label: string; pill: string }
-> = {
-  PENDING: { label: "Pending", pill: "bg-amber-100 text-amber-700" },
-  PROCESSING: { label: "Processing", pill: "bg-indigo-100 text-indigo-700" },
-  SHIPPED: { label: "Shipped", pill: "bg-violet-100 text-violet-700" },
-  DELIVERED: { label: "Delivered", pill: "bg-emerald-100 text-emerald-700" },
-  CANCELLED: { label: "Cancelled", pill: "bg-rose-100 text-rose-700" },
-};
+> = Object.fromEntries(
+  Object.entries(ORDER_STATUS_META).map(([status, meta]) => [
+    status,
+    { label: meta.label, pill: meta.tone.pill },
+  ]),
+) as Record<OrderDetail["status"], { label: string; pill: string }>;
 
 const PAYMENT_TONE: Record<
   OrderDetail["paymentStatus"],
@@ -318,6 +319,13 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
             />
           </div>
         </section>
+
+        {/* Tracking timeline */}
+        <OrderTracker
+          status={order.status}
+          history={order.statusHistory ?? []}
+          className="mt-6"
+        />
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="flex flex-col gap-5">
