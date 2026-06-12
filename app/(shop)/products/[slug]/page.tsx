@@ -36,6 +36,9 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
+type ProductImage = ProductWithCategory["images"][number];
+type ProductVariant = ProductWithCategory["variants"][number];
+
 /** Resolve effective customer price (discount when valid) from the product. */
 function effectivePrice(product: {
   salePrice: { toNumber(): number };
@@ -145,7 +148,7 @@ export default async function ProductDetailsPage({ params }: Props) {
 
   const galleryImages =
     product.images.length > 0
-      ? product.images.map((img: ProductWithCategory["images"][number]) => img.url)
+      ? product.images.map((img: ProductImage) => img.url)
       : [FALLBACK_PRODUCT_IMAGE];
 
   const breadcrumbItems = [
@@ -168,11 +171,11 @@ export default async function ProductDetailsPage({ params }: Props) {
         description: product.description,
         images:
           product.images.length > 0
-            ? product.images.map((img: ProductWithCategory["images"][number]) => img.url)
+            ? product.images.map((img: ProductImage) => img.url)
             : [FALLBACK_PRODUCT_IMAGE],
         path: `/products/${product.slug}`,
         price: effectivePrice(product),
-        inStock: product.variants.some((v) => v.stock > 0),
+        inStock: product.variants.some((v: ProductVariant) => v.stock > 0),
         category: product.category.name,
         sku: primarySku,
       })
@@ -223,7 +226,7 @@ export default async function ProductDetailsPage({ params }: Props) {
                     ? product.discountPrice.toNumber()
                     : null
                 }
-                variants={product.variants.map((v) => ({
+                variants={product.variants.map((v: ProductVariant) => ({
                   id: v.id,
                   sku: v.sku,
                   color: v.color,
