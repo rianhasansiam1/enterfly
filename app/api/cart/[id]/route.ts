@@ -1,5 +1,4 @@
 import type { NextRequest } from "next/server";
-import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/api/guards";
@@ -51,7 +50,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   try {
     const item = await updateCartItem(id, guard.session.user.id, parsed.data);
-    revalidateTag("cart", "max");
     return ok(item);
   } catch (error) {
     return handleServiceError("cart/[id].PATCH", error);
@@ -74,7 +72,6 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
 
   try {
     const result = await removeCartItem(id, guard.session.user.id);
-    revalidateTag("cart", "max");
     return ok(result);
   } catch (error) {
     return handleServiceError("cart/[id].DELETE", error);

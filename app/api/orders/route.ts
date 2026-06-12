@@ -4,17 +4,23 @@ import { z } from "zod";
 
 import { requireUser } from "@/lib/api/guards";
 import { created, jsonError } from "@/lib/api/response";
-import { createOrder } from "@/lib/services/order.service";
+import { placeOrder } from "@/lib/services/checkout.service";
 import { handleServiceError } from "@/lib/services/service-error";
-import { createOrderSchema } from "@/lib/validations/order.validation";
+import { checkoutSchema } from "@/lib/validations/checkout.validation";
 
 /**
  * POST /api/orders
  *
- * Logged-in users only. Creates an order from request body items or,
- * when `items` is omitted, from the user's current cart. Stock checks,
- * total calculation, and (optional) cart clearing all happen inside
- * one Prisma transaction in the service.
+ * Logged-in users only. Thin alias over the checkout flow so there is a
+ * single, safe order-creation path. All money (subtotal, discount,
+ * delivery, tax, totals, promo) is recomputed server-side from the DB by
+ * `checkout.service.placeOrder`; nothing in the body can shift the price.
+ * Stock decrement, order-item snapshots, inventory logging, promo
+ * handling, and optional cart clearing all happen inside one transaction.
+ *
+ * NOTE: This used to call `order.service.createOrder`, which trusted
+ * client-supplied `discountAmount`/`deliveryCharge`. That price-
+ * manipulation path has been removed from the HTTP surface.
  */
 export async function POST(request: NextRequest) {
   const guard = await requireUser();
@@ -32,7 +38,7 @@ export async function POST(request: NextRequest) {
     return jsonError(400, "Invalid JSON payload.");
   }
 
-  const parsed = createOrderSchema.safeParse(body);
+  const parsed = checkoutSchema.safeParse(body);
   if (!parsed.success) {
     return jsonError(400, "Please review the highlighted fields and try again.", {
       fieldErrors: z.flattenError(parsed.error).fieldErrors,
@@ -40,9 +46,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const order = await createOrder(guard.session.user.id, parsed.data);
+    const result = await placeOrder(guard.session.user.id, parsed.data);
+    // Order creation changes stock and (optionally) empties the cart.
     revalidateTag("admin-orders", "max");
-    return created(order);
+    revalidateTag("home-categories", "max");
+    revalidateTag("categories", "max");
+    return created(result.order);
   } catch (error) {
     return handleServiceError("orders.POST", error);
   }

@@ -25,7 +25,10 @@ export async function PATCH(_request: NextRequest, context: RouteContext) {
 
   try {
     const order = await cancelOrderAsCustomer(id, guard.session.user.id);
+    // Cancellation restores stock — refresh cached product surfaces.
     revalidateTag("admin-orders", "max");
+    revalidateTag("home-categories", "max");
+    revalidateTag("categories", "max");
     return ok(order);
   } catch (error) {
     return handleServiceError("orders/[id].cancel.PATCH", error);

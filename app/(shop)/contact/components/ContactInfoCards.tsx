@@ -6,9 +6,9 @@ const cards = [
   {
     icon: Mail,
     title: "Email Us",
-    value: "enterfly26@gmail.com",
+    value: "help.enterfly@gmail.com",
     helper: "We reply within 2 hours",
-    href: "mailto:enterfly26@gmail.com",
+    href: "mailto:help.enterfly@gmail.com",
     color: "from-violet-500 to-purple-600",
   },
   {

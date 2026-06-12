@@ -1,5 +1,4 @@
 import type { NextRequest } from "next/server";
-import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/api/guards";
@@ -50,7 +49,6 @@ export async function POST(request: NextRequest) {
 
   try {
     const result = await mergeCartItems(guard.session.user.id, parsed.data);
-    revalidateTag("cart", "max");
     return ok(result);
   } catch (error) {
     return handleServiceError("cart.merge", error);

@@ -98,8 +98,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   try {
     const product = await updateProduct(id, parsed.data);
-    revalidateTag("products", "max");
     revalidateTag("home-categories", "max");
+    revalidateTag("categories", "max");
     return ok(serializeProduct(product, { includeBuyingPrice: true }));
   } catch (error) {
     if (
@@ -156,8 +156,8 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
 
   try {
     await hardDeleteProduct(id);
-    revalidateTag("products", "max");
     revalidateTag("home-categories", "max");
+    revalidateTag("categories", "max");
     return ok(serializeProduct(existing));
   } catch (error) {
     if (

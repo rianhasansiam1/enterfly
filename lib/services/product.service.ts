@@ -244,10 +244,6 @@ export async function listProducts(query: ProductQueryInput) {
   };
 }
 
-export function listProductsCached(query: ProductQueryInput) {
-  return listProducts(query);
-}
-
 export function getProductById(id: string) {
   return prisma.product.findUnique({
     where: { id },

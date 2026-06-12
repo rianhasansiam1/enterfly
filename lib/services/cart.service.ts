@@ -1,7 +1,6 @@
 import "server-only";
 
 import { Prisma } from "@prisma/client";
-import { unstable_cache } from "next/cache";
 
 import { prisma } from "@/lib/db/prisma";
 import { multiply, round2, subtractClamped, sumDecimals, toDecimal } from "@/lib/money";
@@ -265,15 +264,11 @@ export async function getMyCart(userId: string) {
   return summarize(rows);
 }
 
-const getCachedMyCart = unstable_cache(
-  async (userId: string) => getMyCart(userId),
-  ["cart-by-user"],
-  { revalidate: 120, tags: ["cart"] },
-);
-
-export function getMyCartCached(userId: string) {
-  return getCachedMyCart(userId);
-}
+// NOTE: The cart is per-user and is read immediately after every write
+// (add / update / remove). A cached read with stale-while-revalidate
+// semantics would serve the pre-write cart on that immediate refetch, so
+// the cart is intentionally NOT cached. `GET /api/cart` always reads fresh
+// from the DB via `getMyCart`.
 
 export async function syncCartItems(userId: string, input: SyncCartInput) {
   if (input.items.length === 0) {

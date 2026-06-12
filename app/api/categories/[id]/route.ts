@@ -95,7 +95,6 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
     const result = await hardDeleteCategoryWithProducts(id);
     revalidateTag("categories", "max");
     revalidateTag("home-categories", "max");
-    revalidateTag("products", "max");
     return ok(result.category);
   } catch (error) {
     if (

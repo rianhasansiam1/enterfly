@@ -5,7 +5,7 @@ import type { OrderStatus } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 
 import { prisma } from "@/lib/db/prisma";
-import { multiply, round2, sumDecimals, toDecimal, toNumber } from "@/lib/money";
+import { toNumber } from "@/lib/money";
 import {
   CUSTOMER_CANCELLABLE_STATUSES,
   STATUS_TRANSITIONS,
@@ -14,7 +14,6 @@ import { notifyOrderStatusChange } from "@/lib/orders/notifications";
 import { ServiceError } from "@/lib/services/service-error";
 import type {
   AdminOrderQueryInput,
-  CreateOrderInput,
   OrderQueryInput,
   UpdateOrderStatusInput,
   UpdatePaymentStatusInput,
@@ -141,271 +140,18 @@ export function serializeOrderOrNull<T extends OrderWithItems>(
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Helpers                                                                   */
+/*  Create order — removed                                                    */
 /* -------------------------------------------------------------------------- */
+//
+// The legacy `createOrder` path (and its `resolveItems` /
+// `effectiveProductPrice` / `generateOrderNumber` helpers) used to trust
+// client-supplied `discountAmount`/`deliveryCharge`. It has been deleted.
+// Order creation now goes exclusively through
+// `checkout.service.placeOrder` (used by both `POST /api/orders` and
+// `POST /api/checkout`), which recomputes every money value from the DB
+// inside a single transaction.
 
-/** Pick the effective unit price (discount when valid) as a Decimal. */
-function effectiveProductPrice(product: {
-  salePrice: Prisma.Decimal;
-  discountPrice: Prisma.Decimal | null;
-}): Prisma.Decimal {
-  if (
-    product.discountPrice != null &&
-    toDecimal(product.discountPrice).lessThan(toDecimal(product.salePrice))
-  ) {
-    return toDecimal(product.discountPrice);
-  }
-  return toDecimal(product.salePrice);
-}
 
-/**
- * Generate a human-readable order number.
- * Format: `ORD-YYMMDD-XXXXXXXX` (date + 8 random hex chars).
- * Cheap, sortable by day, low collision risk.
- */
-function generateOrderNumber(): string {
-  const now = new Date();
-  const yy = String(now.getUTCFullYear()).slice(-2);
-  const mm = String(now.getUTCMonth() + 1).padStart(2, "0");
-  const dd = String(now.getUTCDate()).padStart(2, "0");
-  const rand = Math.random().toString(16).slice(2, 10).toUpperCase();
-  return `ORD-${yy}${mm}${dd}-${rand}`;
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Create order                                                              */
-/* -------------------------------------------------------------------------- */
-
-type ResolvedItem = { productId: string; variantId?: string; quantity: number };
-
-async function resolveItems(
-  userId: string,
-  input: CreateOrderInput,
-): Promise<{ items: ResolvedItem[]; fromCart: boolean }> {
-  if (input.items && input.items.length > 0) {
-    return { items: input.items, fromCart: false };
-  }
-
-  const cart = await prisma.cartItem.findMany({
-    where: { userId },
-    select: { productId: true, variantId: true, quantity: true },
-  });
-
-  if (cart.length === 0) {
-    throw new OrderError(
-      400,
-      "Your cart is empty. Add items before placing an order.",
-    );
-  }
-  return {
-    items: cart.map((row) => ({
-      productId: row.productId,
-      variantId: row.variantId,
-      quantity: row.quantity,
-    })),
-    fromCart: true,
-  };
-}
-
-export async function createOrder(userId: string, input: CreateOrderInput) {
-  const { items, fromCart } = await resolveItems(userId, input);
-
-  // Load all products (with their primary variant + first image) in one
-  // query and build a quick lookup.
-  const productIds = items.map((i) => i.productId);
-  const products = await prisma.product.findMany({
-    where: { id: { in: productIds } },
-    select: {
-      id: true,
-      name: true,
-      status: true,
-      salePrice: true,
-      discountPrice: true,
-      buyingPrice: true,
-      images: {
-        orderBy: { position: "asc" },
-        take: 1,
-        select: { url: true },
-      },
-      variants: {
-        orderBy: { createdAt: "asc" },
-        select: {
-          id: true,
-          sku: true,
-          color: true,
-          size: true,
-          stock: true,
-        },
-      },
-    },
-  });
-  const productMap = new Map(products.map((p) => [p.id, p]));
-
-  // Validate every line: product exists, is active, has enough stock.
-  // Failing fast outside the transaction keeps the DB busy for less time.
-  const lines = items.map((line) => {
-    const product = productMap.get(line.productId);
-    if (!product) {
-      throw new OrderError(404, `Product not found: ${line.productId}`);
-    }
-    if (product.status !== "ACTIVE") {
-      throw new OrderError(
-        409,
-        `"${product.name}" is no longer available.`,
-        { productId: product.id },
-      );
-    }
-    // Multi-variant products require an explicit size+color selection.
-    if (!line.variantId && product.variants.length > 1) {
-      throw new OrderError(
-        409,
-        `Please select a size and color for "${product.name}" before ordering.`,
-        { productId: product.id, requiresVariantSelection: true },
-      );
-    }
-    const variant = line.variantId
-      ? product.variants.find((v) => v.id === line.variantId)
-      : product.variants[0];
-    if (!variant) {
-      throw new OrderError(
-        409,
-        line.variantId
-          ? `Selected variant for "${product.name}" is no longer available.`
-          : `"${product.name}" has no purchasable variant.`,
-        { productId: product.id },
-      );
-    }
-    if (variant.stock < line.quantity) {
-      throw new OrderError(
-        409,
-        `Not enough stock for "${product.name}". Available: ${variant.stock}.`,
-        { productId: product.id, available: variant.stock },
-      );
-    }
-    const unitPrice = effectiveProductPrice(product);
-    return {
-      productId: product.id,
-      variantId: variant.id,
-      sku: variant.sku,
-      color: variant.color,
-      size: variant.size,
-      name: product.name,
-      image: product.images[0]?.url ?? null,
-      quantity: line.quantity,
-      unitPrice,
-      lineTotal: multiply(unitPrice, line.quantity),
-      buyingPrice: toDecimal(product.buyingPrice),
-    };
-  });
-
-  const subtotalDec = sumDecimals(lines.map((l) => l.lineTotal));
-  const deliveryChargeDec = toDecimal(round2(input.deliveryCharge ?? 0));
-  const discountAmountDec = toDecimal(
-    Math.min(round2(input.discountAmount ?? 0), round2(subtotalDec)),
-  );
-  const totalAmountDec = subtotalDec
-    .plus(deliveryChargeDec)
-    .minus(discountAmountDec);
-
-  const subtotal = round2(subtotalDec);
-  const deliveryCharge = round2(deliveryChargeDec);
-  const discountAmount = round2(discountAmountDec);
-  const totalAmount = round2(totalAmountDec);
-
-  const orderNumber = generateOrderNumber();
-
-  // Everything that mutates state happens inside one transaction.
-  // We use `updateMany` with a stock guard for an atomic compare-and-set
-  // so two concurrent orders for the last unit can't both succeed.
-  try {
-    return await prisma.$transaction(async (tx) => {
-      for (const line of lines) {
-        const result = await tx.productVariant.updateMany({
-          where: {
-            id: line.variantId,
-            stock: { gte: line.quantity },
-          },
-          data: { stock: { decrement: line.quantity } },
-        });
-        if (result.count !== 1) {
-          throw new OrderError(
-            409,
-            `Stock changed for "${line.name}". Please review your cart and try again.`,
-            { productId: line.productId },
-          );
-        }
-
-        await tx.inventoryLog.create({
-          data: {
-            variantId: line.variantId,
-            type: "ORDER_PLACED",
-            quantity: -line.quantity,
-            note: `Order ${orderNumber}`,
-          },
-        });
-      }
-
-      const order = await tx.order.create({
-        data: {
-          orderNumber,
-          userId,
-          subtotal,
-          deliveryCharge,
-          discountAmount,
-          totalAmount,
-          customerName: input.customerName,
-          customerPhone: input.customerPhone,
-          customerAddress: input.customerAddress,
-          paymentMethod: input.paymentMethod,
-          items: {
-            create: lines.map((l) => ({
-              productId: l.productId,
-              variantId: l.variantId,
-              productName: l.name,
-              productImage: l.image,
-              sku: l.sku,
-              color: l.color,
-              size: l.size,
-              quantity: l.quantity,
-              unitPrice: round2(l.unitPrice),
-              totalPrice: round2(l.lineTotal),
-              buyingPrice: round2(l.buyingPrice),
-            })),
-          },
-          // Seed the audit trail with the initial PENDING entry so the
-          // tracker has a timestamped first step from the moment the
-          // order exists.
-          statusHistory: {
-            create: {
-              status: "PENDING",
-              note: "Order placed.",
-              updatedBy: userId,
-            },
-          },
-        },
-        include: orderInclude,
-      });
-
-      if (fromCart && input.clearCart) {
-        await tx.cartItem.deleteMany({ where: { userId } });
-      }
-
-      return serializeOrder(order);
-    });
-  } catch (error) {
-    // P2002 on `orderNumber` is a one-in-a-trillion collision; retry once.
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
-      throw new OrderError(
-        500,
-        "Failed to generate a unique order number. Please retry.",
-      );
-    }
-    throw error;
-  }
-}
 
 /* -------------------------------------------------------------------------- */
 /*  Customer reads                                                            */

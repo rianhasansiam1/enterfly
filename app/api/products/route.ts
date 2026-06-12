@@ -7,7 +7,7 @@ import { isAdminRequest, requireAdmin } from "@/lib/api/guards";
 import { jsonError, created, ok } from "@/lib/api/response";
 import {
   createProduct,
-  listProductsCached,
+  listProducts,
   serializeProduct,
 } from "@/lib/services/product.service";
 import {createProductSchema, productQuerySchema,} from "@/lib/validations/product.validation";
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { items, meta } = await listProductsCached(parsed.data);
+    const { items, meta } = await listProducts(parsed.data);
     // Reveal admin-only fields (buyingPrice) only to signed-in admins.
     const includeBuyingPrice = await isAdminRequest();
     return ok(
@@ -89,8 +89,10 @@ export async function POST(request: NextRequest) {
 
   try {
     const product = await createProduct(parsed.data);
-    revalidateTag("products", "max");
+    // No dedicated "products" cache exists; the catalog read is uncached.
+    // Bust the cached surfaces that embed product data.
     revalidateTag("home-categories", "max");
+    revalidateTag("categories", "max");
     return created(serializeProduct(product, { includeBuyingPrice: true }));
   } catch (error) {
     if (

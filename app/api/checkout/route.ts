@@ -41,8 +41,12 @@ export async function POST(request: NextRequest) {
 
   try {
     const result = await placeOrder(guard.session.user.id, parsed.data);
+    // Order placement decrements stock and empties the cart. Bust the
+    // cached surfaces that embed product/stock data. (The cart itself is
+    // uncached and refetched fresh by the client.)
     revalidateTag("admin-orders", "max");
-    revalidateTag("cart", "max");
+    revalidateTag("home-categories", "max");
+    revalidateTag("categories", "max");
     return created(result);
   } catch (error) {
     return handleServiceError("checkout.POST", error);

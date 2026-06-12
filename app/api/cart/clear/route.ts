@@ -1,5 +1,3 @@
-import { revalidateTag } from "next/cache";
-
 import { requireUser } from "@/lib/api/guards";
 import { hasUserOrAdminAccess } from "@/lib/auth/access";
 import { jsonError, ok } from "@/lib/api/response";
@@ -21,7 +19,6 @@ export async function DELETE() {
 
   try {
     const result = await clearMyCart(guard.session.user.id);
-    revalidateTag("cart", "max");
     return ok(result);
   } catch (error) {
     return handleServiceError("cart.clear.DELETE", error);

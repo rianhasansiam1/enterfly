@@ -11,10 +11,10 @@ export default function PolicyContactBlock() {
         <li>
           <span className="font-semibold text-gray-900">Email:</span>{" "}
           <a
-            href="mailto:enterfly26@gmail.com"
+            href="mailto:help.enterfly@gmail.com"
             className="text-violet-700 hover:text-violet-800 hover:underline"
           >
-            enterfly26@gmail.com
+            help.enterfly@gmail.com
           </a>
         </li>
         <li>

@@ -46,7 +46,7 @@ export const STORE_INFO = {
   name: "EnterFly",
   tagline: "Local Marketplace",
   address: "Mirpur, Dhaka, Bangladesh",
-  email: "enterfly26@gmail.com",
+  email: "help.enterfly@gmail.com",
 };
 
 /** Public path to the brand logo (served from `public/logo/logo.png`). */

@@ -1,5 +1,4 @@
 import type { NextRequest } from "next/server";
-import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/api/guards";
@@ -7,7 +6,7 @@ import { hasUserOrAdminAccess } from "@/lib/auth/access";
 import { created, jsonError, ok } from "@/lib/api/response";
 import {
   addToCart,
-  getMyCartCached,
+  getMyCart,
   syncCartItems,
 } from "@/lib/services/cart.service";
 import { handleServiceError } from "@/lib/services/service-error";
@@ -30,7 +29,7 @@ export async function GET() {
   }
 
   try {
-    const { items, summary } = await getMyCartCached(guard.session.user.id);
+    const { items, summary } = await getMyCart(guard.session.user.id);
     return ok({ items, summary });
   } catch (error) {
     return handleServiceError("cart.GET", error);
@@ -72,7 +71,6 @@ export async function POST(request: NextRequest) {
 
   try {
     const item = await addToCart(guard.session.user.id, parsed.data);
-    revalidateTag("cart", "max");
     return created(item);
   } catch (error) {
     return handleServiceError("cart.POST", error);
@@ -113,7 +111,6 @@ export async function PUT(request: NextRequest) {
 
   try {
     const result = await syncCartItems(guard.session.user.id, parsed.data);
-    revalidateTag("cart", "max");
     return ok(result);
   } catch (error) {
     return handleServiceError("cart.PUT", error);
