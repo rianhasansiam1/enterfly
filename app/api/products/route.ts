@@ -9,6 +9,7 @@ import {
   createProduct,
   listProducts,
   serializeProduct,
+  type ProductWithCategory,
 } from "@/lib/services/product.service";
 import {createProductSchema, productQuerySchema,} from "@/lib/validations/product.validation";
 
@@ -38,7 +39,9 @@ export async function GET(request: NextRequest) {
     // Reveal admin-only fields (buyingPrice) only to signed-in admins.
     const includeBuyingPrice = await isAdminRequest();
     return ok(
-      items.map((item) => serializeProduct(item, { includeBuyingPrice })),
+      items.map((item: ProductWithCategory) =>
+        serializeProduct(item, { includeBuyingPrice }),
+      ),
       meta,
     );
   } catch (error) {
