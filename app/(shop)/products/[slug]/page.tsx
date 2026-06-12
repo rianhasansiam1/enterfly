@@ -145,7 +145,7 @@ export default async function ProductDetailsPage({ params }: Props) {
 
   const galleryImages =
     product.images.length > 0
-      ? product.images.map((img) => img.url)
+      ? product.images.map((img: ProductWithCategory["images"][number]) => img.url)
       : [FALLBACK_PRODUCT_IMAGE];
 
   const breadcrumbItems = [
