@@ -7,7 +7,10 @@ import JsonLd from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd, collectionPageJsonLd } from "@/lib/seo/json-ld";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { siteConfig } from "@/lib/seo/site";
-import { getActiveCategoryBySlug } from "@/lib/services/category.service";
+import {
+  getActiveCategoryBySlug,
+  type PublicCategoryProduct,
+} from "@/lib/services/category.service";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -115,7 +118,7 @@ export default async function CategoryPage({ params }: Props) {
         ) : (
           <section aria-label={`${category.name} products`}>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
-              {category.products.map((product) => (
+              {category.products.map((product: PublicCategoryProduct) => (
                 <ProductCard
                   key={product.id}
                   id={product.id}
