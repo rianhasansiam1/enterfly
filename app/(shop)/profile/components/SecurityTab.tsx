@@ -129,9 +129,9 @@ export default function SecurityTab({ user }: SecurityTabProps) {
 
   return (
     <div className="flex flex-col gap-4 sm:gap-5">
-      <section className="rounded-2xl border border-brand-border bg-brand-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
+      <section className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
         <header className="mb-5 flex items-center gap-3">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-light-bg text-brand-black">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-violet-100 text-violet-700">
             <KeyRound className="h-4 w-4" />
           </span>
           <div className="min-w-0">
@@ -147,7 +147,7 @@ export default function SecurityTab({ user }: SecurityTabProps) {
         </header>
 
         {isGoogleOnly && !hasPassword && (
-          <div className="mb-5 flex items-start gap-2 rounded-2xl border border-brand-border bg-brand-light-bg p-3 text-sm text-brand-black">
+          <div className="mb-5 flex items-start gap-2 rounded-2xl border border-violet-200 bg-violet-50 p-3 text-sm text-violet-800">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
             You normally sign in with Google. Setting a password gives you a
             fallback if you ever lose access to your Google account.
@@ -234,7 +234,7 @@ export default function SecurityTab({ user }: SecurityTabProps) {
             <button
               type="submit"
               disabled={!canSubmit}
-              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-brand-red px-5 text-sm font-bold text-brand-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-xl disabled:cursor-not-allowed disabled:bg-gray-300 disabled:hover:translate-y-0 sm:w-auto"
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:from-gray-300 disabled:via-gray-300 disabled:to-gray-300 disabled:hover:translate-y-0 sm:w-auto"
             >
               <KeyRound className="h-4 w-4" />
               {submitState.status === "saving"
@@ -247,9 +247,9 @@ export default function SecurityTab({ user }: SecurityTabProps) {
         </form>
       </section>
 
-      <section className="rounded-2xl border border-brand-border bg-brand-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
+      <section className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
         <header className="mb-3 flex items-center gap-3">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-light-bg text-brand-black">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-violet-100 text-violet-700">
             <ShieldCheck className="h-4 w-4" />
           </span>
           <div className="min-w-0">
@@ -307,7 +307,7 @@ function PasswordChecklist({ password }: { password: string }) {
   ];
 
   return (
-    <ul className="grid gap-1.5 rounded-2xl border border-brand-border bg-brand-light-bg p-3 text-xs">
+    <ul className="grid gap-1.5 rounded-2xl border border-violet-100 bg-violet-50/60 p-3 text-xs">
       {checks.map((check) => (
         <li
           key={check.label}
@@ -347,7 +347,7 @@ function SignInMethod({
       className={
         connected
           ? "flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3"
-          : "flex items-center gap-3 rounded-2xl border border-brand-border bg-brand-white p-3"
+          : "flex items-center gap-3 rounded-2xl border border-violet-100 bg-white p-3"
       }
     >
       <span

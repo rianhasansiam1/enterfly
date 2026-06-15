@@ -19,7 +19,7 @@ import Field from "./Field";
 type CategoryChoice = { id: string; name: string };
 
 const inputClass =
-  "h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red";
+  "h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500";
 
 export default function ProductFormDrawer({
   open,
@@ -77,23 +77,23 @@ export default function ProductFormDrawer({
         aria-hidden
         onClick={onClose}
         className={cn(
-          "fixed inset-0 z-60 bg-brand-black/35 backdrop-blur-[1px] transition-opacity duration-300",
+          "fixed inset-0 z-60 bg-gray-900/35 backdrop-blur-[1px] transition-opacity duration-300",
           open ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       />
 
       <aside
         className={cn(
-          "fixed inset-y-0 right-0 z-70 w-full max-w-lg border-l border-brand-border bg-brand-white shadow-2xl transition-transform duration-300",
+          "fixed inset-y-0 right-0 z-70 w-full max-w-lg border-l border-violet-100 bg-white shadow-2xl transition-transform duration-300",
           open ? "translate-x-0" : "translate-x-full",
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="border-b border-brand-border bg-brand-black px-5 py-4 text-brand-white">
+          <div className="border-b border-violet-100 bg-linear-to-r from-violet-600 to-indigo-700 px-5 py-4 text-white">
             <h2 className="text-lg font-bold">
               {mode === "create" ? "Create Product" : "Edit Product"}
             </h2>
-            <p className="mt-0.5 text-xs text-brand-white/70">
+            <p className="mt-0.5 text-xs text-violet-100">
               {mode === "create"
                 ? "Add product details, pricing, and size-color variants."
                 : "Update product details, pricing, and variants."}
@@ -200,7 +200,7 @@ export default function ProductFormDrawer({
               </div>
 
               {/* Variants — one purchasable size + color combination per row. */}
-              <div className="rounded-2xl border border-brand-border bg-brand-light-bg p-3">
+              <div className="rounded-2xl border border-violet-100 bg-violet-50/40 p-3">
                 <div className="mb-2 flex items-center justify-between">
                   <div>
                     <p className="text-sm font-semibold text-gray-900">Variants</p>
@@ -211,7 +211,7 @@ export default function ProductFormDrawer({
                   <button
                     type="button"
                     onClick={addVariant}
-                    className="inline-flex h-8 items-center gap-1 rounded-lg border border-brand-border bg-brand-white px-2.5 text-xs font-semibold text-foreground transition hover:bg-brand-light-bg"
+                    className="inline-flex h-8 items-center gap-1 rounded-lg border border-violet-300 bg-white px-2.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-50"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     Add
@@ -231,7 +231,7 @@ export default function ProductFormDrawer({
                         key={index}
                         className={cn(
                           "rounded-xl border bg-white p-3",
-                          isDuplicate ? "border-red-300" : "border-brand-border",
+                          isDuplicate ? "border-red-300" : "border-violet-100",
                         )}
                       >
                         <div className="mb-2 flex items-center justify-between">
@@ -316,7 +316,7 @@ export default function ProductFormDrawer({
                             onChange={(event) =>
                               updateVariant(index, { isActive: event.target.checked })
                             }
-                            className="h-4 w-4 rounded border-brand-border text-brand-red"
+                            className="h-4 w-4 rounded border-violet-300 text-violet-600"
                           />
                           Active (available for purchase)
                         </label>
@@ -359,25 +359,25 @@ export default function ProductFormDrawer({
                       description: event.target.value,
                     }))
                   }
-                  className="min-h-28 w-full rounded-xl border border-brand-border px-3 py-2 text-sm outline-none transition focus:border-brand-red"
+                  className="min-h-28 w-full rounded-xl border border-violet-200 px-3 py-2 text-sm outline-none transition focus:border-violet-500"
                   placeholder="Product description"
                 />
               </Field>
             </div>
 
-            <div className="border-t border-brand-border bg-brand-white px-5 py-4">
+            <div className="border-t border-violet-100 bg-white px-5 py-4">
               <div className="flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="h-10 rounded-xl border border-brand-border px-4 text-sm font-semibold text-foreground transition hover:bg-brand-light-bg"
+                  className="h-10 rounded-xl border border-violet-200 px-4 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-brand-red px-4 text-sm font-semibold text-brand-white transition hover:bg-brand-red-hover disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white transition hover:from-violet-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                   {mode === "create" ? "Create Product" : "Save Changes"}

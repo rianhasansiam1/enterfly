@@ -5,14 +5,14 @@
  */
 export default function PolicyContactBlock() {
   return (
-    <div className="rounded-2xl bg-brand-light-bg p-4 ring-1 ring-brand-border sm:p-5">
+    <div className="rounded-2xl bg-linear-to-br from-violet-50 to-pink-50 p-4 ring-1 ring-violet-100 sm:p-5">
       <p className="text-sm font-bold text-gray-900 sm:text-base">EnterFly Customer Support</p>
       <ul className="mt-2 space-y-1 text-sm text-gray-700 sm:text-base">
         <li>
           <span className="font-semibold text-gray-900">Email:</span>{" "}
           <a
             href="mailto:help.enterfly@gmail.com"
-            className="text-brand-red hover:text-brand-red-hover hover:underline"
+            className="text-violet-700 hover:text-violet-800 hover:underline"
           >
             help.enterfly@gmail.com
           </a>
@@ -21,7 +21,7 @@ export default function PolicyContactBlock() {
           <span className="font-semibold text-gray-900">Phone:</span>{" "}
           <a
             href="tel:+8801307026260"
-            className="text-brand-red hover:text-brand-red-hover hover:underline"
+            className="text-violet-700 hover:text-violet-800 hover:underline"
           >
             +8801307026260
           </a>

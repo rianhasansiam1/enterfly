@@ -44,10 +44,10 @@ export default function OrderSummary({
   const totalSaved = totalSavings + discount;
 
   return (
-    <aside className="sticky top-[88px] flex flex-col gap-4 rounded-3xl border border-brand-border bg-brand-white p-5 shadow-sm sm:p-6">
+    <aside className="sticky top-[88px] flex flex-col gap-4 rounded-3xl border border-violet-100 bg-white p-5 shadow-sm sm:p-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-gray-900">Order Summary</h2>
-        <span className="rounded-full bg-brand-light-bg px-2.5 py-0.5 text-xs font-semibold text-brand-black">
+        <span className="rounded-full bg-violet-50 px-2.5 py-0.5 text-xs font-semibold text-violet-700">
           {itemCount} {itemCount === 1 ? "item" : "items"}
         </span>
       </div>
@@ -58,7 +58,7 @@ export default function OrderSummary({
         onRemove={onRemovePromo}
       />
 
-      <div className="space-y-2.5 border-t border-dashed border-brand-border pt-4 text-sm">
+      <div className="space-y-2.5 border-t border-dashed border-violet-100 pt-4 text-sm">
         <SummaryRow label="Subtotal" value={subtotal} />
         {discount > 0 && (
           <SummaryRow
@@ -75,10 +75,10 @@ export default function OrderSummary({
         <SummaryRow label="Tax (5%)" value={tax} />
       </div>
 
-      <div className="rounded-2xl border border-brand-border bg-brand-light-bg p-4">
+      <div className="rounded-2xl border border-violet-100 bg-linear-to-br from-violet-50 via-white to-fuchsia-50 p-4">
         <div className="flex items-baseline justify-between">
           <span className="text-sm font-semibold text-gray-700">Total</span>
-          <span className="text-2xl font-extrabold text-brand-red sm:text-3xl">
+          <span className="text-2xl font-extrabold text-violet-700 sm:text-3xl">
             BDT {total.toLocaleString()}
           </span>
         </div>
@@ -93,7 +93,7 @@ export default function OrderSummary({
       <button
         type="button"
         onClick={onCheckout}
-        className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand-red px-5 text-base font-bold text-brand-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-xl"
+        className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 text-base font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
       >
         <Lock className="h-4 w-4" />
         Secure Checkout

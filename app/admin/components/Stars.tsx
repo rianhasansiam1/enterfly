@@ -12,7 +12,7 @@ export default function Stars({ rating }: { rating: number }) {
           key={star}
           className={cn(
             "h-3.5 w-3.5",
-            star <= rating ? "fill-brand-gold text-brand-gold" : "text-gray-200",
+            star <= rating ? "fill-amber-400 text-amber-400" : "text-gray-200",
           )}
         />
       ))}

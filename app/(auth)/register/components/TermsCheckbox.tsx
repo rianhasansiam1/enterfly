@@ -15,8 +15,8 @@ export default function TermsCheckbox({
   onChange,
 }: TermsCheckboxProps) {
   return (
-    <label className="group flex cursor-pointer select-none items-start gap-3 rounded-xl border border-brand-border bg-brand-light-bg p-3 transition-colors hover:bg-brand-red/5">
-      <span className="relative mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-brand-border bg-white transition-colors group-hover:border-brand-red">
+    <label className="group flex cursor-pointer select-none items-start gap-3 rounded-xl border border-violet-100 bg-violet-50/40 p-3 transition-colors hover:bg-violet-50">
+      <span className="relative mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-violet-300 bg-white transition-colors group-hover:border-violet-500">
         <input
           type="checkbox"
           checked={checked}
@@ -33,24 +33,24 @@ export default function TermsCheckbox({
 
         <span
           className={cn(
-            "absolute inset-0 z-0 rounded-md bg-brand-red transition-opacity duration-200",
+            "absolute inset-0 z-0 rounded-md bg-linear-to-br from-violet-600 to-purple-600 transition-opacity duration-200",
             checked ? "opacity-100" : "opacity-0",
           )}
         />
       </span>
 
-      <span className="text-xs leading-relaxed text-brand-text-dark">
+      <span className="text-xs leading-relaxed text-gray-700">
         I agree to the{" "}
         <Link
           href="/about"
-          className="font-semibold text-brand-red hover:underline"
+          className="font-semibold text-violet-700 hover:underline"
         >
           Terms of Service
         </Link>{" "}
         and{" "}
         <Link
           href="/about"
-          className="font-semibold text-brand-red hover:underline"
+          className="font-semibold text-violet-700 hover:underline"
         >
           Privacy Policy
         </Link>

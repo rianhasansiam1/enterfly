@@ -22,14 +22,14 @@ export default function QuantityStepper({
   const increment = () => onChange(Math.min(max, value + 1));
 
   const buttonClasses = cn(
-    "grid place-items-center rounded-lg text-brand-black transition-all duration-200 hover:bg-brand-light-bg hover:text-brand-red active:scale-95 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent",
+    "grid place-items-center rounded-lg text-violet-700 transition-all duration-200 hover:bg-violet-100 hover:text-violet-900 active:scale-95 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent",
     size === "sm" ? "h-7 w-7" : "h-8 w-8",
   );
 
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-1 rounded-xl border border-brand-border bg-brand-light-bg p-1",
+        "inline-flex items-center gap-1 rounded-xl border border-violet-200 bg-violet-50/50 p-1",
         size === "sm" ? "text-xs" : "text-sm",
       )}
     >

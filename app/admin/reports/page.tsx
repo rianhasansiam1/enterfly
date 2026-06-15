@@ -122,12 +122,12 @@ export default function AdminReportsPage() {
   return (
     <section className="space-y-5">
       {/* Hero */}
-      <header className="rounded-2xl border border-brand-border bg-brand-black p-5 text-white shadow-sm">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-white/70">
+      <header className="rounded-2xl border border-violet-100 bg-linear-to-r from-violet-600 to-indigo-700 p-5 text-white shadow-sm">
+        <p className="text-[11px] font-bold uppercase tracking-widest text-violet-100">
           Reports
         </p>
         <h1 className="mt-1 text-xl font-extrabold">Generate &amp; download reports</h1>
-        <p className="mt-1 text-sm text-white/70">
+        <p className="mt-1 text-sm text-violet-100">
           Pick a report, set the window, preview the data, and export a
           polished PDF for sharing with the team.
         </p>

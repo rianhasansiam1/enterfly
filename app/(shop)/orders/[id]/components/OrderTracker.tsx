@@ -122,13 +122,13 @@ export default function OrderTracker({
   return (
     <section
       className={cn(
-        "rounded-3xl border border-brand-border bg-brand-white p-5 shadow-sm sm:p-6",
+        "rounded-3xl border border-violet-100 bg-white p-5 shadow-sm sm:p-6",
         className,
       )}
       aria-label="Order tracking timeline"
     >
       <header className="mb-5 flex items-center gap-2">
-        <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-light-bg text-brand-black">
+        <span className="grid h-8 w-8 place-items-center rounded-lg bg-violet-100 text-violet-700">
           <Truck className="h-4 w-4" />
         </span>
         <div>
@@ -222,7 +222,7 @@ function StepDot({ state, Icon }: { state: StepState; Icon: LucideIcon }) {
         "relative grid h-9 w-9 shrink-0 place-items-center rounded-full ring-4 transition-colors",
         state === "done" && "bg-emerald-500 text-white ring-emerald-100",
         state === "current" &&
-          "bg-brand-red text-brand-white ring-brand-red/20 animate-pulse",
+          "bg-violet-600 text-white ring-violet-200 animate-pulse",
         state === "todo" && "bg-gray-100 text-gray-400 ring-gray-50",
       )}
     >
@@ -260,7 +260,7 @@ function VerticalStep({ step, isLast }: { step: StepView; isLast: boolean }) {
             {step.label}
           </p>
           {step.state === "current" && (
-            <span className="rounded-full bg-brand-red/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-red">
+            <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-700">
               Current
             </span>
           )}
@@ -315,7 +315,7 @@ function HorizontalStep({
           {step.label}
         </p>
         {step.state === "current" && (
-          <span className="mt-1 inline-block rounded-full bg-brand-red/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-red">
+          <span className="mt-1 inline-block rounded-full bg-violet-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-violet-700">
             Current
           </span>
         )}

@@ -28,11 +28,11 @@ export default function StorePricingForm({
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
 }) {
   return (
-    <div className="rounded-2xl border border-brand-border bg-brand-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-violet-100 bg-white p-5 shadow-sm">
       <header className="mb-4 flex items-start justify-between gap-3">
         <div>
           <h2 className="flex items-center gap-2 text-base font-bold text-gray-900">
-            <CircleDollarSign className="h-4 w-4 text-brand-red" />
+            <CircleDollarSign className="h-4 w-4 text-violet-600" />
             Store pricing
           </h2>
           <p className="mt-1 text-xs text-gray-500">
@@ -44,7 +44,7 @@ export default function StorePricingForm({
         <button
           type="button"
           onClick={onRefresh}
-          className="inline-flex h-9 items-center gap-2 rounded-xl border border-brand-border px-3 text-xs font-semibold text-foreground transition hover:bg-brand-light-bg"
+          className="inline-flex h-9 items-center gap-2 rounded-xl border border-violet-200 px-3 text-xs font-semibold text-violet-700 transition hover:bg-violet-50"
         >
           <RotateCcw className="h-3.5 w-3.5" />
           Refresh
@@ -63,7 +63,7 @@ export default function StorePricingForm({
       )}
 
       {isLoading && !hasSettings ? (
-        <div className="rounded-xl border border-brand-border bg-brand-light-bg p-6 text-center text-sm text-brand-text-muted">
+        <div className="rounded-xl border border-violet-100 bg-violet-50/40 p-6 text-center text-sm text-violet-700">
           <span className="inline-flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading settings...
@@ -87,7 +87,7 @@ export default function StorePricingForm({
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, taxRatePercent: e.target.value }))
                 }
-                className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+                className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
                 placeholder="5"
               />
             </Field>
@@ -103,7 +103,7 @@ export default function StorePricingForm({
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, currency: e.target.value }))
                 }
-                className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm uppercase outline-none transition focus:border-brand-red"
+                className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm uppercase outline-none transition focus:border-violet-500"
                 placeholder="BDT"
               />
             </Field>
@@ -126,7 +126,7 @@ export default function StorePricingForm({
                     standardShippingFee: e.target.value,
                   }))
                 }
-                className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+                className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
                 placeholder="120"
               />
             </Field>
@@ -147,7 +147,7 @@ export default function StorePricingForm({
                     expressShippingFee: e.target.value,
                   }))
                 }
-                className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+                className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
                 placeholder="250"
               />
             </Field>
@@ -168,7 +168,7 @@ export default function StorePricingForm({
                     freeShippingThreshold: e.target.value,
                   }))
                 }
-                className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+                className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
                 placeholder="50000"
               />
             </Field>
@@ -178,7 +178,7 @@ export default function StorePricingForm({
             <button
               type="submit"
               disabled={isSaving || !hasSettings}
-              className="inline-flex h-10 items-center gap-2 rounded-xl bg-brand-red px-4 text-sm font-semibold text-white transition hover:bg-brand-red-hover disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-10 items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white transition hover:from-violet-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
               Save settings

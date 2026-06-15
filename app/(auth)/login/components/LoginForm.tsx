@@ -95,7 +95,7 @@ export default function LoginFormView({
       <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
         <Link
           href="/login"
-          className="text-xs font-semibold text-brand-red underline-offset-2 hover:underline"
+          className="text-xs font-semibold text-violet-700 underline-offset-2 hover:underline"
         >
           Forgot password?
         </Link>
@@ -105,7 +105,7 @@ export default function LoginFormView({
         type="submit"
         disabled={!canSubmit || isSubmitting}
         aria-busy={isSubmitting}
-        className="group relative mt-2 inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-brand-red px-7 py-3 text-sm font-bold text-brand-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-lg disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none disabled:hover:translate-y-0"
+        className="group relative mt-2 inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-linear-to-r from-violet-600 to-purple-600 px-7 py-3 text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:from-violet-700 hover:to-purple-700 hover:shadow-lg disabled:cursor-not-allowed disabled:from-gray-300 disabled:to-gray-300 disabled:shadow-none disabled:hover:translate-y-0"
       >
         <span className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
 
@@ -126,18 +126,18 @@ export default function LoginFormView({
       <SocialDivider />
       <GoogleSignInButton callbackUrl={callbackUrl} />
 
-      <p className="mt-2 text-center text-[11px] text-brand-text-muted">
+      <p className="mt-2 text-center text-[11px] text-gray-500">
         By signing in you agree to our{" "}
         <Link
           href="/about"
-          className="font-semibold text-brand-red hover:underline"
+          className="font-semibold text-violet-700 hover:underline"
         >
           Terms
         </Link>{" "}
         and{" "}
         <Link
           href="/about"
-          className="font-semibold text-brand-red hover:underline"
+          className="font-semibold text-violet-700 hover:underline"
         >
           Privacy Policy
         </Link>

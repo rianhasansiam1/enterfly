@@ -36,8 +36,8 @@ function formatBdt(value: number): string {
  */
 export default function ProfileHeader({ user, stats }: ProfileHeaderProps) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-brand-border bg-brand-white shadow-sm sm:rounded-3xl">
-      <div className="relative bg-brand-black px-4 py-5 text-brand-white sm:px-6 sm:py-7 lg:px-10">
+    <section className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm sm:rounded-3xl">
+      <div className="relative bg-linear-to-br from-violet-600 via-indigo-600 to-fuchsia-600 px-4 py-5 text-white sm:px-6 sm:py-7 lg:px-10">
         <div
           className="pointer-events-none absolute inset-0 opacity-10"
           style={{
@@ -75,7 +75,7 @@ export default function ProfileHeader({ user, stats }: ProfileHeaderProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-2 border-t border-brand-border p-3 sm:grid-cols-2 sm:gap-3 sm:p-6 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-2 border-t border-violet-100 p-3 sm:grid-cols-2 sm:gap-3 sm:p-6 lg:grid-cols-4">
         <InfoTile
           icon={<User className="h-4 w-4" />}
           label="Display name"
@@ -99,7 +99,7 @@ export default function ProfileHeader({ user, stats }: ProfileHeaderProps) {
       </div>
 
       {user.provider === "GOOGLE" && (
-        <div className="border-t border-brand-border bg-brand-light-bg px-5 py-3 text-xs font-medium text-brand-black sm:px-6">
+        <div className="border-t border-violet-100 bg-violet-50/60 px-5 py-3 text-xs font-medium text-violet-800 sm:px-6">
           <span className="inline-flex items-center gap-1.5">
             <ShieldCheck className="h-3.5 w-3.5" />
             Connected with Google
@@ -163,9 +163,9 @@ function InfoTile({
   value: string;
 }) {
   return (
-    <div className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-brand-border bg-brand-white p-2.5 sm:block sm:rounded-2xl sm:p-3">
+    <div className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-violet-100 bg-white p-2.5 sm:block sm:rounded-2xl sm:p-3">
       <div className="flex shrink-0 items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500 sm:gap-2 sm:text-[11px] sm:tracking-wider">
-        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-brand-light-bg text-brand-black">
+        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-violet-50 text-violet-700">
           {icon}
         </span>
         <span className="min-w-0 truncate">{label}</span>

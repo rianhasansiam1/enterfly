@@ -38,7 +38,7 @@ export default function TestimonialsTable({
 }) {
   if (isLoading && totalCount === 0) {
     return (
-      <div className="rounded-2xl border border-brand-border bg-white p-10 text-center text-sm text-brand-text-muted shadow-sm">
+      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700 shadow-sm">
         <span className="inline-flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading testimonials...
@@ -49,18 +49,18 @@ export default function TestimonialsTable({
 
   if (testimonials.length === 0) {
     return (
-      <div className="rounded-2xl border border-brand-border bg-white p-10 text-center text-sm text-gray-600 shadow-sm">
-        <MessageSquareQuote className="mx-auto mb-2 h-8 w-8 text-brand-text-muted" />
+      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-gray-600 shadow-sm">
+        <MessageSquareQuote className="mx-auto mb-2 h-8 w-8 text-violet-300" />
         No testimonials yet. Add one to populate the About page.
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-brand-border bg-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="bg-brand-light-bg text-left text-xs uppercase tracking-wider text-brand-black">
+          <thead className="bg-violet-50 text-left text-xs uppercase tracking-wider text-violet-700">
             <tr>
               <th className="px-4 py-3">#</th>
               <th className="px-4 py-3">Reviewer</th>
@@ -84,7 +84,7 @@ export default function TestimonialsTable({
                   exit="exit"
                   variants={LIST_ITEM_VARIANTS}
                   transition={LIST_ITEM_TRANSITION}
-                  className="border-t border-brand-border align-top"
+                  className="border-t border-violet-100/70 align-top"
                 >
                   <td className="px-4 py-3 text-gray-500">{row.position}</td>
                   <td className="px-4 py-3">
@@ -98,7 +98,7 @@ export default function TestimonialsTable({
                           )}`
                         }
                         alt={row.name}
-                        className="h-9 w-9 rounded-full object-cover ring-2 ring-brand-border"
+                        className="h-9 w-9 rounded-full object-cover ring-2 ring-violet-100"
                       />
                       <div>
                         <p className="font-semibold text-gray-900">{row.name}</p>
@@ -134,7 +134,7 @@ export default function TestimonialsTable({
                       <button
                         type="button"
                         onClick={() => onEdit(row)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-brand-border px-2.5 py-1 text-xs font-semibold text-brand-black transition hover:bg-brand-light-bg"
+                        className="inline-flex items-center gap-1 rounded-lg border border-violet-200 px-2.5 py-1 text-xs font-semibold text-violet-700 transition hover:bg-violet-50"
                       >
                         <Pencil className="h-3 w-3" />
                         Edit

@@ -103,7 +103,7 @@ export default function CaroselBanner({ slides }: { slides: CarouselSlide[] }) {
             <h1 className="mb-2 text-xl font-black leading-tight sm:text-3xl md:mb-3 md:text-4xl lg:text-5xl">
               {activeDeal.title}
               <br />
-              <span className="text-brand-gold">{activeDeal.subtitle}</span>
+              <span className="text-yellow-300">{activeDeal.subtitle}</span>
             </h1>
 
             <p className="mb-3 line-clamp-2 max-w-md text-[11px] leading-snug text-white/80 sm:line-clamp-3 sm:text-sm md:mb-5 md:line-clamp-none md:text-base">
@@ -113,7 +113,7 @@ export default function CaroselBanner({ slides }: { slides: CarouselSlide[] }) {
             <div className="flex flex-wrap justify-start gap-2 md:gap-3">
               <Link
                 href={activeDeal.link ?? "/products"}
-                className="rounded-full bg-brand-red px-3 py-1.5 text-[11px] font-bold text-brand-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-xl sm:px-4 sm:py-2 sm:text-xs md:px-6 md:py-2.5 md:text-sm"
+                className="rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-violet-700 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-yellow-300 hover:text-violet-900 hover:shadow-xl sm:px-4 sm:py-2 sm:text-xs md:px-6 md:py-2.5 md:text-sm"
               >
                 Shop Now
               </Link>
@@ -141,7 +141,7 @@ export default function CaroselBanner({ slides }: { slides: CarouselSlide[] }) {
               priority
             />
 
-            <div className="absolute -right-1 -top-1 animate-bounce rounded-full bg-brand-red px-2 py-1 text-[9px] font-black text-brand-white shadow-lg sm:text-[10px] md:-right-2 md:-top-2 md:px-3 md:py-1.5 md:text-sm">
+            <div className="absolute -right-1 -top-1 animate-bounce rounded-full bg-yellow-400 px-2 py-1 text-[9px] font-black text-violet-900 shadow-lg sm:text-[10px] md:-right-2 md:-top-2 md:px-3 md:py-1.5 md:text-sm">
               {activeDeal.title}
             </div>
           </div>
@@ -165,7 +165,7 @@ export default function CaroselBanner({ slides }: { slides: CarouselSlide[] }) {
                   cursor-pointer relative overflow-hidden group flex-1 text-left
                   ${
                     isActive
-                      ? "ring-4 ring-brand-red ring-offset-2 ring-offset-white scale-[1.03]"
+                      ? "ring-4 ring-yellow-300 ring-offset-2 ring-offset-white scale-[1.03]"
                       : "ring-1 ring-white/20"
                   }
                 `}
@@ -185,7 +185,7 @@ export default function CaroselBanner({ slides }: { slides: CarouselSlide[] }) {
 
                   {/* Active Progress Indicator */}
                   {isActive && (
-                    <div className="absolute bottom-0 left-0 h-1 bg-brand-gold animate-[progress_3.5s_linear_infinite]" />
+                    <div className="absolute bottom-0 left-0 h-1 bg-yellow-300 animate-[progress_3.5s_linear_infinite]" />
                   )}
 
                   <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-3">

@@ -29,13 +29,13 @@ export default function PolicyHero({
   const words = title.split(" ");
 
   return (
-    <header className="relative overflow-hidden rounded-3xl bg-white p-6 shadow-sm ring-1 ring-brand-border sm:p-10">
-      <div className="absolute -left-10 -top-10 -z-10 h-32 w-32 rounded-full bg-brand-red/15 blur-3xl" />
-      <div className="absolute -right-10 -bottom-10 -z-10 h-32 w-32 rounded-full bg-brand-red/10 blur-3xl" />
+    <header className="relative overflow-hidden rounded-3xl bg-white p-6 shadow-sm ring-1 ring-violet-100 sm:p-10">
+      <div className="absolute -left-10 -top-10 -z-10 h-32 w-32 rounded-full bg-violet-200 blur-3xl" />
+      <div className="absolute -right-10 -bottom-10 -z-10 h-32 w-32 rounded-full bg-pink-200 blur-3xl" />
 
-      <div className="inline-flex items-center gap-2 rounded-full bg-brand-red/10 px-3 py-1.5">
-        <ShieldCheck className="h-3.5 w-3.5 text-brand-red" />
-        <span className="text-[11px] font-bold uppercase tracking-wide text-brand-red">
+      <div className="inline-flex items-center gap-2 rounded-full bg-violet-100 px-3 py-1.5">
+        <ShieldCheck className="h-3.5 w-3.5 text-violet-700" />
+        <span className="text-[11px] font-bold uppercase tracking-wide text-violet-700">
           {eyebrow}
         </span>
       </div>
@@ -45,7 +45,7 @@ export default function PolicyHero({
           i === words.length - 1 ? (
             <span
               key={i}
-              className="text-brand-red"
+              className="bg-linear-to-r from-violet-600 to-pink-600 bg-clip-text text-transparent"
             >
               {word}
             </span>

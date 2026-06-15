@@ -34,7 +34,7 @@ export default function ProductsToolbar({
   onCreate: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-brand-border bg-brand-white p-4 shadow-sm sm:p-5">
+    <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
           <input
@@ -42,7 +42,7 @@ export default function ProductsToolbar({
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
             placeholder="Search by name, code, category..."
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           />
 
           <select
@@ -50,7 +50,7 @@ export default function ProductsToolbar({
             onChange={(event) =>
               onStatusChange(event.target.value as "ALL" | ProductStatus)
             }
-            className="h-10 rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           >
             <option value="ALL">All status</option>
             <option value="ACTIVE">Active</option>
@@ -60,7 +60,7 @@ export default function ProductsToolbar({
           <select
             value={categoryFilter}
             onChange={(event) => onCategoryChange(event.target.value)}
-            className="h-10 rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           >
             <option value="ALL">All categories</option>
             {categoryOptions.map((category) => (
@@ -75,7 +75,7 @@ export default function ProductsToolbar({
           <button
             type="button"
             onClick={onRefresh}
-            className="inline-flex h-10 items-center gap-2 rounded-xl border border-brand-border px-3 text-sm font-semibold text-foreground transition hover:bg-brand-light-bg"
+            className="inline-flex h-10 items-center gap-2 rounded-xl border border-violet-200 px-3 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
           >
             <RotateCcw className="h-4 w-4" />
             Refresh
@@ -84,7 +84,7 @@ export default function ProductsToolbar({
           <button
             type="button"
             onClick={onCreate}
-            className="inline-flex h-10 items-center gap-2 rounded-xl bg-brand-red px-4 text-sm font-semibold text-brand-white transition hover:bg-brand-red-hover"
+            className="inline-flex h-10 items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white transition hover:from-violet-700 hover:to-indigo-700"
           >
             <Plus className="h-4 w-4" />
             Create Product

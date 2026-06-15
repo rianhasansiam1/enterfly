@@ -160,7 +160,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="relative isolate min-h-screen overflow-hidden bg-brand-light-bg">
+    <main className="relative isolate min-h-screen overflow-hidden bg-[#E6E6FA]">
       <AuthBackground />
 
       <section className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 gap-6 px-4 py-8 sm:px-6 lg:grid-cols-12 lg:gap-8 lg:py-12">
@@ -176,8 +176,8 @@ export default function RegisterPage() {
         />
 
         <section className="lg:col-span-7">
-          <div className="relative overflow-hidden rounded-3xl bg-white p-6 shadow-xl ring-1 ring-brand-border sm:p-9">
-            <div className="pointer-events-none absolute -top-px left-0 h-1 w-full bg-brand-red" />
+          <div className="relative overflow-hidden rounded-3xl bg-white p-6 shadow-xl ring-1 ring-violet-100 sm:p-9">
+            <div className="pointer-events-none absolute -top-px left-0 h-1 w-full bg-linear-to-r from-violet-500 via-purple-500 to-indigo-500" />
 
             <RegisterHeader currentStep={currentStep} />
 

@@ -65,10 +65,10 @@ export default function OrderSummaryCard({
   const onlineDisabled = paymentMethod === "ONLINE";
 
   return (
-    <aside className="flex flex-col gap-4 rounded-3xl border border-brand-border bg-brand-white p-5 shadow-sm sm:p-6">
+    <aside className="flex flex-col gap-4 rounded-3xl border border-violet-100 bg-white p-5 shadow-sm sm:p-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-gray-900">Order summary</h2>
-        <span className="rounded-full bg-brand-light-bg px-2.5 py-0.5 text-xs font-semibold text-brand-black">
+        <span className="rounded-full bg-violet-50 px-2.5 py-0.5 text-xs font-semibold text-violet-700">
           Server-priced
         </span>
       </div>
@@ -113,19 +113,19 @@ export default function OrderSummaryCard({
             className="flex items-stretch gap-2"
           >
             <div className="relative flex-1">
-              <Tag className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-text-muted" />
+              <Tag className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-500" />
               <Input
                 type="text"
                 value={promoCode}
                 onChange={(e) => onPromoCodeChange(e.target.value)}
                 placeholder="Promo code"
-                className="h-11 rounded-xl border-brand-border bg-white pl-10 pr-3 text-sm font-medium uppercase tracking-wide focus-visible:border-brand-red focus-visible:ring-brand-red/30"
+                className="h-11 rounded-xl border-violet-200 bg-white pl-10 pr-3 text-sm font-medium uppercase tracking-wide focus-visible:border-violet-500 focus-visible:ring-violet-200"
               />
             </div>
             <button
               type="submit"
               disabled={!promoCode.trim()}
-              className="rounded-xl bg-brand-red px-4 text-sm font-semibold text-brand-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
+              className="rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:from-violet-700 hover:to-indigo-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
             >
               Apply
             </button>
@@ -134,7 +134,7 @@ export default function OrderSummaryCard({
             <p
               className={`flex items-center gap-1.5 text-xs font-medium ${
                 promoFeedback.tone === "error"
-                  ? "text-red-600"
+                  ? "text-rose-600"
                   : "text-emerald-600"
               }`}
             >
@@ -146,7 +146,7 @@ export default function OrderSummaryCard({
       )}
 
       {/* Totals */}
-      <div className="space-y-2.5 border-t border-dashed border-brand-border pt-4 text-sm">
+      <div className="space-y-2.5 border-t border-dashed border-violet-100 pt-4 text-sm">
         {isLoading || !summary ? (
           <p className="text-sm text-gray-500">Calculating...</p>
         ) : (
@@ -173,10 +173,10 @@ export default function OrderSummaryCard({
       </div>
 
       {summary && (
-        <div className="rounded-2xl border border-brand-border bg-brand-light-bg p-4">
+        <div className="rounded-2xl border border-violet-100 bg-linear-to-br from-violet-50 via-white to-fuchsia-50 p-4">
           <div className="flex items-baseline justify-between">
             <span className="text-sm font-semibold text-gray-700">Total</span>
-            <span className="text-2xl font-extrabold text-brand-red sm:text-3xl">
+            <span className="text-2xl font-extrabold text-violet-700 sm:text-3xl">
               BDT {summary.total.toLocaleString()}
             </span>
           </div>
@@ -206,7 +206,7 @@ export default function OrderSummaryCard({
             ? "Online payment is coming soon. Switch to Cash on delivery to place the order."
             : undefined
         }
-        className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand-red px-5 text-base font-bold text-brand-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-xl disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none disabled:hover:translate-y-0"
+        className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 text-base font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:from-gray-300 disabled:via-gray-300 disabled:to-gray-300 disabled:shadow-none disabled:hover:translate-y-0"
       >
         <Lock className="h-4 w-4" />
         {buttonLabel}

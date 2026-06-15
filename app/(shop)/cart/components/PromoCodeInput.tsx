@@ -72,7 +72,7 @@ export default function PromoCodeInput({
     <div className="space-y-2">
       <form onSubmit={handleApply} className="flex items-stretch gap-2">
         <div className="relative flex-1">
-          <Tag className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-text-muted" />
+          <Tag className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-500" />
           <Input
             type="text"
             value={value}
@@ -81,19 +81,19 @@ export default function PromoCodeInput({
               if (error) setError(null);
             }}
             placeholder="Promo code"
-            className="h-11 rounded-xl border-brand-border bg-white pl-10 pr-3 text-sm font-medium uppercase tracking-wide focus-visible:border-brand-red focus-visible:ring-brand-red/30"
+            className="h-11 rounded-xl border-violet-200 bg-white pl-10 pr-3 text-sm font-medium uppercase tracking-wide focus-visible:border-violet-500 focus-visible:ring-violet-200"
           />
         </div>
         <button
           type="submit"
           disabled={!value.trim()}
-          className="rounded-xl bg-brand-red px-4 text-sm font-semibold text-brand-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
+          className="rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:from-violet-700 hover:to-indigo-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
         >
           Apply
         </button>
       </form>
       {error && (
-        <p className="flex items-center gap-1.5 text-xs font-medium text-red-600">
+        <p className="flex items-center gap-1.5 text-xs font-medium text-rose-600">
           <AlertCircle className="h-3.5 w-3.5" />
           {error}
         </p>
@@ -103,7 +103,7 @@ export default function PromoCodeInput({
         <button
           type="button"
           onClick={() => setValue("ENTERFLY10")}
-          className="font-mono font-semibold text-brand-red underline-offset-2 hover:underline"
+          className="font-mono font-semibold text-violet-700 underline-offset-2 hover:underline"
         >
           ENTERFLY10
         </button>{" "}

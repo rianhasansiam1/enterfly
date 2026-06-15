@@ -100,7 +100,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
             const IconComponent = iconMap[spec.icon as IconName] || Battery
             return (
               <div key={spec.id} className="flex gap-3 text-sm">
-                <div className="shrink-0 w-5 h-5 mt-0.5 text-brand-red flex items-center justify-center">
+                <div className="shrink-0 w-5 h-5 mt-0.5 text-violet-600 flex items-center justify-center">
                   <IconComponent className="w-4 h-4" />
                 </div>
                 <div>
@@ -114,7 +114,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
       )}
 
       {deliveryTime && (
-        <p className="text-sm text-brand-red">Delivery in {deliveryTime}</p>
+        <p className="text-sm text-violet-600">Delivery in {deliveryTime}</p>
       )}
     </div>
   )

@@ -18,10 +18,10 @@ export default function CheckoutItemsCard({
   isLoading,
 }: CheckoutItemsCardProps) {
   return (
-    <section className="rounded-3xl border border-brand-border bg-brand-white p-5 shadow-sm sm:p-6">
+    <section className="rounded-3xl border border-violet-100 bg-white p-5 shadow-sm sm:p-6">
       <header className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-light-bg text-brand-black">
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-violet-100 text-violet-700">
             <Package className="h-4 w-4" />
           </span>
           <h2 className="text-lg font-bold text-gray-900">Order items</h2>
@@ -32,15 +32,15 @@ export default function CheckoutItemsCard({
       </header>
 
       {isLoading ? (
-        <div className="rounded-2xl border border-dashed border-brand-border bg-brand-light-bg p-6 text-center text-sm text-brand-text-muted">
+        <div className="rounded-2xl border border-dashed border-violet-200 bg-violet-50/40 p-6 text-center text-sm text-violet-700">
           Loading items...
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-brand-border bg-brand-light-bg p-6 text-center text-sm text-gray-600">
+        <div className="rounded-2xl border border-dashed border-violet-200 bg-violet-50/40 p-6 text-center text-sm text-gray-600">
           No items selected.
         </div>
       ) : (
-        <ul className="divide-y divide-brand-border">
+        <ul className="divide-y divide-violet-100">
           {items.map((item) => {
             const savings =
               (item.originalPrice - item.unitPrice) * item.quantity;
@@ -49,7 +49,7 @@ export default function CheckoutItemsCard({
                 key={item.variantId || item.productId}
                 className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
               >
-                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-brand-border bg-brand-light-bg">
+                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-violet-100 bg-violet-50">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={item.image || FALLBACK_IMAGE}

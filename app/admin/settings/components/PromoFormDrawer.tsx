@@ -42,16 +42,16 @@ export default function PromoFormDrawer({
       />
       <aside
         className={cn(
-          "fixed inset-y-0 right-0 z-70 w-full max-w-md border-l border-brand-border bg-brand-white shadow-2xl transition-transform duration-300",
+          "fixed inset-y-0 right-0 z-70 w-full max-w-md border-l border-violet-100 bg-white shadow-2xl transition-transform duration-300",
           open ? "translate-x-0" : "translate-x-full",
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="border-b border-brand-border bg-brand-black px-5 py-4 text-white">
+          <div className="border-b border-violet-100 bg-linear-to-r from-violet-600 to-indigo-700 px-5 py-4 text-white">
             <h2 className="text-lg font-bold">
               {mode === "create" ? "Create promo code" : "Edit promo code"}
             </h2>
-            <p className="mt-0.5 text-xs text-white/70">
+            <p className="mt-0.5 text-xs text-violet-100">
               Customers apply these at checkout. Case-insensitive on the wire.
             </p>
           </div>
@@ -65,7 +65,7 @@ export default function PromoFormDrawer({
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, code: e.target.value }))
                     }
-                    className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm font-mono uppercase outline-none transition focus:border-brand-red"
+                    className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm font-mono uppercase outline-none transition focus:border-violet-500"
                     placeholder="ENTERFLY10"
                   />
                 </Field>
@@ -78,7 +78,7 @@ export default function PromoFormDrawer({
                         status: e.target.value as PromoCodeStatus,
                       }))
                     }
-                    className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+                    className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
                   >
                     {PROMO_STATUS_VALUES.map((status) => (
                       <option key={status} value={status}>
@@ -95,7 +95,7 @@ export default function PromoFormDrawer({
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, description: e.target.value }))
                   }
-                  className="min-h-20 w-full rounded-xl border border-brand-border px-3 py-2 text-sm outline-none transition focus:border-brand-red"
+                  className="min-h-20 w-full rounded-xl border border-violet-200 px-3 py-2 text-sm outline-none transition focus:border-violet-500"
                   placeholder="What this code does, shown internally."
                 />
               </Field>
@@ -110,7 +110,7 @@ export default function PromoFormDrawer({
                         discountType: e.target.value as PromoDiscountType,
                       }))
                     }
-                    className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+                    className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
                   >
                     {DISCOUNT_TYPE_VALUES.map((type) => (
                       <option key={type} value={type}>
@@ -135,7 +135,7 @@ export default function PromoFormDrawer({
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, value: e.target.value }))
                     }
-                    className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+                    className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
                     placeholder={form.discountType === "PERCENT" ? "10" : "500"}
                   />
                 </Field>
@@ -151,7 +151,7 @@ export default function PromoFormDrawer({
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, minOrder: e.target.value }))
                     }
-                    className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+                    className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
                     placeholder="Optional"
                   />
                 </Field>
@@ -174,7 +174,7 @@ export default function PromoFormDrawer({
                         maxDiscount: e.target.value,
                       }))
                     }
-                    className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+                    className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
                     placeholder="Optional"
                   />
                 </Field>
@@ -188,7 +188,7 @@ export default function PromoFormDrawer({
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, startsAt: e.target.value }))
                     }
-                    className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+                    className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
                   />
                 </Field>
                 <Field label="Ends at">
@@ -198,7 +198,7 @@ export default function PromoFormDrawer({
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, endsAt: e.target.value }))
                     }
-                    className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+                    className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
                   />
                 </Field>
               </div>
@@ -215,25 +215,25 @@ export default function PromoFormDrawer({
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, usageLimit: e.target.value }))
                   }
-                  className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+                  className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
                   placeholder="Optional"
                 />
               </Field>
             </div>
 
-            <div className="border-t border-brand-border bg-brand-white px-5 py-4">
+            <div className="border-t border-violet-100 bg-white px-5 py-4">
               <div className="flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="h-10 rounded-xl border border-brand-border px-4 text-sm font-semibold text-foreground transition hover:bg-brand-light-bg"
+                  className="h-10 rounded-xl border border-violet-200 px-4 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-brand-red px-4 text-sm font-semibold text-white transition hover:bg-brand-red-hover disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white transition hover:from-violet-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                   {mode === "create" ? "Create" : "Save changes"}

@@ -36,14 +36,14 @@ const ICON_STYLE = {
   danger: "text-rose-500 bg-rose-100",
   warning: "text-amber-500 bg-amber-100",
   success: "text-emerald-500 bg-emerald-100",
-  info: "text-brand-red bg-brand-red/10",
+  info: "text-violet-500 bg-violet-100",
 } as const;
 
 const CONFIRM_BTN = {
   danger: "bg-rose-600 hover:bg-rose-700 text-white",
   warning: "bg-amber-500 hover:bg-amber-600 text-white",
   success: "bg-emerald-600 hover:bg-emerald-700 text-white",
-  info: "bg-brand-red hover:bg-brand-red-hover text-brand-white",
+  info: "bg-violet-600 hover:bg-violet-700 text-white",
 } as const;
 
 function Dialog({

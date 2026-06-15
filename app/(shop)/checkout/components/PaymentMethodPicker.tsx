@@ -43,7 +43,7 @@ export default function PaymentMethodPicker({
   onChange,
 }: PaymentMethodPickerProps) {
   return (
-    <section className="rounded-3xl border border-brand-border bg-brand-white p-5 shadow-sm sm:p-6">
+    <section className="rounded-3xl border border-violet-100 bg-white p-5 shadow-sm sm:p-6">
       <header className="mb-3 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-gray-900">Payment method</h2>
@@ -75,17 +75,17 @@ export default function PaymentMethodPicker({
               className={cn(
                 "group flex items-start gap-3 rounded-2xl border p-3.5 text-left transition-all duration-200",
                 active
-                  ? "border-brand-red bg-brand-red/5 shadow-sm ring-2 ring-brand-red/30"
-                  : "border-brand-border bg-brand-white hover:border-brand-red/40 hover:bg-brand-light-bg",
-                disabled && "cursor-not-allowed opacity-70 hover:border-brand-border hover:bg-brand-white",
+                  ? "border-violet-500 bg-violet-50/70 shadow-sm ring-2 ring-violet-200"
+                  : "border-violet-100 bg-white hover:border-violet-300 hover:bg-violet-50/30",
+                disabled && "cursor-not-allowed opacity-70 hover:border-violet-100 hover:bg-white",
               )}
             >
               <span
                 className={cn(
                   "grid h-10 w-10 shrink-0 place-items-center rounded-xl transition-colors",
                   active
-                    ? "bg-brand-red text-brand-white"
-                    : "bg-brand-light-bg text-brand-black group-hover:bg-brand-border",
+                    ? "bg-violet-600 text-white"
+                    : "bg-violet-100 text-violet-700 group-hover:bg-violet-200",
                   disabled && "bg-gray-100 text-gray-400 group-hover:bg-gray-100",
                 )}
               >
@@ -111,8 +111,8 @@ export default function PaymentMethodPicker({
                       className={cn(
                         "rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
                         active
-                          ? "bg-brand-red text-brand-white"
-                          : "bg-brand-light-bg text-brand-black",
+                          ? "bg-violet-600 text-white"
+                          : "bg-violet-100 text-violet-700",
                       )}
                     >
                       {option.badge}
@@ -127,8 +127,8 @@ export default function PaymentMethodPicker({
                 className={cn(
                   "mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition-colors",
                   active
-                    ? "border-brand-red bg-brand-red"
-                    : "border-brand-border bg-brand-white",
+                    ? "border-violet-600 bg-violet-600"
+                    : "border-violet-300 bg-white",
                   disabled && "border-gray-200 bg-gray-100",
                 )}
               >

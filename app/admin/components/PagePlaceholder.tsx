@@ -7,8 +7,8 @@ type Props = {
 
 export default function PagePlaceholder({ title, description }: Props) {
   return (
-    <section className="rounded-2xl border border-dashed border-brand-border bg-white p-10 text-center shadow-sm">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-red/10 text-brand-red">
+    <section className="rounded-2xl border border-dashed border-violet-200 bg-white p-10 text-center shadow-sm">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
         <Hammer className="h-6 w-6" />
       </div>
       <h2 className="mt-4 text-base font-bold text-gray-900">{title}</h2>

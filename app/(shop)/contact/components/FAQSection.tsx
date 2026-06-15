@@ -36,19 +36,19 @@ export default function FAQSection() {
   return (
     <section>
       <div className="mb-6 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full bg-brand-light-bg px-3 py-1.5">
-          <HelpCircle className="h-3.5 w-3.5 text-brand-red" />
-          <span className="text-[11px] font-bold uppercase tracking-wide text-brand-red">
+        <div className="inline-flex items-center gap-2 rounded-full bg-violet-100 px-3 py-1.5">
+          <HelpCircle className="h-3.5 w-3.5 text-violet-700" />
+          <span className="text-[11px] font-bold uppercase tracking-wide text-violet-700">
             Got Questions?
           </span>
         </div>
-        <h2 className="mt-3 text-2xl font-black tracking-tight text-foreground sm:text-3xl lg:text-4xl">
+        <h2 className="mt-3 text-2xl font-black tracking-tight text-gray-900 sm:text-3xl lg:text-4xl">
           Frequently asked{" "}
-          <span className="text-brand-red">
+          <span className="bg-linear-to-r from-violet-600 to-pink-600 bg-clip-text text-transparent">
             questions
           </span>
         </h2>
-        <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
+        <p className="mx-auto mt-3 max-w-xl text-sm text-gray-600 sm:text-base">
           Quick answers to common questions. Don&apos;t see yours? Send us a message above.
         </p>
       </div>
@@ -61,8 +61,8 @@ export default function FAQSection() {
               key={item.q}
               className={`overflow-hidden rounded-2xl bg-white shadow-sm ring-1 transition-all duration-300 ${
                 isOpen
-                  ? "ring-brand-red shadow-md"
-                  : "ring-brand-border hover:ring-brand-red/40"
+                  ? "ring-violet-300 shadow-md"
+                  : "ring-violet-100 hover:ring-violet-200"
               }`}
             >
               <button
@@ -71,14 +71,14 @@ export default function FAQSection() {
                 aria-expanded={isOpen}
                 className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
               >
-                <span className="text-sm font-bold text-foreground sm:text-base">
+                <span className="text-sm font-bold text-gray-900 sm:text-base">
                   {item.q}
                 </span>
                 <span
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
                     isOpen
-                      ? "bg-brand-red text-white rotate-180"
-                      : "bg-brand-light-bg text-brand-red"
+                      ? "bg-linear-to-br from-violet-600 to-purple-600 text-white rotate-180"
+                      : "bg-violet-100 text-violet-700"
                   }`}
                 >
                   {isOpen ? (
@@ -97,7 +97,7 @@ export default function FAQSection() {
                 }`}
               >
                 <div className="overflow-hidden">
-                  <p className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground">
+                  <p className="px-5 pb-5 text-sm leading-relaxed text-gray-600">
                     {item.a}
                   </p>
                 </div>

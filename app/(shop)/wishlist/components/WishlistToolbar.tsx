@@ -61,7 +61,7 @@ export default function WishlistToolbar({
   onToggleSelectAll,
 }: WishlistToolbarProps) {
   return (
-    <div className="sticky top-[68px] z-30 -mx-2 mt-6 rounded-2xl border border-brand-border bg-brand-white/85 px-3 py-3 shadow-sm backdrop-blur-lg sm:mx-0 sm:px-4">
+    <div className="sticky top-[68px] z-30 -mx-2 mt-6 rounded-2xl border border-violet-100 bg-white/85 px-3 py-3 shadow-sm backdrop-blur-lg sm:mx-0 sm:px-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         {/* Search */}
         <div className="relative flex-1 lg:max-w-sm">
@@ -71,7 +71,7 @@ export default function WishlistToolbar({
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder="Search your wishlist..."
-            className="h-10 rounded-xl border-brand-border bg-brand-white pl-10 pr-9 text-sm focus-visible:border-brand-red focus-visible:ring-brand-red/20"
+            className="h-10 rounded-xl border-violet-200 bg-white pl-10 pr-9 text-sm focus-visible:border-violet-500 focus-visible:ring-violet-200"
           />
           {query && (
             <button
@@ -90,10 +90,10 @@ export default function WishlistToolbar({
           <button
             type="button"
             onClick={onToggleSelectAll}
-            className="inline-flex h-10 items-center gap-2 rounded-xl border border-brand-border bg-brand-white px-3 text-sm font-medium text-foreground transition-colors hover:border-brand-red hover:bg-brand-light-bg hover:text-brand-red"
+            className="inline-flex h-10 items-center gap-2 rounded-xl border border-violet-200 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-violet-400 hover:bg-violet-50 hover:text-violet-700"
           >
             {allSelected ? (
-              <CheckSquare className="h-4 w-4 text-brand-red" />
+              <CheckSquare className="h-4 w-4 text-violet-600" />
             ) : (
               <Square className="h-4 w-4" />
             )}
@@ -104,11 +104,11 @@ export default function WishlistToolbar({
 
           {/* Sort */}
           <div className="relative">
-            <ArrowUpDown className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-text-muted" />
+            <ArrowUpDown className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-600" />
             <select
               value={sort}
               onChange={(e) => onSortChange(e.target.value as WishlistSort)}
-              className="h-10 cursor-pointer appearance-none rounded-xl border border-brand-border bg-brand-white pl-9 pr-8 text-sm font-medium text-foreground transition-colors hover:border-brand-red hover:bg-brand-light-bg focus:border-brand-red focus:outline-none focus:ring-2 focus:ring-brand-red/20"
+              className="h-10 cursor-pointer appearance-none rounded-xl border border-violet-200 bg-white pl-9 pr-8 text-sm font-medium text-gray-700 transition-colors hover:border-violet-400 hover:bg-violet-50 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
             >
               {SORT_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -122,7 +122,7 @@ export default function WishlistToolbar({
           <div
             role="group"
             aria-label="View"
-            className="flex h-10 items-center rounded-xl border border-brand-border bg-brand-white p-0.5"
+            className="flex h-10 items-center rounded-xl border border-violet-200 bg-white p-0.5"
           >
             <ViewButton
               active={view === "grid"}
@@ -187,8 +187,8 @@ function ViewButton({
       className={cn(
         "inline-flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200",
         active
-          ? "bg-brand-red text-brand-white shadow-sm"
-          : "text-brand-text-muted hover:bg-brand-light-bg hover:text-brand-red",
+          ? "bg-linear-to-br from-violet-600 to-indigo-600 text-white shadow-sm"
+          : "text-gray-500 hover:bg-violet-50 hover:text-violet-700",
       )}
     >
       {children}
@@ -212,8 +212,8 @@ function CategoryChip({
       className={cn(
         "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200",
         active
-          ? "border-brand-red bg-brand-red text-brand-white shadow-sm"
-          : "border-brand-border bg-brand-white text-foreground hover:border-brand-red hover:text-brand-red",
+          ? "border-violet-600 bg-violet-600 text-white shadow-sm"
+          : "border-violet-200 bg-white text-gray-700 hover:border-violet-400 hover:text-violet-700",
       )}
     >
       {label}

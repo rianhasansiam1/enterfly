@@ -38,7 +38,7 @@ export default function ReportPreview({
 }: Props) {
   if (isLoading && !payload) {
     return (
-      <div className="rounded-2xl border border-brand-border bg-white p-10 text-center text-sm text-brand-text-muted shadow-sm">
+      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700 shadow-sm">
         <span className="inline-flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
           Crunching the numbers...
@@ -49,8 +49,8 @@ export default function ReportPreview({
 
   if (!payload) {
     return (
-      <div className="rounded-2xl border border-dashed border-brand-border bg-white p-10 text-center shadow-sm">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-light-bg text-brand-red">
+      <div className="rounded-2xl border border-dashed border-violet-200 bg-white p-10 text-center shadow-sm">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
           <FileText className="h-6 w-6" />
         </div>
         <h3 className="mt-3 text-base font-bold text-gray-900">
@@ -58,7 +58,7 @@ export default function ReportPreview({
         </h3>
         <p className="mx-auto mt-1 max-w-md text-sm text-gray-500">
           Pick a report type, choose a date window, and hit
-          <span className="mx-1 font-semibold text-brand-red">Generate report</span>
+          <span className="mx-1 font-semibold text-violet-700">Generate report</span>
           to preview the data here.
         </p>
       </div>
@@ -68,9 +68,9 @@ export default function ReportPreview({
   const def = REPORT_DEFS[payload.meta.type];
 
   return (
-    <section className="rounded-2xl border border-brand-border bg-white shadow-sm">
+    <section className="rounded-2xl border border-violet-100 bg-white shadow-sm">
       {/* Title bar */}
-      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-brand-border bg-brand-light-bg px-5 py-4">
+      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-violet-100 bg-linear-to-r from-violet-600/5 to-indigo-600/5 px-5 py-4">
         <div className="min-w-0">
           <h2 className="text-base font-bold text-gray-900">{def.subject}</h2>
           <p className="mt-0.5 text-xs text-gray-500">
@@ -85,7 +85,7 @@ export default function ReportPreview({
           type="button"
           onClick={onDownload}
           disabled={isDownloading}
-          className="inline-flex h-10 items-center gap-2 rounded-xl bg-brand-red px-4 text-sm font-semibold text-white transition hover:bg-brand-red-hover disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex h-10 items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white transition hover:from-violet-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isDownloading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -115,7 +115,7 @@ export default function ReportPreview({
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="text-xs font-bold uppercase tracking-wider text-brand-black">
+    <h3 className="text-xs font-bold uppercase tracking-wider text-violet-700">
       {children}
     </h3>
   );
@@ -131,7 +131,7 @@ function StatGrid({
       {items.map((item) => (
         <div
           key={item.label}
-          className="rounded-xl border border-brand-border bg-brand-light-bg p-3"
+          className="rounded-xl border border-violet-100 bg-violet-50/40 p-3"
         >
           <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
             {item.label}
@@ -165,17 +165,17 @@ function DataTable({
 }) {
   if (rows.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-brand-border bg-white px-3 py-4 text-center text-xs text-gray-500">
+      <p className="rounded-xl border border-dashed border-violet-200 bg-white px-3 py-4 text-center text-xs text-gray-500">
         {emptyLabel}
       </p>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-brand-border">
+    <div className="overflow-hidden rounded-xl border border-violet-100">
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="bg-brand-light-bg text-left text-[11px] uppercase tracking-wider text-brand-black">
+          <thead className="bg-violet-50 text-left text-[11px] uppercase tracking-wider text-violet-700">
             <tr>
               {headers.map((header) => (
                 <th key={header} className="px-3 py-2 font-bold">
@@ -188,7 +188,7 @@ function DataTable({
             {rows.map((row, idx) => (
               <tr
                 key={idx}
-                className="border-t border-brand-border align-top text-gray-700"
+                className="border-t border-violet-100/70 align-top text-gray-700"
               >
                 {row.map((cell, cellIdx) => (
                   <td key={cellIdx} className="px-3 py-2">

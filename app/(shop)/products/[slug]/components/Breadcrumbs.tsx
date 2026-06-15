@@ -13,7 +13,7 @@ const Breadcrumbs = ({
       <nav className="flex items-center gap-2 text-sm overflow-x-auto">
         <Link
           href="/"
-          className="flex items-center gap-1 text-gray-500 hover:text-brand-red transition-colors shrink-0"
+          className="flex items-center gap-1 text-gray-500 hover:text-violet-600 transition-colors shrink-0"
         >
           <Home className="w-4 h-4" />
           <span className="hidden sm:inline">Home</span>
@@ -24,12 +24,12 @@ const Breadcrumbs = ({
             {item.href ? (
               <Link
                 href={item.href}
-                className="text-gray-500 hover:text-brand-red transition-colors shrink-0"
+                className="text-gray-500 hover:text-violet-600 transition-colors shrink-0"
               >
                 {item.label}
               </Link>
             ) : (
-              <span className="text-brand-black font-medium truncate">{item.label}</span>
+              <span className="text-violet-700 font-medium truncate">{item.label}</span>
             )}
           </Fragment>
         ))}

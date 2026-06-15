@@ -12,7 +12,7 @@ export default function PolicyList({ items }: PolicyListProps) {
         <li key={i} className="flex gap-2.5">
           <span
             aria-hidden
-            className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-red"
+            className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-linear-to-br from-violet-500 to-pink-500"
           />
           <span className="text-sm leading-relaxed text-gray-700 sm:text-base">{item}</span>
         </li>

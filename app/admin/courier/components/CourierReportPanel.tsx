@@ -38,7 +38,7 @@ export default function CourierReportPanel({
   return (
     <div className="space-y-4">
       {/* Overall summary */}
-      <div className="rounded-2xl border border-brand-border bg-white p-4 shadow-sm sm:p-5">
+      <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -97,7 +97,7 @@ export default function CourierReportPanel({
 
       {/* Per-courier breakdown */}
       {report.couriers.length === 0 ? (
-        <div className="rounded-2xl border border-brand-border bg-white p-6 text-center text-sm text-gray-600 shadow-sm">
+        <div className="rounded-2xl border border-violet-100 bg-white p-6 text-center text-sm text-gray-600 shadow-sm">
           No courier-level breakdown is available for this number.
         </div>
       ) : (
@@ -111,7 +111,7 @@ export default function CourierReportPanel({
             return (
               <div
                 key={courier.courier}
-                className="rounded-2xl border border-brand-border bg-white p-4 shadow-sm"
+                className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm"
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
@@ -125,7 +125,7 @@ export default function CourierReportPanel({
                         unoptimized
                       />
                     ) : (
-                      <span className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-light-bg text-brand-black">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-md bg-violet-50 text-violet-600">
                         <Truck className="h-4 w-4" />
                       </span>
                     )}
@@ -212,7 +212,7 @@ function Stat({
           ? "text-amber-700"
           : "text-gray-900";
   return (
-    <div className="rounded-xl border border-brand-border bg-brand-light-bg p-3">
+    <div className="rounded-xl border border-violet-100 bg-violet-50/40 p-3">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
         {label}
       </p>

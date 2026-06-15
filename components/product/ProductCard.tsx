@@ -222,8 +222,8 @@ export default function ProductCard({
   };
 
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-brand-border bg-brand-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-brand-border hover:shadow-lg">
-      <div className="relative aspect-4/3 overflow-hidden bg-brand-light-bg">
+    <div className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg">
+      <div className="relative aspect-4/3 overflow-hidden bg-gray-50">
         <Link href={productHref}>
           <Image
             src={image}
@@ -235,13 +235,13 @@ export default function ProductCard({
         </Link>
 
         {badge && (
-          <span className="absolute left-2 top-2 rounded-full bg-brand-red px-2 py-0.5 text-[10px] font-semibold text-brand-white">
+          <span className="absolute left-2 top-2 rounded-full bg-linear-to-r from-violet-600 to-indigo-600 px-2 py-0.5 text-[10px] font-semibold text-white">
             {badge}
           </span>
         )}
 
         {discount > 0 && !badge && (
-          <span className="absolute left-2 top-2 rounded-full bg-brand-red px-2 py-0.5 text-[10px] font-semibold text-brand-white">
+          <span className="absolute left-2 top-2 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-semibold text-white">
             -{discount}%
           </span>
         )}
@@ -254,13 +254,13 @@ export default function ProductCard({
           disabled={isBusy}
           aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
           aria-pressed={isWishlisted}
-          className="absolute right-2 top-2 rounded-full bg-brand-white/90 p-1.5 shadow-sm backdrop-blur-sm transition-all duration-200 hover:scale-110 hover:bg-brand-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+          className="absolute right-2 top-2 rounded-full bg-white/90 p-1.5 shadow-sm backdrop-blur-sm transition-all duration-200 hover:scale-110 hover:bg-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Heart
             className={`h-3.5 w-3.5 transition-all duration-300 ${
               isWishlisted
-                ? "scale-110 fill-brand-red text-brand-red"
-                : "text-brand-text-muted hover:text-brand-red"
+                ? "scale-110 fill-red-500 text-red-500"
+                : "text-gray-500 hover:text-red-400"
             }`}
           />
         </button>
@@ -272,7 +272,7 @@ export default function ProductCard({
           }}
           disabled={isCartBusy}
           aria-label="Add to cart"
-          className="absolute right-2 top-11 flex items-center gap-1.5 rounded-full bg-brand-white/95 p-1.5 text-xs font-semibold text-brand-red opacity-100 shadow-md backdrop-blur-sm transition-all duration-300 hover:bg-brand-red hover:text-brand-white sm:bottom-2 sm:left-1/2 sm:right-auto sm:top-auto sm:-translate-x-1/2 sm:px-3 sm:py-1.5 sm:can-hover:translate-y-2 sm:can-hover:opacity-0 sm:can-hover:group-hover:translate-y-0 sm:can-hover:group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className="absolute right-2 top-11 flex items-center gap-1.5 rounded-full bg-white/95 p-1.5 text-xs font-semibold text-violet-700 opacity-100 shadow-md backdrop-blur-sm transition-all duration-300 hover:bg-violet-600 hover:text-white sm:bottom-2 sm:left-1/2 sm:right-auto sm:top-auto sm:-translate-x-1/2 sm:px-3 sm:py-1.5 sm:can-hover:translate-y-2 sm:can-hover:opacity-0 sm:can-hover:group-hover:translate-y-0 sm:can-hover:group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <ShoppingCart className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Add</span>
@@ -288,28 +288,28 @@ export default function ProductCard({
                   key={i}
                   className={`h-3 w-3 ${
                     i < Math.round(rating)
-                      ? "fill-brand-gold text-brand-gold"
-                      : "text-brand-border"
+                      ? "fill-amber-400 text-amber-400"
+                      : "text-gray-200"
                   }`}
                 />
               ))}
             </div>
-            <span className="ml-0.5 text-[10px] text-brand-text-muted">({reviewCount})</span>
+            <span className="ml-0.5 text-[10px] text-gray-500">({reviewCount})</span>
           </div>
         )}
 
         <Link href={productHref}>
-          <h3 className="line-clamp-1 text-xs font-semibold leading-tight text-foreground transition-colors hover:text-brand-black sm:text-sm">
+          <h3 className="line-clamp-1 text-xs font-semibold leading-tight text-gray-800 transition-colors hover:text-violet-700 sm:text-sm">
             {name}
           </h3>
         </Link>
 
         <div className="mt-1 flex items-center gap-1.5">
-          <span className="text-sm font-bold text-brand-red">
+          <span className="text-sm font-bold text-violet-700">
             BDT {price.toLocaleString()}
           </span>
           {originalPrice && originalPrice > price && (
-            <span className="text-[11px] text-brand-text-muted line-through">
+            <span className="text-[11px] text-gray-400 line-through">
               BDT {originalPrice.toLocaleString()}
             </span>
           )}

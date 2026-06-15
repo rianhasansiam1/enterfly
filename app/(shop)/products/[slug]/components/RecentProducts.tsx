@@ -36,7 +36,7 @@ const RecentProducts: React.FC<RecentProductsProps> = ({
           <Link 
             key={product.id}
             href={`/products/${product.slug}`}
-            className="flex gap-3 p-2 rounded-xl hover:bg-brand-light-bg transition-colors group"
+            className="flex gap-3 p-2 rounded-xl hover:bg-violet-50 transition-colors group"
           >
             {/* Thumbnail */}
             <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 shrink-0">
@@ -51,11 +51,11 @@ const RecentProducts: React.FC<RecentProductsProps> = ({
             
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-brand-red transition-colors">
+              <h4 className="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-violet-700 transition-colors">
                 {product.name}
               </h4>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-sm font-bold text-brand-red">
+                <span className="text-sm font-bold text-violet-700">
                   {product.price.toLocaleString()} bdt
                 </span>
                 {product.discount > 0 && (

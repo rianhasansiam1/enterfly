@@ -72,7 +72,7 @@ const socialLinks: SocialLink[] = [
 
 const Footer = () => {
   return (
-    <footer className="bg-brand-black text-brand-white ">
+    <footer className="bg-[#E8E5F5] text-gray-800 ">
       <div className="container mx-auto px-4 py-8 sm:py-10">
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {/* Brand Section */}
@@ -80,7 +80,7 @@ const Footer = () => {
             <div className="flex items-center gap-2">
               <Image src="/logo/logo.png" alt="EnterFly Logo" width={120} height={100} />
             </div>
-            <p className="text-brand-white text-xs sm:text-sm leading-relaxed">
+            <p className="text-gray-700 text-xs sm:text-sm leading-relaxed">
               Discover premium verified stores within 50km. Real-time deals, clean UI, and a
               superior local shopping experience.
             </p>
@@ -88,13 +88,13 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-base sm:text-lg font-black text-brand-white mb-3 sm:mb-4">Quick Links</h4>
+            <h4 className="text-base sm:text-lg font-black text-violet-600 mb-3 sm:mb-4">Quick Links</h4>
             <ul className="space-y-1.5 sm:space-y-2">
               {quickLinks.map((link, i) => (
                 <li key={i}>
                   <Link
                     href={link.href}
-                    className="text-brand-white hover:text-brand-red focus-visible:text-brand-red transition text-xs sm:text-sm"
+                    className="text-gray-700 hover:text-violet-600 transition text-xs sm:text-sm"
                   >
                     {link.name}
                   </Link>
@@ -105,13 +105,13 @@ const Footer = () => {
 
           {/* Support Center */}
           <div>
-            <h4 className="text-base sm:text-lg font-black text-brand-white mb-3 sm:mb-4">Support Center</h4>
+            <h4 className="text-base sm:text-lg font-black text-violet-600 mb-3 sm:mb-4">Support Center</h4>
             <ul className="space-y-1.5 sm:space-y-2">
               {supportLinks.map((link, i) => (
                 <li key={i}>
                   <Link
                     href={link.href}
-                    className="text-brand-white hover:text-brand-red focus-visible:text-brand-red transition text-xs sm:text-sm"
+                    className="text-gray-700 hover:text-violet-600 transition text-xs sm:text-sm"
                   >
                     {link.name}
                   </Link>
@@ -123,8 +123,8 @@ const Footer = () => {
           {/* Newsletter */}
           <div className="col-span-2 sm:col-span-2 md:col-span-1">
             {/* Keep In Touch */}
-            <h5 className="text-sm sm:text-base font-black text-brand-white mb-2 sm:mb-3">Keep In Touch</h5>
-            <p className="mb-3 max-w-xs text-xs leading-relaxed text-brand-white sm:mb-4 sm:text-sm">
+            <h5 className="text-sm sm:text-base font-black text-gray-800 mb-2 sm:mb-3">Keep In Touch</h5>
+            <p className="mb-3 max-w-xs text-xs leading-relaxed text-gray-600 sm:mb-4 sm:text-sm">
               Follow EnterFly for fresh deals and local shopping updates.
             </p>
             <div className="flex flex-wrap gap-2.5 sm:gap-3">
@@ -138,7 +138,7 @@ const Footer = () => {
                   className="group relative inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-white/75 bg-white shadow-[0_8px_20px_-14px_rgba(17,24,39,0.75)] ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_28px_-18px_rgba(17,24,39,0.8)] sm:h-11 sm:w-11"
                 >
                   <span className={`absolute inset-0 ${social.color}`} />
-                  <span className="absolute inset-px rounded-[11px] bg-white/10 backdrop-blur-[1px]" />
+                  <span className="absolute inset-[1px] rounded-[11px] bg-white/10 backdrop-blur-[1px]" />
                   <span className="relative z-10 text-white transition-transform duration-300 group-hover:scale-110">
                     {social.icon}
                   </span>

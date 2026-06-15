@@ -488,7 +488,7 @@ export default function CartPage() {
   const isEmpty = items.length === 0;
 
   return (
-    <main className="min-h-screen bg-brand-light-bg">
+    <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <CartHeader itemCount={totals.itemCount} />
 
@@ -504,7 +504,7 @@ export default function CartPage() {
         )}
 
         {isLoading && isEmpty ? (
-          <div className="mt-6 rounded-2xl border border-brand-border bg-brand-white p-6 text-center text-sm text-brand-text-muted">
+          <div className="mt-6 rounded-2xl border border-violet-100 bg-white p-6 text-center text-sm text-violet-700">
             Loading cart...
           </div>
         ) : isEmpty ? (
@@ -552,11 +552,11 @@ export default function CartPage() {
                 </AnimatePresence>
               </div>
 
-              <div className="flex items-center justify-between rounded-2xl border border-dashed border-brand-border bg-brand-white/60 px-4 py-3 text-sm">
+              <div className="flex items-center justify-between rounded-2xl border border-dashed border-violet-200 bg-white/60 px-4 py-3 text-sm">
                 <p className="text-gray-600">Looking for something else?</p>
                 <Link
                   href="/products"
-                  className="font-semibold text-brand-red hover:underline"
+                  className="font-semibold text-violet-700 hover:underline"
                 >
                   Continue shopping {"->"}
                 </Link>
@@ -607,20 +607,20 @@ export default function CartPage() {
       </div>
 
       {!isEmpty && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-border bg-brand-white/95 px-4 py-3 backdrop-blur-lg shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.15)] lg:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-violet-100 bg-white/95 px-4 py-3 backdrop-blur-lg shadow-[0_-8px_24px_-12px_rgba(124,58,237,0.25)] lg:hidden">
           <div className="mx-auto flex max-w-2xl items-center gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-[11px] font-medium text-gray-500">
                 Total ({totals.itemCount} {totals.itemCount === 1 ? "item" : "items"})
               </p>
-              <p className="text-lg font-extrabold text-brand-red">
+              <p className="text-lg font-extrabold text-violet-700">
                 BDT {totals.total.toLocaleString()}
               </p>
             </div>
             <button
               type="button"
               onClick={handleCheckout}
-              className="inline-flex h-12 items-center gap-2 rounded-2xl bg-brand-red px-5 text-sm font-bold text-brand-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-xl"
+              className="inline-flex h-12 items-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
             >
               <Lock className="h-4 w-4" />
               Checkout

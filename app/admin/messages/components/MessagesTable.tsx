@@ -37,7 +37,7 @@ export default function MessagesTable({
 }) {
   if (isLoading && totalCount === 0) {
     return (
-      <div className="rounded-2xl border border-brand-border bg-brand-white p-10 text-center text-sm text-brand-text-muted shadow-sm">
+      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700 shadow-sm">
         <span className="inline-flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading messages...
@@ -48,18 +48,18 @@ export default function MessagesTable({
 
   if (messages.length === 0) {
     return (
-      <div className="rounded-2xl border border-brand-border bg-brand-white p-10 text-center text-sm text-gray-600 shadow-sm">
-        <Mail className="mx-auto mb-2 h-8 w-8 text-brand-text-muted" />
+      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-gray-600 shadow-sm">
+        <Mail className="mx-auto mb-2 h-8 w-8 text-violet-300" />
         No messages match the current filters.
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-brand-border bg-brand-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="bg-brand-light-bg text-left text-xs uppercase tracking-wider text-foreground">
+          <thead className="bg-violet-50 text-left text-xs uppercase tracking-wider text-violet-700">
             <tr>
               <th className="px-4 py-3">From</th>
               <th className="px-4 py-3">Subject</th>
@@ -84,8 +84,8 @@ export default function MessagesTable({
                   variants={LIST_ITEM_VARIANTS}
                   transition={LIST_ITEM_TRANSITION}
                   className={cn(
-                    "border-t border-brand-border align-top transition-colors hover:bg-brand-light-bg",
-                    isNew && "bg-brand-red/5",
+                    "border-t border-violet-100/70 align-top transition-colors hover:bg-violet-50/40",
+                    isNew && "bg-violet-50/30",
                   )}
                 >
                   <td className="px-4 py-3">
@@ -94,7 +94,7 @@ export default function MessagesTable({
                       onClick={() => onOpen(row)}
                       className="flex items-center gap-3 text-left"
                     >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-black text-xs font-bold text-white">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-violet-500 to-indigo-600 text-xs font-bold text-white">
                         {getInitials(row.name, row.email)}
                       </div>
                       <div className="min-w-0">

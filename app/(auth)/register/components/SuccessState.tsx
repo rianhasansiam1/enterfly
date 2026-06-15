@@ -23,11 +23,11 @@ export default function SuccessState({ name }: SuccessStateProps) {
         </div>
       </div>
 
-      <h3 className="mt-6 text-2xl font-black tracking-tight text-brand-text-dark">
+      <h3 className="mt-6 text-2xl font-black tracking-tight text-gray-900">
         Welcome aboard{firstName ? `, ${firstName}` : ""}!
       </h3>
 
-      <p className="mt-2 max-w-sm text-sm text-brand-text-muted">
+      <p className="mt-2 max-w-sm text-sm text-gray-500">
         Your account is ready. Let&apos;s find some great deals from stores near
         you.
       </p>
@@ -35,7 +35,7 @@ export default function SuccessState({ name }: SuccessStateProps) {
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <Link
           href="/products"
-          className="inline-flex items-center gap-2 rounded-full bg-brand-red px-6 py-2.5 text-sm font-bold text-brand-white shadow-md transition-all hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-lg"
+          className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-violet-600 to-purple-600 px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:-translate-y-0.5 hover:from-violet-700 hover:to-purple-700 hover:shadow-lg"
         >
           Start shopping
           <ArrowRight className="h-4 w-4" />
@@ -43,7 +43,7 @@ export default function SuccessState({ name }: SuccessStateProps) {
 
         <Link
           href="/"
-          className="inline-flex items-center gap-2 rounded-full border border-brand-border bg-white px-6 py-2.5 text-sm font-bold text-brand-text-dark transition-all hover:-translate-y-0.5 hover:border-brand-red hover:text-brand-red"
+          className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-white px-6 py-2.5 text-sm font-bold text-gray-700 transition-all hover:-translate-y-0.5 hover:border-violet-400 hover:text-violet-700"
         >
           Go home
         </Link>

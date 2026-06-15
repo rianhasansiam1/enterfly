@@ -279,7 +279,7 @@ function AllProductsPageInner() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-light-bg">
+    <div className="min-h-screen bg-linear-to-b from-[#F5F3FF] via-white to-white">
       <div className="mx-auto max-w-7xl px-3 py-4 sm:px-4 sm:py-6 lg:px-6">
         <div className="flex gap-5">
           <div
@@ -314,7 +314,7 @@ function AllProductsPageInner() {
             />
 
             {isLoadingFromStore && products.length === 0 ? (
-              <div className="mt-10 flex items-center justify-center gap-2 text-sm text-brand-text-muted">
+              <div className="mt-10 flex items-center justify-center gap-2 text-sm text-violet-700">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span>Loading products from server...</span>
               </div>
@@ -336,7 +336,7 @@ function AllProductsPageInner() {
                   {hasMore ? (
                     <>
                       <div ref={sentinelRef} aria-hidden className="h-1 w-full" />
-                      <div className="flex items-center gap-2 text-sm text-brand-text-muted">
+                      <div className="flex items-center gap-2 text-sm text-violet-700">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         <span>Loading more products...</span>
                       </div>

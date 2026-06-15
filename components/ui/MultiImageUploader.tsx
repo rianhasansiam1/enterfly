@@ -108,7 +108,7 @@ export default function MultiImageUploader({
           {value.map((url, index) => (
             <div
               key={`${url}-${index}`}
-              className="group relative aspect-square overflow-hidden rounded-lg border border-brand-border"
+              className="group relative aspect-square overflow-hidden rounded-lg border border-violet-100"
             >
               <img
                 src={url}
@@ -139,19 +139,19 @@ export default function MultiImageUploader({
           onDragLeave={() => setIsDragging(false)}
           onDrop={onDrop}
           className={cn(
-            "flex min-h-24 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-brand-border bg-brand-light-bg p-3 text-center transition",
-            isDragging && "border-brand-red bg-brand-red/5",
+            "flex min-h-24 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-violet-200 bg-violet-50/40 p-3 text-center transition",
+            isDragging && "border-violet-500 bg-violet-100/60",
             disabled && "cursor-not-allowed opacity-70",
           )}
         >
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-brand-red/10 text-brand-red">
+          <span className="grid h-9 w-9 place-items-center rounded-full bg-violet-100 text-violet-600">
             {isUploading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <ImagePlus className="h-4 w-4" />
             )}
           </span>
-          <span className="text-sm font-semibold text-brand-red">
+          <span className="text-sm font-semibold text-violet-700">
             {isUploading ? `Uploading ${pending}...` : "Add images"}
           </span>
           <span className="flex items-center gap-1 text-[11px] text-gray-500">

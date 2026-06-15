@@ -55,7 +55,7 @@ export default function CartItemCard({
   const nearMax = item.quantity >= item.maxQuantity;
 
   return (
-    <article className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 shadow-sm transition-all duration-300 hover:border-brand-red/40 hover:shadow-md sm:p-4">
+    <article className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 shadow-sm transition-all duration-300 hover:border-violet-200 hover:shadow-md sm:p-4">
       <div className="flex gap-3 sm:gap-4">
         <Link
           href={`/products/${item.slug}`}
@@ -69,7 +69,7 @@ export default function CartItemCard({
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
           {hasDiscount && (
-            <span className="absolute left-1.5 top-1.5 rounded-full bg-brand-red px-1.5 py-0.5 text-[10px] font-bold text-brand-white shadow">
+            <span className="absolute left-1.5 top-1.5 rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow">
               -
               {Math.round(
                 ((item.originalPrice! - item.price) / item.originalPrice!) *
@@ -83,12 +83,12 @@ export default function CartItemCard({
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-text-muted">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-violet-600">
                 {item.brand}
               </p>
               <Link
                 href={`/products/${item.slug}`}
-                className="mt-0.5 line-clamp-2 text-sm font-semibold text-gray-900 hover:text-brand-red sm:text-base"
+                className="mt-0.5 line-clamp-2 text-sm font-semibold text-gray-900 hover:text-violet-700 sm:text-base"
               >
                 {item.name}
               </Link>
@@ -98,7 +98,7 @@ export default function CartItemCard({
             </div>
 
             <div className="text-right shrink-0">
-              <p className="text-base font-extrabold text-brand-red sm:text-lg">
+              <p className="text-base font-extrabold text-violet-700 sm:text-lg">
                 BDT {lineTotal.toLocaleString()}
               </p>
               {hasDiscount && (
@@ -124,7 +124,7 @@ export default function CartItemCard({
               {item.perks?.map((perk) => (
                 <span
                   key={perk}
-                  className="inline-flex items-center gap-1 rounded-full bg-brand-light-bg px-2 py-0.5 text-[11px] font-medium text-brand-text-dark"
+                  className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-700"
                 >
                   <Sparkles className="h-3 w-3" />
                   {perk}
@@ -163,7 +163,7 @@ export default function CartItemCard({
                 onClick={() => {
                   onSaveForLater(item.id);
                 }}
-                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-gray-600 transition-colors hover:bg-brand-light-bg hover:text-brand-red"
+                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-gray-600 transition-colors hover:bg-violet-50 hover:text-violet-700"
               >
                 <Bookmark className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Save for later</span>
@@ -173,7 +173,7 @@ export default function CartItemCard({
                 type="button"
                 onClick={() => onRemove(item.id)}
                 aria-label="Remove from cart"
-                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50"
+                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-rose-600 transition-colors hover:bg-rose-50"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Remove</span>

@@ -21,8 +21,8 @@ function avatarFor(item: TestimonialItem): string {
 
 function TestimonialCard({ t }: { t: TestimonialItem }) {
   return (
-    <div className="group relative h-full overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-6">
-      <Quote className="absolute -top-1 -right-1 h-20 w-20 text-brand-border transition-transform duration-500 group-hover:scale-110" />
+    <div className="group relative h-full overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-violet-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-6">
+      <Quote className="absolute -top-1 -right-1 h-20 w-20 text-violet-100 transition-transform duration-500 group-hover:scale-110" />
 
       <div className="relative">
         <div className="flex items-center gap-1">
@@ -31,19 +31,19 @@ function TestimonialCard({ t }: { t: TestimonialItem }) {
               key={i}
               className={`h-4 w-4 ${
                 i < t.rating
-                  ? "fill-brand-gold text-brand-gold"
-                  : "fill-brand-border text-brand-border"
+                  ? "fill-yellow-400 text-yellow-400"
+                  : "fill-gray-200 text-gray-200"
               }`}
             />
           ))}
         </div>
 
-        <p className="mt-3 text-sm leading-relaxed text-foreground">
+        <p className="mt-3 text-sm leading-relaxed text-gray-700">
           &ldquo;{t.text}&rdquo;
         </p>
 
         <div className="mt-5 flex items-center gap-3">
-          <div className="relative h-11 w-11 overflow-hidden rounded-full ring-2 ring-brand-border">
+          <div className="relative h-11 w-11 overflow-hidden rounded-full ring-2 ring-violet-200">
             <Image
               src={avatarFor(t)}
               alt={t.name}
@@ -54,8 +54,8 @@ function TestimonialCard({ t }: { t: TestimonialItem }) {
             />
           </div>
           <div>
-            <p className="text-sm font-bold text-foreground">{t.name}</p>
-            {t.location && <p className="text-xs text-muted-foreground">{t.location}</p>}
+            <p className="text-sm font-bold text-gray-900">{t.name}</p>
+            {t.location && <p className="text-xs text-gray-500">{t.location}</p>}
           </div>
         </div>
       </div>
@@ -86,15 +86,15 @@ export default function Testimonials({
   return (
     <section>
       <div className="mb-6 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full bg-brand-light-bg px-3 py-1.5">
-          <Quote className="h-3.5 w-3.5 text-brand-red" />
-          <span className="text-[11px] font-bold uppercase tracking-wide text-brand-red">
+        <div className="inline-flex items-center gap-2 rounded-full bg-violet-100 px-3 py-1.5">
+          <Quote className="h-3.5 w-3.5 text-violet-700" />
+          <span className="text-[11px] font-bold uppercase tracking-wide text-violet-700">
             Testimonials
           </span>
         </div>
-        <h2 className="mt-3 text-2xl font-black tracking-tight text-foreground sm:text-3xl lg:text-4xl">
+        <h2 className="mt-3 text-2xl font-black tracking-tight text-gray-900 sm:text-3xl lg:text-4xl">
           Loved by{" "}
-          <span className="text-brand-red">
+          <span className="bg-linear-to-r from-violet-600 to-pink-600 bg-clip-text text-transparent">
             shoppers like you
           </span>
         </h2>

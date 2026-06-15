@@ -125,7 +125,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-brand-black">
+      <h2 className="text-xl font-bold text-violet-600">
         {title}
       </h2>
 
@@ -134,7 +134,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
           <Link
             key={product.id}
             href={`/products/${product.slug}`}
-            className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-brand-red transition-all"
+            className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-violet-200 transition-all"
           >
             {/* Image Container */}
             <div className="relative aspect-square bg-gray-50 p-2">
@@ -148,7 +148,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
 
               {/* Discount Badge */}
               {product.discount > 0 && (
-                <span className="absolute top-2 left-2 px-1.5 py-0.5 bg-brand-red text-brand-white text-[10px] font-semibold rounded">
+                <span className="absolute top-2 left-2 px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-semibold rounded">
                   -{product.discount}%
                 </span>
               )}
@@ -182,7 +182,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
                   void handleAddToBag(e, product)
                 }}
                 disabled={cartBusyId !== null}
-                className="w-full py-1.5 bg-brand-red text-brand-white text-xs font-medium rounded-lg hover:bg-brand-red-hover transition-colors flex items-center justify-center gap-1"
+                className="w-full py-1.5 bg-violet-600 text-white text-xs font-medium rounded-lg hover:bg-violet-700 transition-colors flex items-center justify-center gap-1"
               >
                 {cartBusyId === product.id ? (
                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -202,7 +202,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
           <button 
             onClick={handleLoadMore}
             disabled={isLoading}
-            className="inline-flex items-center gap-2 px-8 py-2.5 bg-white border-2 border-gray-200 text-gray-700 font-medium rounded-lg hover:border-brand-red hover:bg-brand-light-bg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-8 py-2.5 bg-white border-2 border-gray-200 text-gray-700 font-medium rounded-lg hover:border-violet-300 hover:bg-violet-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <>

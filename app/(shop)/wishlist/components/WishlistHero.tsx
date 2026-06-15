@@ -14,10 +14,10 @@ export default function WishlistHero({
   priceDrops,
 }: WishlistHeroProps) {
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-brand-border bg-brand-black px-6 py-8 text-brand-white shadow-lg sm:px-10 sm:py-10">
+    <section className="relative overflow-hidden rounded-3xl border border-violet-200/60 bg-linear-to-br from-violet-600 via-indigo-600 to-fuchsia-600 px-6 py-8 text-white shadow-lg sm:px-10 sm:py-10">
       {/* Decorative blobs */}
       <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/15 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-brand-red/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-fuchsia-300/30 blur-3xl" />
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.08]"
         style={{

@@ -94,11 +94,11 @@ export default function SalesChart({ sales, loading }: SalesChartProps) {
   );
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-brand-border bg-white p-4 shadow-sm sm:p-5">
+    <section className="overflow-hidden rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5">
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-brand-red" />
+            <TrendingUp className="h-4 w-4 text-violet-600" />
             <h2 className="text-sm font-bold text-gray-900">Sales Overview</h2>
             <span className="text-[11px] font-medium text-gray-500">
               · last {range === "7d" ? "7" : "14"} days
@@ -110,7 +110,7 @@ export default function SalesChart({ sales, loading }: SalesChartProps) {
                 Revenue
               </p>
               {loading ? (
-                <div className="mt-1 h-7 w-32 animate-pulse rounded-md bg-brand-light-bg" />
+                <div className="mt-1 h-7 w-32 animate-pulse rounded-md bg-violet-50" />
               ) : (
                 <p className="text-xl font-extrabold text-gray-900">
                   BDT {Math.round(totalRevenue).toLocaleString()}
@@ -122,7 +122,7 @@ export default function SalesChart({ sales, loading }: SalesChartProps) {
                 Orders
               </p>
               {loading ? (
-                <div className="mt-1 h-7 w-16 animate-pulse rounded-md bg-brand-light-bg" />
+                <div className="mt-1 h-7 w-16 animate-pulse rounded-md bg-violet-50" />
               ) : (
                 <p className="text-xl font-extrabold text-gray-900">
                   {totalOrders.toLocaleString()}
@@ -132,7 +132,7 @@ export default function SalesChart({ sales, loading }: SalesChartProps) {
           </div>
         </div>
 
-        <div className="inline-flex rounded-xl border border-brand-border bg-brand-light-bg p-1 text-xs font-bold">
+        <div className="inline-flex rounded-xl border border-violet-100 bg-violet-50/60 p-1 text-xs font-bold">
           {(["7d", "14d"] as Range[]).map((r) => (
             <button
               key={r}
@@ -141,8 +141,8 @@ export default function SalesChart({ sales, loading }: SalesChartProps) {
               className={cn(
                 "rounded-lg px-3 py-1.5 transition-all duration-200",
                 range === r
-                  ? "bg-brand-white text-brand-red shadow-sm"
-                  : "text-gray-600 hover:text-brand-red",
+                  ? "bg-white text-violet-700 shadow-sm"
+                  : "text-gray-600 hover:text-violet-700",
               )}
             >
               {r === "7d" ? "7 days" : "14 days"}
@@ -153,7 +153,7 @@ export default function SalesChart({ sales, loading }: SalesChartProps) {
 
       <div className="relative -mx-2 overflow-hidden">
         {loading ? (
-          <div className="h-56 w-full animate-pulse rounded-xl bg-brand-light-bg" />
+          <div className="h-56 w-full animate-pulse rounded-xl bg-violet-50/60" />
         ) : !hasData ? (
           <div className="grid h-56 w-full place-items-center text-sm text-gray-500">
             No orders yet in this window.
@@ -167,8 +167,12 @@ export default function SalesChart({ sales, loading }: SalesChartProps) {
           >
             <defs>
               <linearGradient id="salesArea" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--brand-red)" stopOpacity="0.35" />
-                <stop offset="100%" stopColor="var(--brand-red)" stopOpacity="0" />
+                <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.35" />
+                <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+              </linearGradient>
+              <linearGradient id="salesStroke" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#7c3aed" />
+                <stop offset="100%" stopColor="#4f46e5" />
               </linearGradient>
             </defs>
 
@@ -182,7 +186,7 @@ export default function SalesChart({ sales, loading }: SalesChartProps) {
                     x2={CHART_WIDTH - CHART_PAD.r}
                     y1={y}
                     y2={y}
-                    stroke="var(--brand-border)"
+                    stroke="#ede9fe"
                     strokeDasharray="3 4"
                   />
                   <text
@@ -203,7 +207,7 @@ export default function SalesChart({ sales, loading }: SalesChartProps) {
             <path
               d={linePath}
               fill="none"
-              stroke="var(--brand-red)"
+              stroke="url(#salesStroke)"
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -218,7 +222,7 @@ export default function SalesChart({ sales, loading }: SalesChartProps) {
                   cy={p.y}
                   r="3.5"
                   fill="#fff"
-                  stroke="var(--brand-red)"
+                  stroke="#7c3aed"
                   strokeWidth="2"
                 />
                 <text

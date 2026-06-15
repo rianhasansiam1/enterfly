@@ -173,9 +173,9 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
     (authStatus === "authenticated" && state.status === "loading")
   ) {
     return (
-      <main className="min-h-screen bg-brand-light-bg">
+      <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
         <div className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6">
-          <div className="rounded-3xl border border-brand-border bg-brand-white p-10 text-center text-sm text-brand-text-muted shadow-sm">
+          <div className="rounded-3xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700 shadow-sm">
             Loading order summary...
           </div>
         </div>
@@ -191,7 +191,7 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
           ? state.message
           : "Sign in or open the original checkout link to view this order.";
     return (
-      <main className="min-h-screen bg-brand-light-bg">
+      <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
         <div className="mx-auto w-full max-w-2xl px-4 py-16 sm:px-6">
           <div className="rounded-3xl border border-rose-200 bg-white p-10 text-center shadow-sm">
             <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-rose-100 text-rose-700">
@@ -206,7 +206,7 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
             <div className="mt-6 flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-3">
               <Link
                 href="/products"
-                className="inline-flex items-center gap-2 rounded-2xl bg-brand-red px-5 py-2.5 text-sm font-bold text-brand-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-xl"
+                className="inline-flex items-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
               >
                 <ShoppingBag className="h-4 w-4" />
                 Browse products
@@ -214,7 +214,7 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
               {authStatus !== "authenticated" && (
                 <Link
                   href={`/login?callbackUrl=/orders/${orderId}`}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-brand-border bg-brand-white px-5 py-2.5 text-sm font-bold text-brand-black transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-red hover:bg-brand-light-bg"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-violet-200 bg-white px-5 py-2.5 text-sm font-bold text-violet-700 transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-50"
                 >
                   Sign in
                 </Link>
@@ -237,11 +237,11 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
   ].filter(Boolean);
 
   return (
-    <main className="min-h-screen bg-brand-light-bg">
+    <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
       <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
         {/* Hero */}
-        <section className="overflow-hidden rounded-3xl border border-brand-border bg-brand-white shadow-sm">
-          <div className="relative bg-brand-black px-6 py-8 text-brand-white sm:px-10">
+        <section className="overflow-hidden rounded-3xl border border-violet-100 bg-white shadow-sm">
+          <div className="relative bg-linear-to-br from-violet-600 via-indigo-600 to-fuchsia-600 px-6 py-8 text-white sm:px-10">
             <div
               className="pointer-events-none absolute inset-0 opacity-10"
               style={{
@@ -288,7 +288,7 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
               </div>
             </div>
           </div>
-          <div className="grid gap-3 border-t border-brand-border p-5 sm:grid-cols-4 sm:p-6">
+          <div className="grid gap-3 border-t border-violet-100 p-5 sm:grid-cols-4 sm:p-6">
             <Stat label="Order ID" value={order.id} mono />
             <Stat label="Order date" value={formatDateTime(order.createdAt)} />
             <Stat
@@ -330,9 +330,9 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="flex flex-col gap-5">
             {/* Customer + shipping */}
-            <section className="rounded-3xl border border-brand-border bg-brand-white p-5 shadow-sm sm:p-6">
+            <section className="rounded-3xl border border-violet-100 bg-white p-5 shadow-sm sm:p-6">
               <header className="mb-4 flex items-center gap-2">
-                <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-light-bg text-brand-black">
+                <span className="grid h-8 w-8 place-items-center rounded-lg bg-violet-100 text-violet-700">
                   <User className="h-4 w-4" />
                 </span>
                 <h2 className="text-lg font-bold text-gray-900">
@@ -380,10 +380,10 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
             </section>
 
             {/* Items */}
-            <section className="rounded-3xl border border-brand-border bg-brand-white p-5 shadow-sm sm:p-6">
+            <section className="rounded-3xl border border-violet-100 bg-white p-5 shadow-sm sm:p-6">
               <header className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-light-bg text-brand-black">
+                  <span className="grid h-8 w-8 place-items-center rounded-lg bg-violet-100 text-violet-700">
                     <Package className="h-4 w-4" />
                   </span>
                   <h2 className="text-lg font-bold text-gray-900">Items</h2>
@@ -393,14 +393,14 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
                   {order.items.length === 1 ? "product" : "products"}
                 </span>
               </header>
-              <ul className="divide-y divide-brand-border">
+              <ul className="divide-y divide-violet-100">
                 {order.items.map((item) => {
                   return (
                     <li
                       key={item.id}
                       className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
                     >
-                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-brand-border bg-brand-light-bg">
+                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-violet-100 bg-violet-50">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={item.productImage || FALLBACK_IMAGE}
@@ -433,7 +433,7 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
 
           {/* Totals */}
           <aside className="lg:sticky lg:top-[88px] lg:self-start">
-            <section className="rounded-3xl border border-brand-border bg-brand-white p-5 shadow-sm sm:p-6">
+            <section className="rounded-3xl border border-violet-100 bg-white p-5 shadow-sm sm:p-6">
               <h2 className="text-lg font-bold text-gray-900">Total</h2>
               <div className="mt-4 space-y-2.5 text-sm">
                 <SummaryRow label="Subtotal" value={order.subtotal} />
@@ -457,12 +457,12 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
                   <SummaryRow label="Tax" value={order.taxAmount} />
                 )}
               </div>
-              <div className="mt-4 rounded-2xl border border-brand-border bg-brand-light-bg p-4">
+              <div className="mt-4 rounded-2xl border border-violet-100 bg-linear-to-br from-violet-50 via-white to-fuchsia-50 p-4">
                 <div className="flex items-baseline justify-between">
                   <span className="text-sm font-semibold text-gray-700">
                     Grand total
                   </span>
-                  <span className="text-2xl font-extrabold text-brand-red sm:text-3xl">
+                  <span className="text-2xl font-extrabold text-violet-700 sm:text-3xl">
                     BDT {order.totalAmount.toLocaleString()}
                   </span>
                 </div>
@@ -476,7 +476,7 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
                 type="button"
                 onClick={handleDownload}
                 disabled={downloading}
-                className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand-red text-base font-bold text-brand-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-xl disabled:cursor-not-allowed disabled:bg-gray-300 disabled:hover:translate-y-0"
+                className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 text-base font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:from-gray-300 disabled:via-gray-300 disabled:to-gray-300 disabled:hover:translate-y-0"
                 aria-busy={downloading}
               >
                 <Download className="h-4 w-4" />
@@ -491,7 +491,7 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
               <button
                 type="button"
                 onClick={() => router.push("/products")}
-                className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-brand-border bg-brand-white text-sm font-bold text-brand-black transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-red hover:bg-brand-light-bg"
+                className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-violet-200 bg-white text-sm font-bold text-violet-700 transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-50"
               >
                 <ShoppingBag className="h-4 w-4" />
                 Continue shopping
@@ -515,7 +515,7 @@ function Field({
 }) {
   return (
     <div className="flex items-start gap-2.5">
-      <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-brand-light-bg text-brand-black">
+      <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-violet-50 text-violet-700">
         {icon}
       </span>
       <div className="min-w-0 flex-1">
@@ -542,7 +542,7 @@ function Stat({
   mono?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-brand-border bg-brand-white p-3">
+    <div className="rounded-2xl border border-violet-100 bg-white p-3">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
         {label}
       </p>

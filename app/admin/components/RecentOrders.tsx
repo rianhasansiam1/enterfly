@@ -22,8 +22,8 @@ type RecentOrdersProps = {
 
 export default function RecentOrders({ orders, loading }: RecentOrdersProps) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-brand-border bg-white shadow-sm">
-      <header className="flex items-center justify-between border-b border-brand-border px-4 py-3 sm:px-5">
+    <section className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm">
+      <header className="flex items-center justify-between border-b border-gray-100 px-4 py-3 sm:px-5">
         <div>
           <h2 className="text-sm font-bold text-gray-900">Recent Orders</h2>
           <p className="text-xs text-gray-500">
@@ -32,7 +32,7 @@ export default function RecentOrders({ orders, loading }: RecentOrdersProps) {
         </div>
         <Link
           href="/admin/orders"
-          className="group inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-brand-red transition-colors duration-200 hover:bg-brand-light-bg"
+          className="group inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-violet-700 transition-colors duration-200 hover:bg-violet-50"
         >
           View all
           <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -44,13 +44,13 @@ export default function RecentOrders({ orders, loading }: RecentOrdersProps) {
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
-              className="h-12 w-full animate-pulse rounded-xl bg-brand-light-bg"
+              className="h-12 w-full animate-pulse rounded-xl bg-violet-50/60"
             />
           ))}
         </div>
       ) : orders.length === 0 ? (
         <div className="grid place-items-center px-6 py-12 text-center">
-          <ShoppingBag className="h-7 w-7 text-brand-text-muted" />
+          <ShoppingBag className="h-7 w-7 text-violet-300" />
           <p className="mt-2 text-sm font-semibold text-gray-700">
             No orders yet
           </p>
@@ -61,7 +61,7 @@ export default function RecentOrders({ orders, loading }: RecentOrdersProps) {
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-brand-light-bg text-left">
+            <thead className="bg-violet-50/60 text-left">
               <tr className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
                 <th className="px-4 py-2.5 sm:px-5">Order</th>
                 <th className="px-4 py-2.5">Customer</th>
@@ -74,12 +74,12 @@ export default function RecentOrders({ orders, loading }: RecentOrdersProps) {
               {orders.map((order) => (
                 <tr
                   key={order.id}
-                  className="transition-colors duration-200 hover:bg-brand-light-bg"
+                  className="transition-colors duration-200 hover:bg-violet-50/40"
                 >
                   <td className="px-4 py-3 sm:px-5">
                     <Link
                       href={`/admin/orders`}
-                      className="font-mono text-xs font-bold text-brand-red hover:underline"
+                      className="font-mono text-xs font-bold text-violet-700 hover:underline"
                     >
                       #{order.orderNumber}
                     </Link>

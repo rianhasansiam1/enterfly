@@ -28,14 +28,14 @@ const ICONS = {
 const STYLES = {
   success: "bg-emerald-50 border-emerald-200 text-emerald-800",
   error: "bg-rose-50 border-rose-200 text-rose-800",
-  info: "bg-brand-red/5 border-brand-red/20 text-brand-red",
+  info: "bg-violet-50 border-violet-200 text-violet-800",
   warning: "bg-amber-50 border-amber-200 text-amber-800",
 } as const;
 
 const ICON_STYLES = {
   success: "text-emerald-500",
   error: "text-rose-500",
-  info: "text-brand-red",
+  info: "text-violet-500",
   warning: "text-amber-500",
 } as const;
 

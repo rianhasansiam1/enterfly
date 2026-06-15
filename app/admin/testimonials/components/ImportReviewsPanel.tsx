@@ -112,7 +112,7 @@ export default function ImportReviewsPanel({
   };
 
   return (
-    <div className="rounded-2xl border border-brand-border bg-white p-4 shadow-sm sm:p-5">
+    <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-sm font-bold text-gray-900">
@@ -134,26 +134,26 @@ export default function ImportReviewsPanel({
       </div>
 
       <label className="relative mt-4 flex items-center">
-        <Search className="pointer-events-none absolute left-3 h-4 w-4 text-brand-text-muted" />
+        <Search className="pointer-events-none absolute left-3 h-4 w-4 text-violet-400" />
         <input
           type="text"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search reviews by author, product, text..."
-          className="h-10 w-full rounded-xl border border-brand-border pl-9 pr-3 text-sm outline-none transition focus:border-brand-red"
+          className="h-10 w-full rounded-xl border border-violet-200 pl-9 pr-3 text-sm outline-none transition focus:border-violet-500"
         />
       </label>
 
       <div className="mt-4 max-h-96 space-y-3 overflow-y-auto pr-1">
         {loading ? (
-          <div className="rounded-xl border border-brand-border bg-brand-light-bg p-8 text-center text-sm text-brand-text-muted">
+          <div className="rounded-xl border border-violet-100 bg-violet-50/40 p-8 text-center text-sm text-violet-700">
             <span className="inline-flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
               Loading reviews...
             </span>
           </div>
         ) : candidates.length === 0 ? (
-          <div className="rounded-xl border border-brand-border bg-brand-light-bg p-8 text-center text-sm text-gray-600">
+          <div className="rounded-xl border border-violet-100 bg-violet-50/40 p-8 text-center text-sm text-gray-600">
             No reviews available to import.
           </div>
         ) : (
@@ -163,7 +163,7 @@ export default function ImportReviewsPanel({
             return (
               <div
                 key={review.id}
-                className="rounded-xl border border-brand-border p-3 sm:p-4"
+                className="rounded-xl border border-violet-100 p-3 sm:p-4"
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold text-gray-900">
@@ -196,7 +196,7 @@ export default function ImportReviewsPanel({
                       }))
                     }
                     placeholder="Location (optional, e.g. Dhaka)"
-                    className="h-9 flex-1 rounded-lg border border-brand-border px-3 text-xs outline-none transition focus:border-brand-red"
+                    className="h-9 flex-1 rounded-lg border border-violet-200 px-3 text-xs outline-none transition focus:border-violet-500"
                   />
                   <button
                     type="button"
@@ -204,7 +204,7 @@ export default function ImportReviewsPanel({
                       void handleImport(review);
                     }}
                     disabled={isBusy}
-                    className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-brand-red px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-red-hover disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-linear-to-r from-violet-600 to-indigo-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:from-violet-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isBusy ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />

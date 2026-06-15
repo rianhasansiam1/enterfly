@@ -30,9 +30,9 @@ export default function BulkActionsBar({
           : "pointer-events-none translate-y-12 opacity-0",
       )}
     >
-      <div className="pointer-events-auto flex w-full max-w-2xl items-center gap-3 rounded-2xl border border-white/10 bg-brand-black/95 px-4 py-3 text-brand-white shadow-2xl backdrop-blur-xl">
+      <div className="pointer-events-auto flex w-full max-w-2xl items-center gap-3 rounded-2xl border border-violet-300/60 bg-gray-900/95 px-4 py-3 text-white shadow-2xl backdrop-blur-xl">
         <div className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-red text-sm font-bold">
+          <span className="grid h-8 w-8 place-items-center rounded-full bg-violet-500 text-sm font-bold">
             {selectedCount}
           </span>
           <p className="text-sm font-medium">
@@ -45,7 +45,7 @@ export default function BulkActionsBar({
           <button
             type="button"
             onClick={onMoveAllToCart}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-brand-red px-3 py-2 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-red-hover"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-linear-to-r from-violet-500 to-indigo-500 px-3 py-2 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:from-violet-400 hover:to-indigo-400"
           >
             <ShoppingCart className="h-4 w-4" />
             <span className="hidden sm:inline">Move to cart</span>

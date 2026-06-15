@@ -67,16 +67,16 @@ export default function BannerFormDrawer({
 
       <aside
         className={cn(
-          "fixed inset-y-0 right-0 z-70 w-full max-w-md border-l border-brand-border bg-brand-white shadow-2xl transition-transform duration-300",
+          "fixed inset-y-0 right-0 z-70 w-full max-w-md border-l border-violet-100 bg-white shadow-2xl transition-transform duration-300",
           editing ? "translate-x-0" : "translate-x-full",
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="border-b border-brand-border bg-brand-black px-5 py-4 text-white">
+          <div className="border-b border-violet-100 bg-linear-to-r from-violet-600 to-indigo-700 px-5 py-4 text-white">
             <h2 className="text-lg font-bold">
               {editing?.mode === "create" ? "Create banner" : "Edit banner"}
             </h2>
-            <p className="mt-0.5 text-xs text-white/70">
+            <p className="mt-0.5 text-xs text-violet-100">
               {editing
                 ? TABS.find((t) => t.kind === editing.kind)?.description
                 : ""}
@@ -106,19 +106,19 @@ export default function BannerFormDrawer({
               )}
             </div>
 
-            <div className="border-t border-brand-border bg-brand-white px-5 py-4">
+            <div className="border-t border-violet-100 bg-white px-5 py-4">
               <div className="flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="h-10 rounded-xl border border-brand-border px-4 text-sm font-semibold text-foreground transition hover:bg-brand-light-bg"
+                  className="h-10 rounded-xl border border-violet-200 px-4 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || !editing}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-brand-red px-4 text-sm font-semibold text-white transition hover:bg-brand-red-hover disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white transition hover:from-violet-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                   {editing?.mode === "create" ? "Create" : "Save changes"}

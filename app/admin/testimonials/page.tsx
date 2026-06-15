@@ -229,7 +229,7 @@ export default function AdminTestimonialsPage() {
         activeCount={activeCount}
       />
 
-      <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-3 text-xs text-amber-800">
+      <div className="rounded-2xl border border-violet-100 bg-amber-50/60 p-3 text-xs text-amber-800">
         The About page shows your <strong>active</strong> testimonials. With 3
         or fewer it renders a static grid; with more than 3 it switches to a
         smooth left-to-right auto-scrolling marquee.

@@ -93,7 +93,7 @@ const TopBannerClient = ({ slides }: { slides: TopBannerSlide[] }) => {
   if (!isVisible || !currentSale) return null;
 
   return (
-    <div className="relative w-screen max-w-[100vw] overflow-hidden bg-brand-black">
+    <div className="relative w-screen max-w-[100vw] overflow-hidden bg-linear-to-r from-violet-700 via-violet-600 to-indigo-600">
       <div className="mx-auto flex min-h-10 w-full max-w-7xl items-center gap-1.5 px-2 py-1.5 sm:gap-3 sm:px-4">
         <Link
           href={currentSale.link || "/products"}
@@ -120,7 +120,7 @@ const TopBannerClient = ({ slides }: { slides: TopBannerSlide[] }) => {
             <div className="hidden h-4 w-px shrink-0 bg-white/40 sm:block"></div>
 
             <p className="min-w-0 truncate text-[10px] font-medium sm:text-xs md:text-sm">
-              <span className="mx-1 font-extrabold text-xs text-brand-gold sm:text-base md:text-lg">
+              <span className="mx-1 font-extrabold text-xs text-yellow-300 sm:text-base md:text-lg">
                 {currentSale.discount}
               </span>
               <span className="hidden sm:inline">{currentSale.description}</span>
@@ -142,8 +142,8 @@ const TopBannerClient = ({ slides }: { slides: TopBannerSlide[] }) => {
         <Link
           href={currentSale.link || "/products"}
           aria-label="Shop now"
-          className="hidden shrink-0 items-center justify-center gap-1.5 rounded-md bg-brand-white text-brand-red sm:flex
-            text-xs font-semibold shadow-sm transition-colors duration-200 hover:bg-brand-light-bg sm:h-auto sm:w-auto sm:px-3 sm:py-1 md:text-sm"
+          className="hidden shrink-0 items-center justify-center gap-1.5 rounded-md bg-white text-violet-700 sm:flex
+            text-xs font-semibold shadow-sm transition-colors duration-200 hover:bg-violet-50 sm:h-auto sm:w-auto sm:px-3 sm:py-1 md:text-sm"
         >
           <span>Shop Now</span>
           <ArrowRight className="h-3.5 w-3.5" />

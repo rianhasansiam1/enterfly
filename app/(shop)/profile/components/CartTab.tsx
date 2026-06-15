@@ -203,10 +203,10 @@ export default function CartTab() {
 
   return (
     <div className="flex flex-col gap-4 sm:gap-5">
-      <header className="rounded-2xl border border-brand-border bg-brand-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
+      <header className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-light-bg text-brand-black">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-violet-100 text-violet-700">
               <ShoppingBag className="h-4 w-4" />
             </span>
             <div className="min-w-0">
@@ -222,7 +222,7 @@ export default function CartTab() {
           </div>
           <Link
             href="/cart"
-            className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-brand-border bg-brand-white px-3 py-2 text-xs font-bold text-brand-red transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-red hover:bg-brand-light-bg sm:w-auto"
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-violet-700 transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-50 sm:w-auto"
           >
             Open cart
             <ArrowRight className="h-3.5 w-3.5" />
@@ -237,12 +237,12 @@ export default function CartTab() {
       )}
 
       {isLoading && items.length === 0 ? (
-        <div className="rounded-2xl border border-brand-border bg-brand-white p-6 text-center text-sm text-brand-text-muted shadow-sm sm:rounded-3xl sm:p-10">
+        <div className="rounded-2xl border border-violet-100 bg-white p-6 text-center text-sm text-violet-700 shadow-sm sm:rounded-3xl sm:p-10">
           Loading cart...
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-2xl border border-brand-border bg-brand-white p-6 text-center shadow-sm sm:rounded-3xl sm:p-10">
-          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-brand-light-bg text-brand-black">
+        <div className="rounded-2xl border border-violet-100 bg-white p-6 text-center shadow-sm sm:rounded-3xl sm:p-10">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-violet-100 text-violet-700">
             <ShoppingBag className="h-6 w-6" />
           </div>
           <h3 className="mt-4 text-lg font-extrabold text-gray-900">
@@ -253,7 +253,7 @@ export default function CartTab() {
           </p>
           <Link
             href="/products"
-            className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-brand-red px-5 py-2.5 text-sm font-bold text-brand-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-xl"
+            className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
           >
             <ShoppingBag className="h-4 w-4" />
             Browse products
@@ -272,9 +272,9 @@ export default function CartTab() {
                   exit="exit"
                   variants={LIST_ITEM_VARIANTS}
                   transition={LIST_ITEM_TRANSITION}
-                  className="grid grid-cols-[56px_minmax(0,1fr)] items-start gap-3 overflow-hidden rounded-2xl border border-brand-border bg-brand-white p-3 shadow-sm sm:grid-cols-[64px_minmax(0,1fr)_auto] sm:items-center sm:p-4"
+                  className="grid grid-cols-[56px_minmax(0,1fr)] items-start gap-3 overflow-hidden rounded-2xl border border-violet-100 bg-white p-3 shadow-sm sm:grid-cols-[64px_minmax(0,1fr)_auto] sm:items-center sm:p-4"
                 >
-                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-brand-border bg-brand-light-bg sm:h-16 sm:w-16">
+                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-violet-100 bg-violet-50 sm:h-16 sm:w-16">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={item.image || FALLBACK_PRODUCT_IMAGE}
@@ -285,7 +285,7 @@ export default function CartTab() {
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/products/${item.productId}`}
-                    className="line-clamp-2 text-sm font-bold text-gray-900 hover:text-brand-red"
+                    className="line-clamp-2 text-sm font-bold text-gray-900 hover:text-violet-700"
                   >
                     {item.name}
                   </Link>
@@ -305,7 +305,7 @@ export default function CartTab() {
                     )}
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <div className="inline-flex items-center rounded-xl border border-brand-border bg-brand-white">
+                    <div className="inline-flex items-center rounded-xl border border-violet-100 bg-white">
                       <button
                         type="button"
                         onClick={() =>
@@ -313,7 +313,7 @@ export default function CartTab() {
                         }
                         disabled={item.quantity <= 1}
                         aria-label="Decrease quantity"
-                        className="grid h-8 w-8 place-items-center rounded-l-xl text-gray-700 transition-colors hover:bg-brand-light-bg disabled:cursor-not-allowed disabled:opacity-40"
+                        className="grid h-8 w-8 place-items-center rounded-l-xl text-gray-700 transition-colors hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <Minus className="h-3.5 w-3.5" />
                       </button>
@@ -327,7 +327,7 @@ export default function CartTab() {
                         }
                         disabled={item.quantity >= item.stock}
                         aria-label="Increase quantity"
-                        className="grid h-8 w-8 place-items-center rounded-r-xl text-gray-700 transition-colors hover:bg-brand-light-bg disabled:cursor-not-allowed disabled:opacity-40"
+                        className="grid h-8 w-8 place-items-center rounded-r-xl text-gray-700 transition-colors hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <Plus className="h-3.5 w-3.5" />
                       </button>
@@ -353,26 +353,26 @@ export default function CartTab() {
           {hiddenCount > 0 && (
             <Link
               href="/cart"
-              className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-dashed border-brand-border bg-brand-white px-4 py-3 text-sm font-bold text-brand-red transition-colors hover:bg-brand-light-bg"
+              className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-dashed border-violet-300 bg-white px-4 py-3 text-sm font-bold text-violet-700 transition-colors hover:bg-violet-50"
             >
               View {hiddenCount} more {hiddenCount === 1 ? "item" : "items"} in cart
               <ArrowRight className="h-4 w-4" />
             </Link>
           )}
 
-          <section className="rounded-2xl border border-brand-border bg-brand-light-bg p-4 shadow-sm sm:rounded-3xl sm:p-5">
+          <section className="rounded-2xl border border-violet-100 bg-linear-to-br from-violet-50 via-white to-fuchsia-50 p-4 shadow-sm sm:rounded-3xl sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                   Subtotal
                 </p>
-                <p className="text-xl font-extrabold text-brand-red sm:text-2xl">
+                <p className="text-xl font-extrabold text-violet-700 sm:text-2xl">
                   {formatBdt(summary.subtotal)}
                 </p>
               </div>
               <Link
                 href="/checkout"
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-brand-red px-5 text-sm font-bold text-brand-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-xl sm:w-auto"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:w-auto"
               >
                 <Lock className="h-4 w-4" />
                 Checkout

@@ -29,19 +29,19 @@ export default function AdminSidebar({ open, onClose }: Props) {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-60 flex w-72 flex-col border-r border-brand-border bg-white shadow-xl transition-transform duration-300 ease-out lg:sticky lg:top-0 lg:z-0 lg:h-screen lg:translate-x-0 lg:shadow-sm",
+          "fixed inset-y-0 left-0 z-60 flex w-72 flex-col border-r border-violet-100 bg-white shadow-xl transition-transform duration-300 ease-out lg:sticky lg:top-0 lg:z-0 lg:h-screen lg:translate-x-0 lg:shadow-sm",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
         {/* Brand block */}
-        <div className="flex items-center justify-between border-b border-brand-border bg-brand-black px-4 py-4">
+        <div className="flex items-center justify-between border-b border-violet-100 bg-linear-to-r from-violet-600 to-indigo-700 px-4 py-4">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/30">
               <ShieldCheck className="h-5 w-5 text-white" />
             </div>
             <div className="leading-tight">
               <p className="text-sm font-bold text-white">Admin Panel</p>
-              <p className="text-[11px] font-medium text-white/70">EnterFly Console</p>
+              <p className="text-[11px] font-medium text-violet-100">EnterFly Console</p>
             </div>
           </div>
           <button
@@ -75,15 +75,15 @@ export default function AdminSidebar({ open, onClose }: Props) {
                     className={cn(
                       "group flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-200",
                       active
-                        ? "bg-brand-red text-brand-white shadow-sm"
-                        : "text-brand-black hover:translate-x-0.5 hover:bg-brand-light-bg hover:text-brand-red",
+                        ? "bg-linear-to-r from-violet-600 to-indigo-600 text-white shadow-sm"
+                        : "text-gray-700 hover:translate-x-0.5 hover:bg-violet-50 hover:text-violet-700",
                     )}
                   >
                     <span className="flex items-center gap-2.5">
                       <Icon
                         className={cn(
                           "h-4 w-4 transition-transform duration-200 group-hover:scale-110",
-                          active ? "text-white" : "text-brand-red",
+                          active ? "text-white" : "text-violet-600",
                         )}
                       />
                       {item.label}
@@ -96,13 +96,13 @@ export default function AdminSidebar({ open, onClose }: Props) {
         </nav>
 
         {/* Footer */}
-        <div className="space-y-1 border-t border-brand-border p-3">
+        <div className="space-y-1 border-t border-gray-100 p-3">
           <Link
             href="/"
             onClick={onClose}
-            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-brand-black transition-all duration-200 hover:translate-x-0.5 hover:bg-brand-light-bg hover:text-brand-red"
+            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-700 transition-all duration-200 hover:translate-x-0.5 hover:bg-violet-50 hover:text-violet-700"
           >
-            <Home className="h-4 w-4 text-brand-red" />
+            <Home className="h-4 w-4 text-violet-600" />
             Exit to Site
           </Link>
           <button

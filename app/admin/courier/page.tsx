@@ -143,14 +143,14 @@ export default function AdminCourierPage() {
   return (
     <section className="space-y-4">
       {/* Heading */}
-      <div className="rounded-2xl border border-brand-border bg-brand-black p-5 text-white shadow-sm">
+      <div className="rounded-2xl border border-violet-100 bg-linear-to-r from-violet-600 to-indigo-600 p-5 text-white shadow-sm">
         <div className="flex items-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/30">
             <ShieldCheck className="h-5 w-5" />
           </span>
           <div>
             <h1 className="text-lg font-bold">Courier Fraud Check</h1>
-            <p className="text-xs text-white/70">
+            <p className="text-xs text-violet-100">
               Review a customer&apos;s delivery track record before dispatching
               an order.
             </p>
@@ -159,7 +159,7 @@ export default function AdminCourierPage() {
       </div>
 
       {/* Manual search */}
-      <div className="rounded-2xl border border-brand-border bg-white p-4 shadow-sm sm:p-5">
+      <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
           Manual lookup
         </p>
@@ -171,20 +171,20 @@ export default function AdminCourierPage() {
           className="flex flex-col gap-3 sm:flex-row"
         >
           <label className="relative flex flex-1 items-center">
-            <Truck className="pointer-events-none absolute left-3 h-4 w-4 text-brand-text-muted" />
+            <Truck className="pointer-events-none absolute left-3 h-4 w-4 text-violet-400" />
             <input
               type="tel"
               inputMode="tel"
               value={manualPhone}
               onChange={(event) => setManualPhone(event.target.value)}
               placeholder="Enter customer phone, e.g. 017XXXXXXXX"
-              className="h-10 w-full rounded-xl border border-brand-border pl-9 pr-3 text-sm outline-none transition focus:border-brand-red"
+              className="h-10 w-full rounded-xl border border-violet-200 pl-9 pr-3 text-sm outline-none transition focus:border-violet-500"
             />
           </label>
           <button
             type="submit"
             disabled={checking || !manualPhone.trim()}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-brand-red px-5 text-sm font-semibold text-white transition hover:bg-brand-red-hover disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-5 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {checking ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -204,7 +204,7 @@ export default function AdminCourierPage() {
 
       {/* Report */}
       {checking && !report ? (
-        <div className="rounded-2xl border border-brand-border bg-white p-10 text-center text-sm text-brand-text-muted shadow-sm">
+        <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700 shadow-sm">
           <span className="inline-flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
             Checking courier history for {activePhone}...
@@ -215,7 +215,7 @@ export default function AdminCourierPage() {
       ) : null}
 
       {/* Customer / order list */}
-      <div className="rounded-2xl border border-brand-border bg-white p-4 shadow-sm sm:p-5">
+      <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -230,7 +230,7 @@ export default function AdminCourierPage() {
             onClick={() => {
               void refreshOrders();
             }}
-            className="inline-flex h-9 items-center gap-2 self-start rounded-xl border border-brand-border px-3 text-sm font-semibold text-brand-black transition hover:bg-brand-light-bg sm:self-auto"
+            className="inline-flex h-9 items-center gap-2 self-start rounded-xl border border-violet-200 px-3 text-sm font-semibold text-violet-700 transition hover:bg-violet-50 sm:self-auto"
           >
             <RotateCcw className="h-4 w-4" />
             Refresh
@@ -238,13 +238,13 @@ export default function AdminCourierPage() {
         </div>
 
         <label className="relative mt-3 flex items-center">
-          <Search className="pointer-events-none absolute left-3 h-4 w-4 text-brand-text-muted" />
+          <Search className="pointer-events-none absolute left-3 h-4 w-4 text-violet-400" />
           <input
             type="text"
             value={orderQuery}
             onChange={(event) => setOrderQuery(event.target.value)}
             placeholder="Search customers by name, phone, or order #..."
-            className="h-10 w-full rounded-xl border border-brand-border pl-9 pr-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 pl-9 pr-3 text-sm outline-none transition focus:border-violet-500"
           />
         </label>
 
@@ -254,9 +254,9 @@ export default function AdminCourierPage() {
           </div>
         )}
 
-        <div className="mt-3 overflow-hidden rounded-xl border border-brand-border">
+        <div className="mt-3 overflow-hidden rounded-xl border border-violet-100">
           {ordersLoading && orders.length === 0 ? (
-            <div className="p-8 text-center text-sm text-brand-text-muted">
+            <div className="p-8 text-center text-sm text-violet-700">
               <span className="inline-flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Loading orders...
@@ -264,13 +264,13 @@ export default function AdminCourierPage() {
             </div>
           ) : customers.length === 0 ? (
             <div className="p-8 text-center text-sm text-gray-600">
-              <Package2 className="mx-auto mb-2 h-8 w-8 text-brand-text-muted" />
+              <Package2 className="mx-auto mb-2 h-8 w-8 text-violet-300" />
               No customers match the current search.
             </div>
           ) : (
             <div className="max-h-112 overflow-x-auto overflow-y-auto">
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 bg-brand-light-bg text-left text-xs uppercase tracking-wider text-brand-black">
+                <thead className="sticky top-0 bg-violet-50 text-left text-xs uppercase tracking-wider text-violet-700">
                   <tr>
                     <th className="px-4 py-3">Customer</th>
                     <th className="px-4 py-3">Phone</th>
@@ -287,8 +287,8 @@ export default function AdminCourierPage() {
                       <tr
                         key={customer.phone}
                         className={cn(
-                          "border-t border-brand-border transition",
-                          isActive ? "bg-brand-light-bg" : "hover:bg-brand-light-bg",
+                          "border-t border-violet-100/70 transition",
+                          isActive ? "bg-violet-50/60" : "hover:bg-violet-50/40",
                         )}
                       >
                         <td className="px-4 py-3 font-semibold text-gray-900">
@@ -316,7 +316,7 @@ export default function AdminCourierPage() {
                               void runCheck(customer.phone);
                             }}
                             disabled={checking}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border px-3 py-1.5 text-xs font-semibold text-brand-black transition hover:bg-brand-light-bg disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 px-3 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {checking && activePhone === customer.phone.trim() ? (
                               <Loader2 className="h-3.5 w-3.5 animate-spin" />

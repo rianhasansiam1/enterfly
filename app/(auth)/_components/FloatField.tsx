@@ -36,19 +36,19 @@ export default function FloatField({
       ? "focus-within:border-emerald-500 focus-within:ring-emerald-200"
       : valid === false
         ? "border-red-300 focus-within:border-red-500 focus-within:ring-red-200"
-        : "focus-within:border-brand-red focus-within:ring-brand-red/20";
+        : "focus-within:border-violet-500 focus-within:ring-violet-200";
 
   const iconClass =
     valid === true
       ? "text-emerald-600"
       : valid === false
         ? "text-red-500"
-        : "text-brand-text-muted group-focus-within:text-brand-red";
+        : "text-violet-500 group-focus-within:text-violet-600";
 
   return (
     <div
       className={cn(
-        "group relative rounded-xl border border-brand-border bg-white shadow-sm transition-all duration-300 focus-within:ring-4",
+        "group relative rounded-xl border border-violet-200 bg-white shadow-sm transition-all duration-300 focus-within:ring-4",
         validationClass,
       )}
     >
@@ -70,15 +70,15 @@ export default function FloatField({
         onBlur={() => setFocused(false)}
         onChange={(event) => onChange(event.target.value)}
         placeholder=" "
-        className="h-12 w-full rounded-xl bg-transparent pl-9 pr-10 text-sm text-brand-text-dark outline-none placeholder:text-transparent"
+        className="h-12 w-full rounded-xl bg-transparent pl-9 pr-10 text-sm text-gray-900 outline-none placeholder:text-transparent"
       />
 
       <label
         className={cn(
           "pointer-events-none absolute transition-all duration-200 ease-out",
           float
-            ? "-top-2 left-3 bg-white px-1.5 text-[11px] font-bold uppercase tracking-wide text-brand-text-dark"
-            : "left-9 top-1/2 -translate-y-1/2 text-sm font-normal normal-case tracking-normal text-brand-text-muted",
+            ? "-top-2 left-3 bg-white px-1.5 text-[11px] font-bold uppercase tracking-wide text-violet-700"
+            : "left-9 top-1/2 -translate-y-1/2 text-sm font-normal normal-case tracking-normal text-gray-500",
         )}
       >
         {label}

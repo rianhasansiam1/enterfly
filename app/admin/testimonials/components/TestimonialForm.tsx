@@ -32,7 +32,7 @@ export default function TestimonialForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="rounded-2xl border border-brand-border bg-white p-4 shadow-sm sm:p-5"
+      className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5"
     >
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold text-gray-900">
@@ -66,7 +66,7 @@ export default function TestimonialForm({
               value={form.name}
               onChange={(event) => update("name", event.target.value)}
               placeholder="e.g. Sneha Iyer"
-              className="h-10 rounded-xl border border-brand-border px-3 text-sm font-normal text-gray-900 outline-none transition focus:border-brand-red"
+              className="h-10 rounded-xl border border-violet-200 px-3 text-sm font-normal text-gray-900 outline-none transition focus:border-violet-500"
             />
           </label>
 
@@ -77,7 +77,7 @@ export default function TestimonialForm({
               value={form.location}
               onChange={(event) => update("location", event.target.value)}
               placeholder="e.g. Dhaka"
-              className="h-10 rounded-xl border border-brand-border px-3 text-sm font-normal text-gray-900 outline-none transition focus:border-brand-red"
+              className="h-10 rounded-xl border border-violet-200 px-3 text-sm font-normal text-gray-900 outline-none transition focus:border-violet-500"
             />
           </label>
 
@@ -86,7 +86,7 @@ export default function TestimonialForm({
             <select
               value={String(form.rating)}
               onChange={(event) => update("rating", Number(event.target.value))}
-              className="h-10 rounded-xl border border-brand-border px-3 text-sm font-normal text-gray-900 outline-none transition focus:border-brand-red"
+              className="h-10 rounded-xl border border-violet-200 px-3 text-sm font-normal text-gray-900 outline-none transition focus:border-violet-500"
             >
               {[5, 4, 3, 2, 1].map((star) => (
                 <option key={star} value={star}>
@@ -105,7 +105,7 @@ export default function TestimonialForm({
               onChange={(event) =>
                 update("position", Number(event.target.value) || 0)
               }
-              className="h-10 rounded-xl border border-brand-border px-3 text-sm font-normal text-gray-900 outline-none transition focus:border-brand-red"
+              className="h-10 rounded-xl border border-violet-200 px-3 text-sm font-normal text-gray-900 outline-none transition focus:border-violet-500"
             />
           </label>
 
@@ -116,7 +116,7 @@ export default function TestimonialForm({
               onChange={(event) => update("text", event.target.value)}
               placeholder="What did the shopper say?"
               rows={3}
-              className="rounded-xl border border-brand-border px-3 py-2 text-sm font-normal text-gray-900 outline-none transition focus:border-brand-red"
+              className="rounded-xl border border-violet-200 px-3 py-2 text-sm font-normal text-gray-900 outline-none transition focus:border-violet-500"
             />
           </label>
 
@@ -127,7 +127,7 @@ export default function TestimonialForm({
               onChange={(event) =>
                 update("status", event.target.value as TestimonialStatus)
               }
-              className="h-10 rounded-xl border border-brand-border px-3 text-sm font-normal text-gray-900 outline-none transition focus:border-brand-red"
+              className="h-10 rounded-xl border border-violet-200 px-3 text-sm font-normal text-gray-900 outline-none transition focus:border-violet-500"
             >
               {STATUS_VALUES.map((status) => (
                 <option key={status} value={status}>
@@ -150,7 +150,7 @@ export default function TestimonialForm({
         <button
           type="submit"
           disabled={saving}
-          className="inline-flex h-10 items-center gap-2 rounded-xl bg-brand-red px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-red-hover disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex h-10 items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:from-violet-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {saving && <Loader2 className="h-4 w-4 animate-spin" />}
           {mode === "create" ? "Add testimonial" : "Save changes"}

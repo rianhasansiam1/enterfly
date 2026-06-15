@@ -54,14 +54,14 @@ export default function ProductToolbar({
   onToggleSidebar,
 }: Props) {
   return (
-    <div className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-brand-border bg-white px-3 py-2.5 shadow-sm transition-shadow duration-300 hover:shadow-md sm:px-4">
+    <div className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-violet-100 bg-white px-3 py-2.5 shadow-sm transition-shadow duration-300 hover:shadow-md sm:px-4">
       <div className="flex items-center gap-2">
         <Button
           type="button"
           onClick={onOpenMobileFilter}
           variant="secondary"
           size="sm"
-          className="bg-brand-light-bg text-brand-black transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-border active:translate-y-0 lg:hidden"
+          className="bg-violet-50 text-violet-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-violet-100 active:translate-y-0 lg:hidden"
         >
           <SlidersHorizontal className="size-4" />
           Filters
@@ -74,7 +74,7 @@ export default function ProductToolbar({
           size="sm"
           aria-label={sidebarOpen ? "Hide filters" : "Show filters"}
           aria-pressed={sidebarOpen}
-          className="hidden bg-brand-light-bg text-brand-black transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-border active:translate-y-0 lg:flex"
+          className="hidden bg-violet-50 text-violet-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-violet-100 active:translate-y-0 lg:flex"
         >
           <SlidersHorizontal
             className={cn(
@@ -106,7 +106,7 @@ export default function ProductToolbar({
               type="button"
               variant="outline"
               size="sm"
-              className="group bg-brand-light-bg text-brand-black transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-light-bg hover:text-brand-red active:translate-y-0 data-[state=open]:bg-brand-light-bg data-[state=open]:text-brand-red"
+              className="group bg-gray-50 text-gray-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-violet-50 hover:text-violet-700 active:translate-y-0 data-[state=open]:bg-violet-50 data-[state=open]:text-violet-700"
             >
               <span className="hidden sm:inline">Sort:</span>
               <span className="font-semibold">{SORT_LABELS[sort]}</span>
@@ -168,8 +168,8 @@ function ViewToggle({
       className={cn(
         "rounded-md p-1.5 transition-all duration-200",
         active
-          ? "scale-100 bg-white text-brand-red shadow-sm"
-          : "text-brand-text-muted hover:scale-105 hover:text-brand-red",
+          ? "scale-100 bg-white text-violet-700 shadow-sm"
+          : "text-gray-500 hover:scale-105 hover:text-violet-600",
       )}
     >
       {children}

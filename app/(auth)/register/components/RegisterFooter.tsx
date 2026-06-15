@@ -29,7 +29,7 @@ export default function RegisterFooter({
         type="button"
         onClick={onBack}
         disabled={currentStep === 0 || isSubmitting}
-        className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-brand-text-muted transition-all hover:-translate-x-0.5 hover:text-brand-red disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-x-0"
+        className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-gray-600 transition-all hover:-translate-x-0.5 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-x-0"
       >
         <ArrowLeft className="h-4 w-4" />
         Back
@@ -39,7 +39,7 @@ export default function RegisterFooter({
         type="button"
         onClick={onNext}
         disabled={!canContinue || isSubmitting}
-        className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-brand-red px-7 py-2.5 text-sm font-bold text-brand-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-lg disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none disabled:hover:translate-y-0"
+        className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-linear-to-r from-violet-600 to-purple-600 px-7 py-2.5 text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:from-violet-700 hover:to-purple-700 hover:shadow-lg disabled:cursor-not-allowed disabled:from-gray-300 disabled:to-gray-300 disabled:shadow-none disabled:hover:translate-y-0"
       >
         <span className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
 

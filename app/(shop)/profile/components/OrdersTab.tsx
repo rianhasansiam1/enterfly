@@ -171,10 +171,10 @@ export default function OrdersTab() {
 
   return (
     <div className="flex flex-col gap-4 sm:gap-5">
-      <header className="rounded-2xl border border-brand-border bg-brand-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
+      <header className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-light-bg text-brand-black">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-violet-100 text-violet-700">
               <Package className="h-4 w-4" />
             </span>
             <div className="min-w-0">
@@ -203,8 +203,8 @@ export default function OrdersTab() {
                 onClick={() => handleStatusFilterChange(filter.id)}
                 className={
                   active
-                    ? "inline-flex shrink-0 snap-start items-center gap-1.5 rounded-xl bg-brand-red px-3 py-1.5 text-xs font-bold text-brand-white shadow-sm"
-                    : "inline-flex shrink-0 snap-start items-center gap-1.5 rounded-xl border border-brand-border bg-brand-white px-3 py-1.5 text-xs font-bold text-foreground hover:border-brand-red hover:text-brand-red"
+                    ? "inline-flex shrink-0 snap-start items-center gap-1.5 rounded-xl bg-violet-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm"
+                    : "inline-flex shrink-0 snap-start items-center gap-1.5 rounded-xl border border-violet-100 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:border-violet-300 hover:text-violet-700"
                 }
                 aria-pressed={active}
               >
@@ -223,7 +223,7 @@ export default function OrdersTab() {
       )}
 
       {state.status === "loading" && (
-        <div className="rounded-2xl border border-brand-border bg-brand-white p-6 text-center text-sm text-brand-text-muted shadow-sm sm:rounded-3xl sm:p-10">
+        <div className="rounded-2xl border border-violet-100 bg-white p-6 text-center text-sm text-violet-700 shadow-sm sm:rounded-3xl sm:p-10">
           Loading orders...
         </div>
       )}
@@ -235,8 +235,8 @@ export default function OrdersTab() {
       )}
 
       {state.status === "ready" && filteredEmpty && (
-        <div className="rounded-2xl border border-brand-border bg-brand-white p-6 text-center shadow-sm sm:rounded-3xl sm:p-10">
-          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-brand-light-bg text-brand-black">
+        <div className="rounded-2xl border border-violet-100 bg-white p-6 text-center shadow-sm sm:rounded-3xl sm:p-10">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-violet-100 text-violet-700">
             <Package className="h-6 w-6" />
           </div>
           <h3 className="mt-4 text-lg font-extrabold text-gray-900">
@@ -249,7 +249,7 @@ export default function OrdersTab() {
           </p>
           <Link
             href="/products"
-            className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-brand-red px-5 py-2.5 text-sm font-bold text-brand-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-xl"
+            className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
           >
             <ShoppingBag className="h-4 w-4" />
             Start shopping
@@ -318,7 +318,7 @@ function OrderRow({
       : null;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-brand-border bg-brand-white shadow-sm sm:rounded-3xl">
+    <div className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm sm:rounded-3xl">
       <div className="flex flex-col gap-4 p-4 sm:p-5 lg:flex-row lg:items-center lg:gap-6">
         <div className="flex min-w-0 flex-1 flex-col items-start gap-3 sm:flex-row sm:gap-4">
           <div className="flex shrink-0 -space-x-3">
@@ -332,7 +332,7 @@ function OrderRow({
               />
             ))}
             {moreItems > 0 && (
-              <span className="grid h-12 w-12 place-items-center rounded-xl border-2 border-white bg-brand-light-bg text-xs font-bold text-brand-black shadow-sm sm:h-16 sm:w-16">
+              <span className="grid h-12 w-12 place-items-center rounded-xl border-2 border-white bg-violet-100 text-xs font-bold text-violet-700 shadow-sm sm:h-16 sm:w-16">
                 +{moreItems}
               </span>
             )}
@@ -376,13 +376,13 @@ function OrderRow({
         </div>
 
         <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-end lg:justify-center">
-          <p className="text-left text-lg font-extrabold text-brand-red sm:text-right">
+          <p className="text-left text-lg font-extrabold text-violet-700 sm:text-right">
             {formatBdt(order.totalAmount)}
           </p>
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
             <Link
               href={`/orders/${order.id}`}
-              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-brand-border bg-brand-white px-3 text-xs font-bold text-brand-red transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-red hover:bg-brand-light-bg"
+              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-violet-200 bg-white px-3 text-xs font-bold text-violet-700 transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-50"
             >
               <Eye className="h-3.5 w-3.5" />
               View
@@ -400,7 +400,7 @@ function OrderRow({
             ) : reviewableProductId ? (
               <Link
                 href={`/products/${reviewableProductId}#reviews`}
-                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-brand-red px-3 text-xs font-bold text-brand-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-md"
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-linear-to-r from-amber-500 to-orange-500 px-3 text-xs font-bold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
               >
                 <Star className="h-3.5 w-3.5" />
                 Review
@@ -408,7 +408,7 @@ function OrderRow({
             ) : (
               <Link
                 href="/products"
-                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-brand-red px-3 text-xs font-bold text-brand-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-md"
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-3 text-xs font-bold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 Reorder
@@ -431,12 +431,12 @@ function Pagination({
   onChange: (next: number) => void;
 }) {
   return (
-    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-2xl border border-brand-border bg-brand-white p-2.5 text-xs font-semibold text-gray-600 shadow-sm sm:p-3">
+    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-2xl border border-violet-100 bg-white p-2.5 text-xs font-semibold text-gray-600 shadow-sm sm:p-3">
       <button
         type="button"
         onClick={() => onChange(Math.max(1, page - 1))}
         disabled={page <= 1}
-        className="inline-flex items-center gap-1 rounded-xl border border-brand-border bg-brand-white px-3 py-1.5 transition-all duration-200 hover:border-brand-red hover:text-brand-red disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-brand-border disabled:hover:text-gray-600"
+        className="inline-flex items-center gap-1 rounded-xl border border-violet-100 bg-white px-3 py-1.5 transition-all duration-200 hover:border-violet-300 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-violet-100 disabled:hover:text-gray-600"
       >
         <ChevronLeft className="h-3.5 w-3.5" />
         <span className="hidden min-[380px]:inline">Previous</span>
@@ -448,7 +448,7 @@ function Pagination({
         type="button"
         onClick={() => onChange(Math.min(totalPages, page + 1))}
         disabled={page >= totalPages}
-        className="inline-flex items-center gap-1 rounded-xl border border-brand-border bg-brand-white px-3 py-1.5 transition-all duration-200 hover:border-brand-red hover:text-brand-red disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-brand-border disabled:hover:text-gray-600"
+        className="inline-flex items-center gap-1 rounded-xl border border-violet-100 bg-white px-3 py-1.5 transition-all duration-200 hover:border-violet-300 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-violet-100 disabled:hover:text-gray-600"
       >
         <span className="hidden min-[380px]:inline">Next</span>
         <ChevronRight className="h-3.5 w-3.5" />

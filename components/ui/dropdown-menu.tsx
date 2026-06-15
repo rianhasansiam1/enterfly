@@ -67,7 +67,7 @@ function DropdownMenuItem({
       data-inset={inset ? "" : undefined}
       className={cn(
         "relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-2.5 py-2 text-sm outline-none transition-colors duration-150",
-        "focus:bg-brand-light-bg focus:text-brand-red",
+        "focus:bg-violet-50 focus:text-violet-700",
         "data-disabled:pointer-events-none data-disabled:opacity-50",
         "data-inset:pl-8",
         className,
@@ -88,7 +88,7 @@ function DropdownMenuCheckboxItem({
       data-slot="dropdown-menu-checkbox-item"
       className={cn(
         "relative flex cursor-pointer select-none items-center gap-2 rounded-lg py-2 pl-8 pr-2.5 text-sm outline-none transition-colors duration-150",
-        "focus:bg-brand-light-bg focus:text-brand-red",
+        "focus:bg-violet-50 focus:text-violet-700",
         "data-disabled:pointer-events-none data-disabled:opacity-50",
         className,
       )}
@@ -126,8 +126,8 @@ function DropdownMenuRadioItem({
       data-slot="dropdown-menu-radio-item"
       className={cn(
         "relative flex cursor-pointer select-none items-center gap-2 rounded-lg py-2 pl-8 pr-2.5 text-sm outline-none transition-colors duration-150",
-        "focus:bg-brand-light-bg focus:text-brand-red",
-        "data-[state=checked]:bg-brand-light-bg data-[state=checked]:text-brand-red data-[state=checked]:font-semibold",
+        "focus:bg-violet-50 focus:text-violet-700",
+        "data-[state=checked]:bg-violet-50 data-[state=checked]:text-violet-700 data-[state=checked]:font-semibold",
         "data-disabled:pointer-events-none data-disabled:opacity-50",
         className,
       )}
@@ -221,8 +221,8 @@ function DropdownMenuSubTrigger({
       data-inset={inset ? "" : undefined}
       className={cn(
         "flex cursor-pointer select-none items-center gap-2 rounded-lg px-2.5 py-2 text-sm outline-none transition-colors duration-150",
-        "focus:bg-brand-light-bg focus:text-brand-red",
-        "data-[state=open]:bg-brand-light-bg data-[state=open]:text-brand-red",
+        "focus:bg-violet-50 focus:text-violet-700",
+        "data-[state=open]:bg-violet-50 data-[state=open]:text-violet-700",
         "data-inset:pl-8",
         className,
       )}

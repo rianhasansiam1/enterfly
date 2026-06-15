@@ -105,7 +105,7 @@ export default function AdminDashboardPage() {
           type="button"
           onClick={() => void load("refresh")}
           disabled={loading}
-          className="inline-flex h-9 items-center gap-2 rounded-xl border border-brand-border bg-white px-3 text-xs font-bold text-brand-red shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-red hover:bg-brand-light-bg disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+          className="inline-flex h-9 items-center gap-2 rounded-xl border border-violet-200 bg-white px-3 text-xs font-bold text-violet-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
         >
           <RotateCw
             className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}

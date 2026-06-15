@@ -186,7 +186,7 @@ export default function SearchBar({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className={cn(
-            "h-10 rounded-xl border-brand-border bg-white/60 pl-11 pr-9 text-sm text-gray-800 focus-visible:bg-white focus-visible:border-brand-red focus-visible:ring-brand-red/30",
+            "h-10 rounded-xl border-violet-500/40 bg-white/60 pl-11 pr-9 text-sm text-gray-800 focus-visible:bg-white focus-visible:border-violet-500 focus-visible:ring-violet-200",
             inputClassName,
           )}
         />
@@ -211,10 +211,10 @@ export default function SearchBar({
         <div
           id={listboxId}
           role="listbox"
-          className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-brand-border bg-white shadow-xl"
+          className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-violet-100 bg-white shadow-xl"
         >
           {isLoading && (
-            <div className="flex items-center justify-center gap-2 px-4 py-6 text-sm text-brand-red">
+            <div className="flex items-center justify-center gap-2 px-4 py-6 text-sm text-violet-700">
               <Loader2 className="h-4 w-4 animate-spin" />
               <span>Searching...</span>
             </div>
@@ -226,7 +226,7 @@ export default function SearchBar({
 
           {!isLoading && !error && results.length === 0 && (
             <div className="flex flex-col items-center gap-2 px-4 py-6 text-center">
-              <PackageSearch className="h-6 w-6 text-brand-text-muted" />
+              <PackageSearch className="h-6 w-6 text-violet-400" />
               <p className="text-sm text-gray-600">
                 No products found for{" "}
                 <span className="font-semibold text-gray-800">
@@ -254,8 +254,8 @@ export default function SearchBar({
                         className={cn(
                           "flex w-full items-center gap-3 px-3 py-2 text-left transition-colors",
                           index === activeIndex
-                            ? "bg-brand-red/10"
-                            : "hover:bg-brand-red/5",
+                            ? "bg-violet-50"
+                            : "hover:bg-violet-50/60",
                         )}
                       >
                         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
@@ -276,7 +276,7 @@ export default function SearchBar({
                           </p>
                         </div>
                         <div className="shrink-0 text-right">
-                          <p className="text-sm font-bold text-brand-red">
+                          <p className="text-sm font-bold text-violet-700">
                             BDT {finalPrice.toLocaleString()}
                           </p>
                           {hasDiscount && (
@@ -294,7 +294,7 @@ export default function SearchBar({
               <button
                 type="button"
                 onClick={goToAllResults}
-                className="flex w-full items-center justify-center gap-1.5 border-t border-gray-100 bg-brand-light-bg px-4 py-2.5 text-sm font-semibold text-brand-red transition-colors hover:bg-brand-red/5"
+                className="flex w-full items-center justify-center gap-1.5 border-t border-gray-100 bg-violet-50/40 px-4 py-2.5 text-sm font-semibold text-violet-700 transition-colors hover:bg-violet-50"
               >
                 <Search className="h-4 w-4" />
                 View all results for &ldquo;{trimmed}&rdquo;

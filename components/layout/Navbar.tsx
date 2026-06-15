@@ -198,8 +198,8 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-brand-light-bg px-1 py-2 sm:px-4 lg:border-b lg:border-brand-border lg:px-0 lg:py-0">
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2 rounded-md border border-brand-border bg-brand-white py-2.5 shadow-sm sm:px-4 lg:rounded-none lg:border-none lg:bg-transparent lg:py-3 lg:shadow-none lg:px-6">
+    <header className="sticky top-0 z-50 bg-[#E6E6FA] px-1 py-2 sm:px-4 lg:border-b lg:border-gray-200 lg:px-0 lg:py-0">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2 rounded-md border border-[#8140DF] bg-white py-2.5 shadow-sm sm:px-4 lg:rounded-none lg:border-none lg:bg-transparent lg:py-3 lg:shadow-none lg:px-6">
         {/* LEFT: Mobile Menu + Logo */}
         <div className="flex items-center gap-2">
           <button
@@ -212,7 +212,7 @@ export default function Navbar() {
             aria-label="Open menu"
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-navigation-drawer"
-            className="rounded-full p-2 text-brand-black transition-colors duration-200 hover:bg-brand-white/40 hover:text-brand-red lg:hidden"
+            className="rounded-full p-2 text-gray-700 transition-colors duration-200 hover:bg-white/40 lg:hidden"
           >
             <Menu className="h-6 w-6" />
           </button>
@@ -246,17 +246,17 @@ export default function Navbar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "relative flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-red focus-visible:text-brand-red",
+                  "relative flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-300 ease-out",
                   active
-                    ? "text-brand-red"
-                    : "text-brand-black hover:text-brand-red",
+                    ? "text-violet-700"
+                    : "text-gray-800 hover:text-violet-700",
                 )}
               >
                 <Icon className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
                 {item.label}
                 <span
                   className={cn(
-                    "absolute bottom-0 left-1/2 h-0.5 w-[60%] -translate-x-1/2 rounded-full bg-brand-red transition-all duration-200 ease-out",
+                    "absolute bottom-0 left-1/2 h-0.5 w-[60%] -translate-x-1/2 rounded-full bg-violet-600 transition-all duration-300 ease-out",
                     active
                       ? "scale-x-100 opacity-100"
                       : "scale-x-0 opacity-0",
@@ -279,7 +279,7 @@ export default function Navbar() {
             aria-expanded={mobileSearchOpen}
             aria-controls="mobile-navbar-search"
             onClick={() => setMobileSearchOpen((open) => !open)}
-            className="rounded-full p-2 text-brand-black transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-light-bg hover:text-brand-red md:hidden"
+            className="rounded-full p-2 text-violet-600 transition-all duration-200 hover:-translate-y-0.5 hover:bg-violet-50 md:hidden"
           >
             {mobileSearchOpen ? (
               <X className="h-5 w-5" />
@@ -291,7 +291,7 @@ export default function Navbar() {
           {!user && (
             <Link
               href="/login"
-              className="flex items-center gap-1 px-2 py-1.5 text-sm font-semibold text-brand-black transition-colors duration-200 hover:text-brand-red lg:hidden"
+              className="flex items-center gap-1 px-2 py-1.5 text-sm font-semibold text-gray-700 transition-colors duration-200 hover:text-violet-700 lg:hidden"
             >
               <span className="hidden sm:inline">Sign in</span>
               <User className="h-5 w-5" />
@@ -301,10 +301,10 @@ export default function Navbar() {
           {user && (
             <Link
               href="/profile"
-              className="rounded-full p-2 transition-colors duration-200 hover:bg-brand-white/40 lg:hidden"
+              className="rounded-full p-2 transition-colors duration-200 hover:bg-white/40 lg:hidden"
               aria-label="My profile"
             >
-              <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-2 border-brand-border bg-brand-light-bg">
+              <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-2 border-violet-400 bg-violet-100">
                 {user.image ? (
                   <Image
                     src={user.image}
@@ -314,7 +314,7 @@ export default function Navbar() {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <User className="h-3.5 w-3.5 text-brand-black" />
+                  <User className="h-3.5 w-3.5 text-violet-600" />
                 )}
               </div>
             </Link>
@@ -323,11 +323,11 @@ export default function Navbar() {
           <Link
             href="/wishlist"
             aria-label={`Wishlist${wishlistCount > 0 ? `, ${wishlistCount} item${wishlistCount === 1 ? "" : "s"}` : ""}`}
-            className="group relative rounded-full p-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-white/40"
+            className="group relative rounded-full p-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/40"
           >
-            <Heart className="h-5 w-5 text-brand-black transition-transform duration-200 group-hover:scale-110 group-hover:text-brand-red" />
+            <Heart className="h-5 w-5 text-violet-600 transition-transform duration-200 group-hover:scale-110" />
             {wishlistCount > 0 && (
-              <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-red text-[10px] font-bold leading-none text-brand-white ring-2 ring-brand-white">
+              <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold leading-none text-white ring-2 ring-white">
                 {wishlistCount > 99 ? "99+" : wishlistCount}
               </span>
             )}
@@ -336,11 +336,11 @@ export default function Navbar() {
           <Link
             href="/cart"
             aria-label={`Cart${cartCount > 0 ? `, ${cartCount} item${cartCount === 1 ? "" : "s"}` : ""}`}
-            className="group relative rounded-full p-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-white/40"
+            className="group relative rounded-full p-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/40"
           >
-            <ShoppingCart className="h-5 w-5 text-brand-black transition-transform duration-200 group-hover:scale-110 group-hover:text-brand-red" />
+            <ShoppingCart className="h-5 w-5 text-violet-600 transition-transform duration-200 group-hover:scale-110" />
             {cartCount > 0 && (
-              <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-red text-[10px] font-bold leading-none text-brand-white ring-2 ring-brand-white">
+              <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-violet-600 text-[10px] font-bold leading-none text-white ring-2 ring-white">
                 {cartCount > 99 ? "99+" : cartCount}
               </span>
             )}
@@ -372,10 +372,10 @@ export default function Navbar() {
                           event.preventDefault();
                         }
                       }}
-                      className="group flex items-center gap-2 rounded-full p-1.5 transition-colors duration-200 hover:bg-brand-white/40"
+                      className="group flex items-center gap-2 rounded-full p-1.5 transition-colors duration-200 hover:bg-white/40"
                       aria-label="Open profile menu"
                     >
-                      <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-brand-border bg-brand-light-bg transition-transform duration-300 group-hover:scale-105">
+                      <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-violet-400 bg-violet-100 transition-transform duration-300 group-hover:scale-105">
                         {user.image ? (
                           <Image
                             src={user.image}
@@ -385,10 +385,10 @@ export default function Navbar() {
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <User className="h-4 w-4 text-brand-black" />
+                          <User className="h-4 w-4 text-violet-600" />
                         )}
                       </div>
-                      <ChevronDown className="h-4 w-4 text-brand-black transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                      <ChevronDown className="h-4 w-4 text-gray-600 transition-transform duration-300 group-data-[state=open]:rotate-180" />
                     </button>
                   </DropdownMenuTrigger>
                 </div>
@@ -399,9 +399,9 @@ export default function Navbar() {
                   onMouseEnter={cancelClose}
                   onMouseLeave={scheduleClose}
                 >
-                  <div className="border-b border-brand-border bg-brand-light-bg p-4">
+                  <div className="border-b border-gray-100 bg-linear-to-r from-violet-50 to-indigo-50 p-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-brand-border bg-brand-light-bg">
+                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-violet-400 bg-violet-100">
                         {user.image ? (
                           <Image
                             src={user.image}
@@ -411,15 +411,15 @@ export default function Navbar() {
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <User className="h-6 w-6 text-brand-black" />
+                          <User className="h-6 w-6 text-violet-600" />
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate font-semibold text-brand-black">
+                        <p className="truncate font-semibold text-gray-900">
                           {user.name || "User"}
                         </p>
                         {user.email && (
-                          <p className="truncate text-xs text-brand-text-muted">
+                          <p className="truncate text-xs text-violet-600">
                             {user.email}
                           </p>
                         )}
@@ -465,14 +465,14 @@ export default function Navbar() {
               <div className="hidden items-center gap-2 sm:flex">
                 <Link
                   href="/login"
-                  className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-brand-black transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-white/40 hover:text-brand-red"
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/40 hover:text-violet-700"
                 >
                   <LogIn className="h-4 w-4" />
                   Sign In
                 </Link>
                 <Link
                   href="/register"
-                  className="flex items-center gap-1.5 rounded-lg bg-brand-red px-3 py-2 text-sm font-medium text-brand-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-md"
+                  className="flex items-center gap-1.5 rounded-lg bg-linear-to-r from-violet-600 to-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:from-violet-700 hover:to-indigo-700 hover:shadow-md"
                 >
                   <UserPlus className="h-4 w-4" />
                   Sign Up
@@ -497,13 +497,13 @@ export default function Navbar() {
       >
         <div
           className={cn(
-            "overflow-visible rounded-b-2xl border-x border-b border-brand-border bg-brand-white p-3 shadow-xl transition-[max-height,padding] duration-300 ease-out",
+            "overflow-visible rounded-b-2xl border-x border-b border-violet-200 bg-white p-3 shadow-xl transition-[max-height,padding] duration-300 ease-out",
             mobileSearchOpen ? "max-h-24" : "max-h-0 py-0",
           )}
         >
           <SearchBar
             placeholder="Search products..."
-            inputClassName="border-brand-border bg-brand-light-bg"
+            inputClassName="border-violet-300 bg-violet-50/50"
             shouldFocus={mobileSearchOpen}
             onNavigate={() => setMobileSearchOpen(false)}
           />
@@ -522,7 +522,7 @@ export default function Navbar() {
           mobileMenuButtonRef.current?.focus({ preventScroll: true });
         }}
         className={cn(
-          "fixed inset-0 z-60 cursor-default border-0 bg-brand-black/40 p-0 transition-opacity duration-200 ease-out motion-reduce:transition-none lg:hidden",
+          "fixed inset-0 z-60 cursor-default border-0 bg-black/40 p-0 transition-opacity duration-200 ease-out motion-reduce:transition-none lg:hidden",
           mobileMenuOpen
             ? "pointer-events-auto opacity-100"
             : "pointer-events-none opacity-0",
@@ -539,14 +539,14 @@ export default function Navbar() {
         aria-hidden={!mobileMenuOpen}
         inert={!mobileMenuOpen}
         className={cn(
-          "fixed inset-y-0 right-0 z-70 flex h-dvh w-[85%] max-w-sm transform-gpu flex-col overflow-hidden border-l border-brand-border bg-brand-light-bg shadow-xl [backface-visibility:hidden] [contain:paint] transition-transform duration-[420ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform motion-reduce:transition-none lg:hidden",
+          "fixed inset-y-0 right-0 z-70 flex h-dvh w-[85%] max-w-sm transform-gpu flex-col overflow-hidden border-l border-violet-200 bg-[#E6E6FA] shadow-xl [backface-visibility:hidden] [contain:paint] transition-transform duration-[420ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform motion-reduce:transition-none lg:hidden",
           mobileMenuOpen ? "translate-x-0" : "translate-x-full",
         )}
       >
-        <div className="relative bg-brand-black px-4 py-3 text-brand-white">
+        <div className="relative bg-linear-to-r from-violet-600 to-indigo-700 px-4 py-3 text-white">
           <h2
             id="mobile-navigation-title"
-            className="text-base font-bold text-brand-white"
+            className="text-base font-bold text-white"
           >
             Menu
           </h2>
@@ -561,17 +561,17 @@ export default function Navbar() {
               setMobileMenuOpen(false);
               mobileMenuButtonRef.current?.focus({ preventScroll: true });
             }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-brand-white/90 transition-colors duration-150 hover:bg-brand-white/15 focus:outline-none focus:ring-2 focus:ring-brand-white/40"
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-white/90 transition-colors duration-150 hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/40"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Mobile Search */}
-        <div className="border-b border-brand-border bg-brand-white/40 px-4 py-3">
+        <div className="border-b border-violet-200 bg-white/40 px-4 py-3">
           <SearchBar
             placeholder="Search..."
-            inputClassName="rounded-xl border-brand-border bg-brand-white"
+            inputClassName="rounded-xl border-violet-300 bg-white"
             onNavigate={() => setMobileMenuOpen(false)}
           />
         </div>
@@ -586,10 +586,10 @@ export default function Navbar() {
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-xl px-4 py-3 text-base font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-red",
+                  "flex items-center gap-3 rounded-xl px-4 py-3 text-base font-semibold transition-all duration-200",
                   active
-                    ? "bg-brand-red text-brand-white shadow-md"
-                    : "text-brand-black hover:translate-x-1 hover:bg-brand-white/60 hover:text-brand-red",
+                    ? "bg-linear-to-r from-violet-600 to-indigo-700 text-white shadow-md"
+                    : "text-gray-800 hover:translate-x-1 hover:bg-white/60 hover:text-violet-700",
                 )}
               >
                 <Icon className="h-5 w-5" />
@@ -598,13 +598,13 @@ export default function Navbar() {
             );
           })}
 
-          <div className="mt-2 border-t border-brand-border pt-2">
+          <div className="mt-2 border-t border-gray-300 pt-2">
             {user ? (
               <>
                 <Link
                   href="/profile"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-semibold text-brand-black transition-all duration-200 hover:translate-x-1 hover:bg-brand-white/60 hover:text-brand-red"
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-semibold text-gray-800 transition-all duration-200 hover:translate-x-1 hover:bg-white/60 hover:text-violet-700"
                 >
                   <User className="h-5 w-5" />
                   My Profile
@@ -625,7 +625,7 @@ export default function Navbar() {
                 <Link
                   href="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-semibold text-brand-black transition-all duration-200 hover:translate-x-1 hover:bg-brand-white/60 hover:text-brand-red"
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-semibold text-gray-800 transition-all duration-200 hover:translate-x-1 hover:bg-white/60 hover:text-violet-700"
                 >
                   <LogIn className="h-5 w-5" />
                   Sign In
@@ -633,7 +633,7 @@ export default function Navbar() {
                 <Link
                   href="/register"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-xl bg-brand-red px-4 py-3 text-base font-semibold text-brand-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-red-hover"
+                  className="flex items-center gap-3 rounded-xl bg-linear-to-r from-violet-600 to-indigo-700 px-4 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5"
                 >
                   <UserPlus className="h-5 w-5" />
                   Sign Up

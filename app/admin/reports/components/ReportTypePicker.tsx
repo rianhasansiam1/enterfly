@@ -42,7 +42,7 @@ type Props = {
 
 /**
  * Card grid the admin uses to choose which report to generate.
- * The active card is highlighted with the brand red accent
+ * The active card is highlighted with the violet/indigo brand gradient
  * to match the rest of the admin console.
  */
 export default function ReportTypePicker({ value, onChange, disabled }: Props) {
@@ -63,8 +63,8 @@ export default function ReportTypePicker({ value, onChange, disabled }: Props) {
               "group relative overflow-hidden rounded-2xl border p-4 text-left transition-all duration-200",
               "shadow-sm hover:-translate-y-0.5 hover:shadow-md",
               active
-                ? "border-brand-red bg-brand-light-bg"
-                : "border-brand-border bg-white hover:border-brand-red",
+                ? "border-violet-300 bg-linear-to-br from-violet-50 via-white to-indigo-50"
+                : "border-violet-100 bg-white hover:border-violet-200",
               disabled && "cursor-not-allowed opacity-60",
             )}
           >
@@ -73,8 +73,8 @@ export default function ReportTypePicker({ value, onChange, disabled }: Props) {
                 className={cn(
                   "flex h-10 w-10 items-center justify-center rounded-xl",
                   active
-                    ? "bg-brand-red text-white"
-                    : "bg-brand-light-bg text-brand-black",
+                    ? "bg-linear-to-br from-violet-600 to-indigo-600 text-white"
+                    : "bg-violet-100 text-violet-700",
                 )}
               >
                 <Icon className="h-5 w-5" />
@@ -88,7 +88,7 @@ export default function ReportTypePicker({ value, onChange, disabled }: Props) {
             </div>
 
             {active && (
-              <span className="absolute right-3 top-3 rounded-full bg-brand-red px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+              <span className="absolute right-3 top-3 rounded-full bg-violet-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
                 Selected
               </span>
             )}

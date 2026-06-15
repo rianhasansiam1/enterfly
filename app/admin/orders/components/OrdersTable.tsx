@@ -27,8 +27,8 @@ function DetailBlock({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-brand-border bg-white p-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-text-muted">
+    <div className="rounded-xl border border-violet-100 bg-white p-3">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-violet-500">
         {label}
       </p>
       <p className="mt-1 text-sm text-gray-700">{children}</p>
@@ -57,7 +57,7 @@ export default function OrdersTable({
 }) {
   if (isLoading && totalCount === 0) {
     return (
-      <div className="rounded-2xl border border-brand-border bg-white p-10 text-center text-sm text-brand-text-muted shadow-sm">
+      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700 shadow-sm">
         <span className="inline-flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading orders...
@@ -68,18 +68,18 @@ export default function OrdersTable({
 
   if (orders.length === 0) {
     return (
-      <div className="rounded-2xl border border-brand-border bg-white p-10 text-center text-sm text-gray-600 shadow-sm">
-        <Package2 className="mx-auto mb-2 h-8 w-8 text-brand-text-muted" />
+      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-gray-600 shadow-sm">
+        <Package2 className="mx-auto mb-2 h-8 w-8 text-violet-300" />
         No orders match the current filters.
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-brand-border bg-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="bg-brand-light-bg text-left text-xs uppercase tracking-wider text-brand-text-muted">
+          <thead className="bg-violet-50 text-left text-xs uppercase tracking-wider text-violet-700">
             <tr>
               <th className="px-4 py-3">Order</th>
               <th className="px-4 py-3">Customer</th>
@@ -99,12 +99,12 @@ export default function OrdersTable({
 
               return (
                 <Fragment key={order.id}>
-                  <tr className="border-t border-brand-border align-top">
+                  <tr className="border-t border-violet-100/70 align-top">
                     <td className="px-4 py-3">
                       <button
                         type="button"
                         onClick={() => onToggleExpand(isExpanded ? null : order.id)}
-                        className="inline-flex items-center gap-1 text-left font-semibold text-brand-red transition hover:text-brand-red-hover"
+                        className="inline-flex items-center gap-1 text-left font-semibold text-violet-700 transition hover:text-violet-900"
                       >
                         <ChevronDown
                           className={cn(
@@ -139,7 +139,7 @@ export default function OrdersTable({
                         {formatCurrency(order.totalAmount)}
                       </p>
                       {order.discountAmount > 0 && (
-                        <p className="text-xs text-brand-red">
+                        <p className="text-xs text-emerald-700">
                           -{formatCurrency(order.discountAmount)} discount
                         </p>
                       )}
@@ -183,7 +183,7 @@ export default function OrdersTable({
                               if (!next) return;
                               onChangeStatus(order, next);
                             }}
-                            className="h-8 rounded-lg border border-brand-border px-2 text-xs font-semibold text-foreground transition hover:bg-brand-light-bg disabled:cursor-not-allowed disabled:opacity-60"
+                            className="h-8 rounded-lg border border-violet-200 px-2 text-xs font-semibold text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             <option value="">Change status</option>
                             {allowedNext.map((status) => (
@@ -213,7 +213,7 @@ export default function OrdersTable({
                   </tr>
 
                   {isExpanded && (
-                    <tr className="border-t border-brand-border bg-brand-light-bg">
+                    <tr className="border-t border-violet-100/70 bg-violet-50/30">
                       <td colSpan={8} className="px-4 py-3">
                         <div className="grid gap-3 sm:grid-cols-3">
                           <DetailBlock label="Shipping address">

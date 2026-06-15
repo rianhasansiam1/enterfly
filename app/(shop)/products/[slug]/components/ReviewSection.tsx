@@ -109,12 +109,12 @@ export default function ReviewSection({ productId }: { productId: string }) {
     <div className="space-y-8">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <span className="w-1.5 h-6 bg-brand-red rounded-full" />
+          <span className="w-1.5 h-6 bg-linear-to-b from-violet-500 to-indigo-500 rounded-full" />
           Customer Reviews
         </h2>
         <button
           onClick={() => setShowForm((open) => !open)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-brand-red text-brand-white text-sm font-medium rounded-xl hover:bg-brand-red-hover transition-all shadow-lg"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-linear-to-r from-violet-600 to-indigo-600 text-white text-sm font-medium rounded-xl hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg shadow-violet-200"
         >
           {showForm ? <X className="w-4 h-4" /> : <PenLine className="w-4 h-4" />}
           {showForm ? 'Close' : 'Write a Review'}
@@ -132,11 +132,11 @@ export default function ReviewSection({ productId }: { productId: string }) {
       )}
 
       {/* Rating Overview */}
-      <div className="bg-white rounded-2xl border border-brand-border p-4 sm:p-6">
+      <div className="bg-white rounded-2xl border border-violet-100 p-4 sm:p-6">
         <div className="grid md:grid-cols-2 gap-6 md:gap-8">
           {/* Average Rating */}
-          <div className="text-center md:text-left md:border-r md:border-brand-border md:pr-8">
-            <div className="text-4xl sm:text-5xl font-bold text-brand-black mb-2">
+          <div className="text-center md:text-left md:border-r md:border-violet-100 md:pr-8">
+            <div className="text-4xl sm:text-5xl font-bold text-violet-700 mb-2">
               {summary.averageRating.toFixed(1)}
             </div>
             <div className="flex items-center justify-center md:justify-start gap-1 mb-2">
@@ -145,7 +145,7 @@ export default function ReviewSection({ productId }: { productId: string }) {
                   key={star}
                   className={`w-5 h-5 ${
                     star <= Math.round(summary.averageRating)
-                      ? 'fill-brand-gold text-brand-gold'
+                      ? 'fill-amber-400 text-amber-400'
                       : 'text-gray-200'
                   }`}
                 />
@@ -166,13 +166,13 @@ export default function ReviewSection({ productId }: { productId: string }) {
                   setFilterRating(filterRating === item.stars ? null : item.stars)
                 }
                 className={`w-full flex items-center gap-3 p-1.5 rounded-lg transition-all ${
-                  filterRating === item.stars ? 'bg-brand-red/10' : 'hover:bg-gray-50'
+                  filterRating === item.stars ? 'bg-violet-100' : 'hover:bg-gray-50'
                 }`}
               >
                 <span className="text-sm text-gray-600 w-8">{item.stars}★</span>
                 <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-brand-red rounded-full transition-all"
+                    className="h-full bg-linear-to-r from-violet-500 to-indigo-500 rounded-full transition-all"
                     style={{ width: `${item.percentage}%` }}
                   />
                 </div>
@@ -197,7 +197,7 @@ export default function ReviewSection({ productId }: { productId: string }) {
           {filterRating && (
             <button
               onClick={() => setFilterRating(null)}
-              className="text-sm text-brand-red hover:underline"
+              className="text-sm text-violet-600 hover:underline"
             >
               Clear filter
             </button>
@@ -207,7 +207,7 @@ export default function ReviewSection({ productId }: { productId: string }) {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortKey)}
-            className="appearance-none pl-3 pr-8 py-2 bg-white border border-brand-border rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-red"
+            className="appearance-none pl-3 pr-8 py-2 bg-white border border-violet-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
           >
             <option value="newest">Newest First</option>
             <option value="rating">Highest Rated</option>
@@ -218,7 +218,7 @@ export default function ReviewSection({ productId }: { productId: string }) {
 
       {/* States */}
       {loading ? (
-        <div className="rounded-xl border border-brand-border bg-white p-10 text-center text-sm text-brand-text-muted">
+        <div className="rounded-xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700">
           <span className="inline-flex items-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin" />
             Loading reviews...
@@ -229,7 +229,7 @@ export default function ReviewSection({ productId }: { productId: string }) {
           {loadError}
         </div>
       ) : visibleReviews.length === 0 ? (
-        <div className="rounded-xl border border-brand-border bg-white p-10 text-center text-sm text-gray-600">
+        <div className="rounded-xl border border-violet-100 bg-white p-10 text-center text-sm text-gray-600">
           {reviews.length === 0
             ? 'No reviews yet. Be the first to review this product after it is delivered.'
             : 'No reviews match the current filter.'}
@@ -239,10 +239,10 @@ export default function ReviewSection({ productId }: { productId: string }) {
           {visibleReviews.map((review) => (
             <div
               key={review.id}
-              className="bg-white rounded-xl border border-brand-border p-5 hover:shadow-md transition-shadow"
+              className="bg-white rounded-xl border border-violet-100 p-5 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start gap-4">
-                <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 bg-brand-light-bg">
+                <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 bg-violet-50">
                   <Image
                     src={avatarFor(review)}
                     alt={review.authorName}
@@ -270,7 +270,7 @@ export default function ReviewSection({ productId }: { productId: string }) {
                           key={star}
                           className={`w-3.5 h-3.5 ${
                             star <= review.rating
-                              ? 'fill-brand-gold text-brand-gold'
+                              ? 'fill-amber-400 text-amber-400'
                               : 'text-gray-200'
                           }`}
                         />
@@ -358,7 +358,7 @@ function WriteReviewForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-brand-border bg-white p-5"
+      className="rounded-2xl border border-violet-100 bg-white p-5"
     >
       <h3 className="text-base font-bold text-gray-900">Share your experience</h3>
       <p className="mt-0.5 text-xs text-gray-500">
@@ -379,7 +379,7 @@ function WriteReviewForm({
             <Star
               className={`w-6 h-6 transition-colors ${
                 star <= (hover || rating)
-                  ? 'fill-brand-gold text-brand-gold'
+                  ? 'fill-amber-400 text-amber-400'
                   : 'text-gray-300'
               }`}
             />
@@ -394,7 +394,7 @@ function WriteReviewForm({
           onChange={(event) => setTitle(event.target.value)}
           placeholder="Title (optional)"
           maxLength={120}
-          className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm text-gray-900 outline-none transition focus:border-brand-red"
+          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm text-gray-900 outline-none transition focus:border-violet-500"
         />
         <textarea
           value={comment}
@@ -402,7 +402,7 @@ function WriteReviewForm({
           placeholder="Tell others what you liked or disliked (optional)"
           rows={3}
           maxLength={2000}
-          className="w-full rounded-xl border border-brand-border px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-brand-red"
+          className="w-full rounded-xl border border-violet-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-violet-500"
         />
       </div>
 
@@ -416,7 +416,7 @@ function WriteReviewForm({
         <button
           type="submit"
           disabled={submitting}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-red text-brand-white text-sm font-medium rounded-xl hover:bg-brand-red-hover transition-all shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-violet-600 to-indigo-600 text-white text-sm font-medium rounded-xl hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg shadow-violet-200 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
           Submit review

@@ -19,7 +19,7 @@ export default function BannerTabsBar({
   onCreate: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-brand-border bg-brand-white p-4 shadow-sm sm:p-5">
+    <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-2">
           {TABS.map((tab) => {
@@ -32,8 +32,8 @@ export default function BannerTabsBar({
                 className={cn(
                   "rounded-xl border px-3 py-2 text-sm font-semibold transition",
                   isActive
-                    ? "border-brand-red bg-brand-red text-white shadow"
-                    : "border-brand-border text-foreground hover:bg-brand-light-bg",
+                    ? "border-violet-500 bg-violet-600 text-white shadow"
+                    : "border-violet-200 text-violet-700 hover:bg-violet-50",
                 )}
               >
                 {tab.label}
@@ -46,7 +46,7 @@ export default function BannerTabsBar({
           <button
             type="button"
             onClick={onRefresh}
-            className="inline-flex h-10 items-center gap-2 rounded-xl border border-brand-border px-3 text-sm font-semibold text-foreground transition hover:bg-brand-light-bg"
+            className="inline-flex h-10 items-center gap-2 rounded-xl border border-violet-200 px-3 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
           >
             <RotateCcw className="h-4 w-4" />
             Refresh
@@ -55,7 +55,7 @@ export default function BannerTabsBar({
           <button
             type="button"
             onClick={onCreate}
-            className="inline-flex h-10 items-center gap-2 rounded-xl bg-brand-red px-4 text-sm font-semibold text-white transition hover:bg-brand-red-hover"
+            className="inline-flex h-10 items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white transition hover:from-violet-700 hover:to-indigo-700"
           >
             <Plus className="h-4 w-4" />
             New {TABS.find((t) => t.kind === activeTab)?.label.toLowerCase()}

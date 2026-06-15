@@ -22,8 +22,8 @@ const STATUS_BADGE: Record<PromoCodeStatus, string> = {
 };
 
 const TYPE_BADGE: Record<PromoDiscountType, string> = {
-  FLAT: "bg-brand-light-bg text-brand-black ring-brand-border",
-  PERCENT: "bg-brand-red/10 text-brand-red ring-brand-red/30",
+  FLAT: "bg-violet-50 text-violet-700 ring-violet-200",
+  PERCENT: "bg-sky-50 text-sky-700 ring-sky-200",
 };
 
 export default function PromoCodesTable({
@@ -41,18 +41,18 @@ export default function PromoCodesTable({
 }) {
   if (promos.length === 0) {
     return (
-      <div className="rounded-2xl border border-brand-border bg-brand-white p-10 text-center text-sm text-gray-600 shadow-sm">
-        <Ticket className="mx-auto mb-2 h-8 w-8 text-brand-text-muted" />
+      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-gray-600 shadow-sm">
+        <Ticket className="mx-auto mb-2 h-8 w-8 text-violet-300" />
         No promo codes yet. Create your first to start running campaigns.
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-brand-border bg-brand-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="bg-brand-light-bg text-left text-xs uppercase tracking-wider text-foreground">
+          <thead className="bg-violet-50 text-left text-xs uppercase tracking-wider text-violet-700">
             <tr>
               <th className="px-4 py-3">Code</th>
               <th className="px-4 py-3">Discount</th>
@@ -81,10 +81,10 @@ export default function PromoCodesTable({
                   exit="exit"
                   variants={LIST_ITEM_VARIANTS}
                   transition={LIST_ITEM_TRANSITION}
-                  className="border-t border-brand-border align-top"
+                  className="border-t border-violet-100/70 align-top"
                 >
                   <td className="px-4 py-3">
-                    <p className="font-mono text-sm font-bold uppercase text-brand-black">
+                    <p className="font-mono text-sm font-bold uppercase text-violet-700">
                       {promo.code}
                     </p>
                     {promo.description && (
@@ -155,7 +155,7 @@ export default function PromoCodesTable({
                         type="button"
                         onClick={() => onEdit(promo)}
                         disabled={isBusy}
-                        className="inline-flex items-center gap-1 rounded-lg border border-brand-border px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-brand-light-bg disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex items-center gap-1 rounded-lg border border-violet-200 px-2.5 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <Pencil className="h-3.5 w-3.5" /> Edit
                       </button>

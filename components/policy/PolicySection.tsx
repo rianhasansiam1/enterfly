@@ -15,7 +15,7 @@ type PolicySectionProps = {
  */
 export default function PolicySection({ title, intro, children }: PolicySectionProps) {
   return (
-    <section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-brand-border sm:p-7">
+    <section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-violet-100 sm:p-7">
       <h2 className="text-lg font-black tracking-tight text-gray-900 sm:text-xl">{title}</h2>
       {intro && (
         <p className="mt-2 text-sm leading-relaxed text-gray-600 sm:text-base">{intro}</p>

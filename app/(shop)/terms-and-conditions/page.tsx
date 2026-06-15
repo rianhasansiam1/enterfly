@@ -114,7 +114,7 @@ export default function TermsAndConditionsPage() {
         <p>
           Once your order has been handed over to our courier partner, it cannot be cancelled but may
           still be eligible for return under our{" "}
-          <a href="/return-policy" className="font-semibold text-brand-red hover:underline">
+          <a href="/return-policy" className="font-semibold text-violet-700 hover:underline">
             Return Policy
           </a>
           . We also reserve the right to cancel orders at our discretion, in which case any amount
@@ -181,7 +181,7 @@ export default function TermsAndConditionsPage() {
       >
         <p>
           Please review the full{" "}
-          <a href="/return-policy" className="font-semibold text-brand-red hover:underline">
+          <a href="/return-policy" className="font-semibold text-violet-700 hover:underline">
             Return Policy
           </a>{" "}
           for eligibility, time limits, non-returnable items, and the refund process. By placing an
@@ -239,7 +239,7 @@ export default function TermsAndConditionsPage() {
       >
         <p>
           Please review our{" "}
-          <a href="/privacy-policy" className="font-semibold text-brand-red hover:underline">
+          <a href="/privacy-policy" className="font-semibold text-violet-700 hover:underline">
             Privacy Policy
           </a>{" "}
           to understand how we collect, use, and protect your information.

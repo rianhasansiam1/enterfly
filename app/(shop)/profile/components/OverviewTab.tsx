@@ -125,10 +125,10 @@ export default function OverviewTab({
       )}
 
       {/* Order status breakdown */}
-      <section className="rounded-2xl border border-brand-border bg-brand-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
+      <section className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
         <header className="mb-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-light-bg text-brand-black">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-violet-100 text-violet-700">
               <ClipboardList className="h-4 w-4" />
             </span>
             <h2 className="text-base font-bold text-gray-900 sm:text-lg">
@@ -138,7 +138,7 @@ export default function OverviewTab({
           <button
             type="button"
             onClick={() => onJumpToTab("orders")}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-red hover:text-brand-red-hover"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-violet-700 hover:text-violet-800"
           >
             View all
             <ArrowRight className="h-3.5 w-3.5" />
@@ -151,7 +151,7 @@ export default function OverviewTab({
             return (
               <div
                 key={key}
-                className="rounded-2xl border border-brand-border bg-brand-white p-3"
+                className="rounded-2xl border border-violet-100 bg-white p-3"
               >
                 <span
                   className={`inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold leading-tight ${tone.pill}`}
@@ -178,9 +178,9 @@ export default function OverviewTab({
       </section>
 
       {/* Quick actions */}
-      <section className="rounded-2xl border border-brand-border bg-brand-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
+      <section className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
         <header className="mb-4 flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-light-bg text-brand-black">
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-violet-100 text-violet-700">
             <Gift className="h-4 w-4" />
           </span>
           <h2 className="text-base font-bold text-gray-900 sm:text-lg">
@@ -217,24 +217,24 @@ const TONE_STYLES: Record<
   { surface: string; iconBg: string; iconText: string }
 > = {
   violet: {
-    surface: "bg-brand-light-bg",
-    iconBg: "bg-brand-white",
-    iconText: "text-brand-black",
+    surface: "from-violet-50 to-white",
+    iconBg: "bg-violet-100",
+    iconText: "text-violet-700",
   },
   indigo: {
-    surface: "bg-brand-light-bg",
-    iconBg: "bg-brand-white",
-    iconText: "text-brand-black",
+    surface: "from-indigo-50 to-white",
+    iconBg: "bg-indigo-100",
+    iconText: "text-indigo-700",
   },
   fuchsia: {
-    surface: "bg-brand-light-bg",
-    iconBg: "bg-brand-white",
-    iconText: "text-brand-black",
+    surface: "from-fuchsia-50 to-white",
+    iconBg: "bg-fuchsia-100",
+    iconText: "text-fuchsia-700",
   },
   rose: {
-    surface: "bg-brand-light-bg",
-    iconBg: "bg-brand-white",
-    iconText: "text-brand-black",
+    surface: "from-rose-50 to-white",
+    iconBg: "bg-rose-100",
+    iconText: "text-rose-700",
   },
 };
 
@@ -256,7 +256,7 @@ function MetricCard({
   const styles = TONE_STYLES[tone];
   return (
     <div
-      className={`min-w-0 rounded-2xl border border-brand-border ${styles.surface} p-3 shadow-sm sm:rounded-3xl sm:p-4`}
+      className={`min-w-0 rounded-2xl border border-violet-100 bg-linear-to-br ${styles.surface} p-3 shadow-sm sm:rounded-3xl sm:p-4`}
     >
       <div className="flex items-center justify-between gap-2">
         <span
@@ -268,7 +268,7 @@ function MetricCard({
           <button
             type="button"
             onClick={onAction}
-            className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-brand-red hover:text-brand-red-hover"
+            className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-violet-700 hover:text-violet-800"
           >
             {actionLabel}
             <ArrowRight className="h-3 w-3" />
@@ -299,12 +299,12 @@ function QuickAction({
   icon: React.ReactNode;
 }) {
   const className =
-    "group flex items-center justify-between gap-3 rounded-2xl border border-brand-border bg-brand-white p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-red hover:shadow-md";
+    "group flex items-center justify-between gap-3 rounded-2xl border border-violet-100 bg-white p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-md";
 
   const inner = (
     <>
       <div className="flex min-w-0 items-center gap-3">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-light-bg text-brand-black">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-violet-50 text-violet-700">
           {icon}
         </span>
         <span className="min-w-0">
@@ -316,7 +316,7 @@ function QuickAction({
           </span>
         </span>
       </div>
-      <ArrowRight className="h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-brand-red" />
+      <ArrowRight className="h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-violet-700" />
     </>
   );
 

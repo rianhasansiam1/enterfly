@@ -31,7 +31,7 @@ export default function Field({
       <span className="flex items-center gap-1.5 font-semibold text-gray-700">
         {icon}
         {label}
-        {required && <span className="ml-0.5 text-brand-red">*</span>}
+        {required && <span className="ml-0.5 text-rose-600">*</span>}
       </span>
       {children}
       {hint && <span className="text-[11px] text-gray-500">{hint}</span>}

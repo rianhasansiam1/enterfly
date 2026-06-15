@@ -193,7 +193,7 @@ export default async function ProductDetailsPage({ params }: Props) {
     : null;
 
   return (
-    <div className="min-h-screen bg-brand-light-bg">
+    <div className="min-h-screen bg-gray-50">
       {productSchema && breadcrumbSchema && (
         <JsonLd data={[productSchema, breadcrumbSchema]} />
       )}

@@ -362,9 +362,9 @@ function CheckoutPageInner() {
   // sees an empty form for a flash before the redirect kicks in.
   if (authStatus !== "authenticated") {
     return (
-      <main className="min-h-screen bg-brand-light-bg">
+      <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
         <div className="mx-auto w-full max-w-2xl px-4 py-16 sm:px-6">
-          <div className="rounded-3xl border border-brand-border bg-brand-white p-10 text-center shadow-sm">
+          <div className="rounded-3xl border border-violet-100 bg-white p-10 text-center shadow-sm">
             <p className="text-lg font-semibold text-gray-900">
               {authStatus === "loading"
                 ? "Loading checkout..."
@@ -382,7 +382,7 @@ function CheckoutPageInner() {
                     ? `/checkout?buy=${encodeURIComponent(searchParams.get("buy")!)}`
                     : "/checkout",
                 )}`}
-                className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-brand-red px-5 py-2.5 text-sm font-bold text-brand-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-xl"
+                className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
               >
                 Sign in to continue
               </Link>
@@ -394,7 +394,7 @@ function CheckoutPageInner() {
   }
 
   return (
-    <main className="min-h-screen bg-brand-light-bg">
+    <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <CheckoutHeader
           isAuthenticated={isAuthenticated}
@@ -416,7 +416,7 @@ function CheckoutPageInner() {
         )}
 
         {isEmpty ? (
-          <div className="mt-8 rounded-3xl border border-brand-border bg-brand-white p-10 text-center shadow-sm">
+          <div className="mt-8 rounded-3xl border border-violet-100 bg-white p-10 text-center shadow-sm">
             <p className="text-lg font-semibold text-gray-900">
               Nothing to check out yet
             </p>
@@ -425,7 +425,7 @@ function CheckoutPageInner() {
             </p>
             <Link
               href="/products"
-              className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-brand-red px-5 py-2.5 text-sm font-bold text-brand-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-xl"
+              className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
             >
               Browse products
             </Link>
@@ -486,9 +486,9 @@ export default function CheckoutPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen bg-brand-light-bg">
+        <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
           <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-            <div className="rounded-3xl border border-brand-border bg-brand-white p-6 text-center text-sm text-brand-text-muted shadow-sm">
+            <div className="rounded-3xl border border-violet-100 bg-white p-6 text-center text-sm text-violet-700 shadow-sm">
               Loading checkout...
             </div>
           </div>

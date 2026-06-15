@@ -29,7 +29,7 @@ const PRESETS: Array<{ days: number; label: string }> = [
  */
 export default function ReportFilters(props: Props) {
   return (
-    <div className="rounded-2xl border border-brand-border bg-white p-4 shadow-sm sm:p-5">
+    <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex flex-wrap items-end gap-3">
         <Field label="From" icon={<CalendarRange className="h-3.5 w-3.5" />}>
           <input
@@ -37,7 +37,7 @@ export default function ReportFilters(props: Props) {
             value={props.from}
             disabled={props.allTime}
             onChange={(event) => props.onFromChange(event.target.value)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
           />
         </Field>
 
@@ -47,7 +47,7 @@ export default function ReportFilters(props: Props) {
             value={props.to}
             disabled={props.allTime}
             onChange={(event) => props.onToChange(event.target.value)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
           />
         </Field>
 
@@ -66,7 +66,7 @@ export default function ReportFilters(props: Props) {
               const next = Number(event.target.value);
               if (Number.isFinite(next)) props.onLimitChange(next);
             }}
-            className="h-10 w-28 rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-28 rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           />
         </Field>
 
@@ -77,8 +77,8 @@ export default function ReportFilters(props: Props) {
             className={
               "inline-flex h-10 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition-all duration-200 " +
               (props.allTime
-                ? "border-brand-red bg-brand-red text-white shadow-sm"
-                : "border-brand-border bg-white text-brand-black hover:bg-brand-light-bg")
+                ? "border-violet-300 bg-linear-to-r from-violet-600 to-indigo-600 text-white shadow-sm"
+                : "border-violet-200 bg-white text-violet-700 hover:bg-violet-50")
             }
             aria-pressed={props.allTime}
           >
@@ -88,7 +88,7 @@ export default function ReportFilters(props: Props) {
 
           <div
             className={
-              "inline-flex rounded-xl border border-brand-border bg-brand-light-bg p-1 text-xs font-bold transition-opacity " +
+              "inline-flex rounded-xl border border-violet-100 bg-violet-50/60 p-1 text-xs font-bold transition-opacity " +
               (props.allTime ? "pointer-events-none opacity-40" : "")
             }
           >
@@ -97,7 +97,7 @@ export default function ReportFilters(props: Props) {
                 key={preset.days}
                 type="button"
                 onClick={() => props.onPresetWindow(preset.days)}
-                className="rounded-lg px-3 py-1.5 text-brand-text-muted transition-all duration-200 hover:bg-white hover:text-brand-red"
+                className="rounded-lg px-3 py-1.5 text-gray-600 transition-all duration-200 hover:bg-white hover:text-violet-700"
               >
                 Last {preset.label}
               </button>
@@ -108,7 +108,7 @@ export default function ReportFilters(props: Props) {
             type="button"
             onClick={props.onGenerate}
             disabled={props.isLoading}
-            className="inline-flex h-10 items-center gap-2 rounded-xl bg-brand-red px-4 text-sm font-semibold text-white transition hover:bg-brand-red-hover disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-10 items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white transition hover:from-violet-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {props.isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -136,7 +136,7 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-brand-text-muted">
+      <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-violet-600">
         {icon}
         {label}
       </span>

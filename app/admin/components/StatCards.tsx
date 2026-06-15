@@ -18,24 +18,24 @@ type Accent = "violet" | "emerald" | "amber" | "indigo";
 
 const ACCENT_STYLES: Record<Accent, { ring: string; tile: string; icon: string }> = {
   violet: {
-    ring: "bg-brand-red/15",
-    tile: "bg-brand-red/10 text-brand-red",
-    icon: "text-brand-red",
+    ring: "from-violet-500/30 to-indigo-500/20",
+    tile: "bg-violet-100 text-violet-700",
+    icon: "text-violet-700",
   },
   indigo: {
-    ring: "bg-brand-red/15",
-    tile: "bg-brand-red/10 text-brand-red",
-    icon: "text-brand-red",
+    ring: "from-indigo-500/30 to-blue-500/20",
+    tile: "bg-indigo-100 text-indigo-700",
+    icon: "text-indigo-700",
   },
   emerald: {
-    ring: "bg-brand-red/15",
-    tile: "bg-brand-red/10 text-brand-red",
-    icon: "text-brand-red",
+    ring: "from-emerald-500/30 to-teal-500/20",
+    tile: "bg-emerald-100 text-emerald-700",
+    icon: "text-emerald-700",
   },
   amber: {
-    ring: "bg-brand-red/15",
-    tile: "bg-brand-red/10 text-brand-red",
-    icon: "text-brand-red",
+    ring: "from-amber-500/30 to-orange-500/20",
+    tile: "bg-amber-100 text-amber-700",
+    icon: "text-amber-700",
   },
 };
 
@@ -164,11 +164,11 @@ function StatCard({ card, stat, loading }: StatCardProps) {
         : "bg-red-50 text-red-600";
 
   return (
-    <article className="group relative overflow-hidden rounded-2xl border border-brand-border bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+    <article className="group relative overflow-hidden rounded-2xl border border-violet-100 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
       <div
         aria-hidden
         className={cn(
-          "pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full opacity-60 blur-2xl transition-opacity duration-300 group-hover:opacity-100",
+          "pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-linear-to-br opacity-60 blur-2xl transition-opacity duration-300 group-hover:opacity-100",
           styles.ring,
         )}
       />
@@ -178,7 +178,7 @@ function StatCard({ card, stat, loading }: StatCardProps) {
             {card.label}
           </p>
           {loading ? (
-            <div className="mt-2 h-8 w-32 animate-pulse rounded-md bg-brand-light-bg" />
+            <div className="mt-2 h-8 w-32 animate-pulse rounded-md bg-violet-50" />
           ) : (
             <p className="mt-2 text-2xl font-extrabold text-gray-900">
               {stat ? card.format(stat.current) : "—"}
@@ -196,7 +196,7 @@ function StatCard({ card, stat, loading }: StatCardProps) {
 
       <div className="relative mt-3 flex items-center gap-2">
         {loading ? (
-          <span className="h-4 w-24 animate-pulse rounded-full bg-brand-light-bg" />
+          <span className="h-4 w-24 animate-pulse rounded-full bg-violet-50" />
         ) : stat ? (
           <span
             className={cn(

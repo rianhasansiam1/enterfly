@@ -362,7 +362,7 @@ const ProductActions = ({
               <span className="text-lg text-gray-400 line-through">
                 {currentListPrice.toLocaleString()} BDT
               </span>
-              <span className="rounded-full bg-brand-red/10 px-2 py-0.5 text-xs font-bold text-brand-red">
+              <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700">
                 -{discount}%
               </span>
             </>
@@ -405,22 +405,22 @@ const ProductActions = ({
                       ? /* Swatch circle for hex colors */
                         `h-9 w-9 ${
                           isSelected
-                            ? "ring-2 ring-brand-red ring-offset-2"
+                            ? "ring-2 ring-violet-600 ring-offset-2"
                             : isDisabled
                               ? "opacity-30 cursor-not-allowed"
                               : !isAvailable
                                 ? "opacity-50"
-                                : "hover:ring-2 hover:ring-brand-red hover:ring-offset-1"
+                                : "hover:ring-2 hover:ring-violet-300 hover:ring-offset-1"
                         }`
                       : /* Text button for named colors */
                         `rounded-lg border px-3.5 py-2 text-sm font-medium ${
                           isSelected
-                            ? "border-brand-red bg-brand-red/10 text-brand-red ring-1 ring-brand-red"
+                            ? "border-violet-600 bg-violet-50 text-violet-700 ring-1 ring-violet-600"
                             : isDisabled
                               ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400 line-through"
                               : !isAvailable
                                 ? "border-gray-200 bg-gray-50 text-gray-400"
-                                : "border-gray-200 text-gray-700 hover:border-brand-red hover:bg-brand-red/10"
+                                : "border-gray-200 text-gray-700 hover:border-violet-300 hover:bg-violet-50"
                         }`
                   }`}
                 >
@@ -483,12 +483,12 @@ const ProductActions = ({
                     isNumeric ? "min-w-[3rem] px-3 py-2.5" : "min-w-[2.75rem] px-3.5 py-2"
                   } ${
                     isSelected
-                      ? "border-brand-red bg-brand-red text-brand-white shadow-sm"
+                      ? "border-violet-600 bg-violet-600 text-white shadow-sm shadow-violet-200"
                       : isDisabled
                         ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-300"
                         : !isAvailable
                           ? "border-gray-200 bg-gray-50 text-gray-400"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-brand-red hover:bg-brand-red/10 hover:text-brand-red"
+                          : "border-gray-200 bg-white text-gray-700 hover:border-violet-400 hover:bg-violet-50 hover:text-violet-700"
                   }`}
                 >
                   {size}
@@ -531,10 +531,10 @@ const ProductActions = ({
                   disabled={isOut}
                   className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
                     isSelected
-                      ? "border-brand-red bg-brand-red/10 text-brand-red ring-1 ring-brand-red"
+                      ? "border-violet-600 bg-violet-50 text-violet-700 ring-1 ring-violet-600"
                       : isOut
                         ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400 line-through"
-                        : "border-gray-200 text-gray-700 hover:border-brand-red hover:bg-brand-red/10"
+                        : "border-gray-200 text-gray-700 hover:border-violet-300 hover:bg-violet-50"
                   }`}
                 >
                   {colorIsHex(variant.color) && (
@@ -596,7 +596,7 @@ const ProductActions = ({
           disabled={!inStock || isCartBusy}
           className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-all ${
             inStock
-              ? "bg-brand-red text-brand-white hover:bg-brand-red-hover"
+              ? "bg-violet-600 text-white hover:bg-violet-700"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
           }`}
         >
@@ -611,7 +611,7 @@ const ProductActions = ({
         disabled={!inStock}
         className={`flex w-full items-center justify-center gap-2 rounded-lg px-6 py-2.5 text-sm font-bold transition-all ${
           inStock
-            ? "bg-brand-black text-brand-white shadow-md hover:-translate-y-0.5 hover:bg-brand-dark-surface hover:shadow-lg"
+            ? "bg-linear-to-r from-amber-500 via-orange-500 to-rose-500 text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg"
             : "bg-gray-200 text-gray-500 cursor-not-allowed"
         }`}
       >

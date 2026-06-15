@@ -12,13 +12,13 @@ export default function EmptyWishlist({
   onClearFilters,
 }: EmptyWishlistProps) {
   return (
-    <div className="relative mx-auto mt-10 max-w-xl overflow-hidden rounded-3xl border border-brand-border bg-brand-white px-6 py-12 text-center shadow-sm sm:px-10 sm:py-16">
-      <div className="pointer-events-none absolute -left-12 -top-12 h-40 w-40 rounded-full bg-brand-red/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-16 -right-12 h-48 w-48 rounded-full bg-brand-red/10 blur-3xl" />
+    <div className="relative mx-auto mt-10 max-w-xl overflow-hidden rounded-3xl border border-violet-100 bg-white px-6 py-12 text-center shadow-sm sm:px-10 sm:py-16">
+      <div className="pointer-events-none absolute -left-12 -top-12 h-40 w-40 rounded-full bg-violet-200/40 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-16 -right-12 h-48 w-48 rounded-full bg-fuchsia-200/40 blur-3xl" />
 
-      <div className="relative mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-brand-red text-brand-white shadow-lg">
+      <div className="relative mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-linear-to-br from-violet-500 to-indigo-600 text-white shadow-lg">
         <Heart className="h-9 w-9 fill-white" />
-        <span className="absolute -right-2 -top-2 grid h-7 w-7 place-items-center rounded-full bg-brand-gold text-brand-black shadow">
+        <span className="absolute -right-2 -top-2 grid h-7 w-7 place-items-center rounded-full bg-amber-300 text-amber-900 shadow">
           <Sparkles className="h-3.5 w-3.5" />
         </span>
       </div>
@@ -37,14 +37,14 @@ export default function EmptyWishlist({
           <button
             type="button"
             onClick={onClearFilters}
-            className="inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-white px-4 py-2.5 text-sm font-semibold text-brand-black transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-light-bg"
+            className="inline-flex items-center gap-2 rounded-xl border border-violet-300 bg-white px-4 py-2.5 text-sm font-semibold text-violet-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-violet-50"
           >
             Clear filters
           </button>
         ) : null}
         <Link
           href="/products"
-          className="inline-flex items-center gap-2 rounded-xl bg-brand-red px-5 py-2.5 text-sm font-semibold text-brand-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-md"
+          className="inline-flex items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:from-violet-700 hover:to-indigo-700 hover:shadow-md"
         >
           <ShoppingBag className="h-4 w-4" />
           Discover products

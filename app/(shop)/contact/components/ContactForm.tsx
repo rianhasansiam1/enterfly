@@ -132,13 +132,13 @@ export default function ContactForm() {
     >
       {/* Left: Contextual panel */}
       <div className="lg:col-span-2">
-        <div className="relative h-full overflow-hidden rounded-3xl bg-brand-black p-6 sm:p-8 text-white shadow-xl">
+        <div className="relative h-full overflow-hidden rounded-3xl bg-linear-to-br from-violet-600 via-purple-600 to-pink-600 p-6 sm:p-8 text-white shadow-xl">
           <div className="absolute top-0 right-0 h-32 w-32 rounded-full bg-white/10 -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 h-40 w-40 rounded-full bg-white/5 translate-y-1/3 -translate-x-1/3" />
 
           <div className="relative z-10">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 backdrop-blur-sm ring-1 ring-white/20">
-              <MessageSquare className="h-3.5 w-3.5 text-brand-gold" />
+              <MessageSquare className="h-3.5 w-3.5 text-yellow-300" />
               <span className="text-[11px] font-bold uppercase tracking-wide">
                 Drop a line
               </span>
@@ -158,7 +158,7 @@ export default function ContactForm() {
                 "Available 7 days a week, 9am to 9pm",
               ].map((tip) => (
                 <li key={tip} className="flex items-start gap-2.5 text-sm">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" />
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-yellow-300" />
                   <span className="text-white/90">{tip}</span>
                 </li>
               ))}
@@ -170,7 +170,7 @@ export default function ContactForm() {
               </p>
               <a
                 href="mailto:support@enterfly.com"
-                className="mt-1 block text-base font-black text-brand-gold hover:underline"
+                className="mt-1 block text-base font-black text-yellow-300 hover:underline"
               >
                 support@enterfly.com
               </a>
@@ -181,15 +181,15 @@ export default function ContactForm() {
 
       {/* Right: Form */}
       <div className="lg:col-span-3">
-        <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-brand-border sm:p-8">
-          <h3 className="text-xl font-black tracking-tight text-foreground sm:text-2xl">
+        <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-violet-100 sm:p-8">
+          <h3 className="text-xl font-black tracking-tight text-gray-900 sm:text-2xl">
             Send us a message
           </h3>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm text-gray-500">
             Fill in the details below and we&apos;ll get back to you shortly.
           </p>
 
-          <div className="my-5 h-0.5 w-full bg-brand-border rounded-full" />
+          <div className="my-5 h-0.5 w-full bg-linear-to-r from-violet-500 via-purple-400 to-transparent rounded-full" />
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -223,15 +223,15 @@ export default function ContactForm() {
               />
 
               <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-foreground">
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-700">
                   Subject
                 </label>
                 <div className="relative">
-                  <Tag className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Tag className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-500" />
                   <select
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    className="h-11 w-full appearance-none rounded-xl border border-brand-border bg-white pl-9 pr-9 text-sm text-foreground shadow-sm transition-colors focus:border-brand-red focus:outline-none focus:ring-2 focus:ring-brand-red/30"
+                    className="h-11 w-full appearance-none rounded-xl border border-violet-200 bg-white pl-9 pr-9 text-sm text-gray-800 shadow-sm transition-colors focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
                   >
                     {subjects.map((s) => (
                       <option key={s} value={s}>
@@ -239,7 +239,7 @@ export default function ContactForm() {
                       </option>
                     ))}
                   </select>
-                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-violet-500">
                     ▾
                   </span>
                 </div>
@@ -247,7 +247,7 @@ export default function ContactForm() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-foreground">
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-700">
                 Message
               </label>
               <textarea
@@ -256,14 +256,14 @@ export default function ContactForm() {
                 placeholder="Tell us how we can help..."
                 rows={5}
                 required
-                className="w-full resize-none rounded-xl border border-brand-border bg-white p-3 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus:border-brand-red focus:outline-none focus:ring-2 focus:ring-brand-red/30"
+                className="w-full resize-none rounded-xl border border-violet-200 bg-white p-3 text-sm text-gray-800 shadow-sm transition-colors placeholder:text-gray-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
               />
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-500">
                 By sending, you agree to our{" "}
-                <a href="/about" className="font-semibold text-brand-red hover:underline">
+                <a href="/about" className="font-semibold text-violet-700 hover:underline">
                   Privacy Policy
                 </a>
                 .
@@ -272,7 +272,7 @@ export default function ContactForm() {
               <button
                 type="submit"
                 disabled={status === "sending" || status === "sent"}
-                className="group inline-flex items-center gap-2 rounded-full bg-brand-red px-6 py-2.5 text-sm font-bold text-brand-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-80"
+                className="group inline-flex items-center gap-2 rounded-full bg-linear-to-r from-violet-600 to-purple-600 px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:from-violet-700 hover:to-purple-700 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-80"
               >
                 {status === "sending" && (
                   <>
@@ -329,11 +329,11 @@ function Field({
 }: FieldProps) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-foreground">
+      <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-700">
         {label}
       </label>
       <div className="relative">
-        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-violet-500">
           {icon}
         </span>
         <input
@@ -342,7 +342,7 @@ function Field({
           required={required}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="h-11 w-full rounded-xl border border-brand-border bg-white pl-9 pr-3 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus:border-brand-red focus:outline-none focus:ring-2 focus:ring-brand-red/30"
+          className="h-11 w-full rounded-xl border border-violet-200 bg-white pl-9 pr-3 text-sm text-gray-800 shadow-sm transition-colors placeholder:text-gray-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
         />
       </div>
     </div>

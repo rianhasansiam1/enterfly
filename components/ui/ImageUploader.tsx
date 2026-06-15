@@ -96,8 +96,8 @@ export default function ImageUploader({
         onDragLeave={() => setIsDragging(false)}
         onDrop={onDrop}
         className={cn(
-          "group relative flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border-2 border-dashed border-brand-border bg-brand-light-bg p-3 text-center transition",
-          isDragging && "border-brand-red bg-brand-red/5",
+          "group relative flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border-2 border-dashed border-violet-200 bg-violet-50/40 p-3 text-center transition",
+          isDragging && "border-violet-500 bg-violet-100/60",
           (disabled || isUploading) && "cursor-not-allowed opacity-70",
           value && "border-solid",
         )}
@@ -110,21 +110,21 @@ export default function ImageUploader({
               className="h-36 w-full rounded-lg object-cover"
             />
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-gray-900/0 transition group-hover:bg-gray-900/40">
-              <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-brand-red opacity-0 transition group-hover:opacity-100">
+              <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-violet-700 opacity-0 transition group-hover:opacity-100">
                 Click or drop to replace
               </span>
             </div>
           </>
         ) : (
           <>
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-brand-red/10 text-brand-red">
+            <span className="grid h-11 w-11 place-items-center rounded-full bg-violet-100 text-violet-600">
               {isUploading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
                 <ImagePlus className="h-5 w-5" />
               )}
             </span>
-            <span className="text-sm font-semibold text-brand-red">
+            <span className="text-sm font-semibold text-violet-700">
               {isUploading ? "Uploading..." : "Click to upload"}
             </span>
             <span className="flex items-center gap-1 text-[11px] text-gray-500">
@@ -158,7 +158,7 @@ export default function ImageUploader({
       )}
 
       {isUploading && (
-        <p className="flex items-center gap-1 text-xs text-brand-red">
+        <p className="flex items-center gap-1 text-xs text-violet-600">
           <Loader2 className="h-3 w-3 animate-spin" />
           Uploading to image host...
         </p>

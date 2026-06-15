@@ -42,9 +42,9 @@ export default function BrandPanel({
 }: BrandPanelProps) {
   return (
     <aside className="relative hidden lg:col-span-5 lg:block">
-      <div className="sticky top-24 overflow-hidden rounded-3xl bg-brand-black p-8 text-brand-white shadow-2xl ring-1 ring-white/15">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 animate-[float_8s_ease-in-out_infinite] rounded-full bg-brand-red/20 blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 animate-[float_11s_ease-in-out_infinite_reverse] rounded-full bg-brand-white/10 blur-3xl" />
+      <div className="sticky top-24 overflow-hidden rounded-3xl bg-linear-to-br from-violet-600 via-purple-600 to-indigo-700 p-8 text-white shadow-2xl ring-1 ring-white/15">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 animate-[float_8s_ease-in-out_infinite] rounded-full bg-yellow-300/20 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 animate-[float_11s_ease-in-out_infinite_reverse] rounded-full bg-purple-400/25 blur-3xl" />
         <div className="pointer-events-none absolute right-10 top-1/3 h-24 w-24 animate-[float_6s_ease-in-out_infinite] rounded-full bg-white/15 blur-xl" />
 
         <div className="relative z-10 flex h-full flex-col">
@@ -52,7 +52,7 @@ export default function BrandPanel({
 
           <h1 className="mt-6 text-3xl font-black leading-tight tracking-tight sm:text-4xl">
             {headlineLead}
-            <span className="block text-brand-red drop-shadow">
+            <span className="block bg-linear-to-r from-yellow-200 to-amber-300 bg-clip-text text-transparent drop-shadow">
               {headlineEmphasis}
             </span>
           </h1>
@@ -79,7 +79,7 @@ export default function BrandPanel({
 function BrandBadge({ text }: { text: string }) {
   return (
     <div className="inline-flex w-fit items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 backdrop-blur-sm ring-1 ring-white/20">
-      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-white text-brand-red">
+      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-violet-700">
         <MapPin className="h-3.5 w-3.5" />
       </div>
 
@@ -114,7 +114,7 @@ function RotatingPerks({
             )}
           >
             <div className="flex items-start gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-white text-brand-red shadow-md">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-violet-700 shadow-md">
                 <Icon className="h-5 w-5" />
               </div>
 
@@ -149,7 +149,7 @@ function PerkIndicators({
           onClick={() => onSelect(index)}
           className={cn(
             "h-1.5 rounded-full transition-all duration-500",
-            index === activeIndex ? "w-8 bg-brand-red" : "w-2 bg-white/40",
+            index === activeIndex ? "w-8 bg-yellow-300" : "w-2 bg-white/40",
           )}
         />
       ))}
@@ -165,7 +165,7 @@ function BrandStats({ stats }: { stats: readonly Stat[] }) {
           key={stat.label}
           className="rounded-xl bg-white/10 px-3 py-2.5 ring-1 ring-white/15 backdrop-blur-sm"
         >
-          <p className="text-lg font-black text-brand-gold">{stat.value}</p>
+          <p className="text-lg font-black text-yellow-300">{stat.value}</p>
           <p className="text-[10px] uppercase tracking-wide text-white/80">
             {stat.label}
           </p>

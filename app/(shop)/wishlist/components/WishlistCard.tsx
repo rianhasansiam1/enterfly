@@ -58,8 +58,8 @@ export default function WishlistCard({
         className={cn(
           "group relative flex gap-4 rounded-2xl border bg-white p-3 shadow-sm transition-all duration-300 sm:p-4",
           selected
-            ? "border-brand-red ring-2 ring-brand-red/20"
-            : "border-brand-border hover:border-brand-red hover:shadow-md",
+            ? "border-violet-500 ring-2 ring-violet-200"
+            : "border-gray-100 hover:border-violet-200 hover:shadow-md",
         )}
       >
         <SelectCheckbox
@@ -88,12 +88,12 @@ export default function WishlistCard({
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-text-muted">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-violet-600">
                 {item.brand} • {item.category}
               </p>
               <Link
                 href={`/products/${item.slug ?? item.id}`}
-                className="mt-0.5 line-clamp-2 text-sm font-semibold text-brand-black hover:text-brand-red sm:text-base"
+                className="mt-0.5 line-clamp-2 text-sm font-semibold text-gray-900 hover:text-violet-700 sm:text-base"
               >
                 {item.name}
               </Link>
@@ -128,8 +128,8 @@ export default function WishlistCard({
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-300",
         selected
-          ? "border-brand-red ring-2 ring-brand-red/20"
-          : "border-brand-border hover:-translate-y-1 hover:border-brand-red hover:shadow-xl",
+          ? "border-violet-500 ring-2 ring-violet-200"
+          : "border-gray-100 hover:-translate-y-1 hover:border-violet-200 hover:shadow-xl",
       )}
     >
       {/* Image */}
@@ -174,12 +174,12 @@ export default function WishlistCard({
         {/* Badges (left) */}
         <div className="pointer-events-none absolute left-2.5 top-12 flex flex-col gap-1.5">
           {item.badge && (
-            <span className="rounded-full bg-brand-red px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-white shadow-md">
+            <span className="rounded-full bg-linear-to-r from-violet-600 to-indigo-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-md">
               {item.badge}
             </span>
           )}
           {discount > 0 && (
-            <span className="rounded-full bg-brand-red px-2.5 py-1 text-[10px] font-bold text-brand-white shadow-md">
+            <span className="rounded-full bg-rose-500 px-2.5 py-1 text-[10px] font-bold text-white shadow-md">
               -{discount}%
             </span>
           )}
@@ -202,11 +202,11 @@ export default function WishlistCard({
 
       {/* Content */}
       <div className="flex flex-1 flex-col p-3 sm:p-4">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-brand-text-muted">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-violet-600">
           {item.brand} • {item.category}
         </p>
         <Link href={`/products/${item.slug ?? item.id}`}>
-          <h3 className="mt-1 line-clamp-2 min-h-10 text-sm font-semibold leading-tight text-brand-black transition-colors hover:text-brand-red">
+          <h3 className="mt-1 line-clamp-2 min-h-10 text-sm font-semibold leading-tight text-gray-900 transition-colors hover:text-violet-700">
             {item.name}
           </h3>
         </Link>
@@ -229,7 +229,7 @@ export default function WishlistCard({
             className={cn(
               "mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-200",
               item.inStock
-                ? "bg-brand-red text-brand-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-md"
+                ? "bg-linear-to-r from-violet-600 to-indigo-600 text-white shadow-sm hover:-translate-y-0.5 hover:from-violet-700 hover:to-indigo-700 hover:shadow-md"
                 : "cursor-not-allowed bg-gray-100 text-gray-400",
             )}
           >
@@ -254,12 +254,12 @@ function Badges({
   return (
     <div className="flex shrink-0 flex-col items-end gap-1">
       {item.badge && (
-        <span className="rounded-full bg-brand-red px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-white">
+        <span className="rounded-full bg-linear-to-r from-violet-600 to-indigo-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
           {item.badge}
         </span>
       )}
       {discount > 0 && (
-        <span className="rounded-full bg-brand-red px-2 py-0.5 text-[10px] font-bold text-brand-white">
+        <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold text-white">
           -{discount}%
         </span>
       )}
@@ -276,7 +276,7 @@ function PriceBlock({
 }) {
   return (
     <div className="flex items-baseline gap-2">
-      <span className="text-base font-extrabold text-brand-red sm:text-lg">
+      <span className="text-base font-extrabold text-violet-700 sm:text-lg">
         BDT {item.price.toLocaleString()}
       </span>
       {item.originalPrice && item.originalPrice > item.price && (
@@ -303,7 +303,7 @@ function RatingStars({ rating }: { rating: number }) {
           className={cn(
             "h-3 w-3",
             i < Math.round(rating)
-              ? "fill-brand-gold text-brand-gold"
+              ? "fill-amber-400 text-amber-400"
               : "text-gray-200",
           )}
         />
@@ -328,8 +328,8 @@ function SelectCheckbox({
       className={cn(
         "grid h-7 w-7 place-items-center rounded-lg border-2 backdrop-blur-md transition-all duration-200",
         selected
-          ? "border-brand-red bg-brand-red text-brand-white shadow-md"
-          : "border-white/80 bg-white/70 text-transparent hover:border-brand-red hover:text-brand-red",
+          ? "border-violet-600 bg-violet-600 text-white shadow-md"
+          : "border-white/80 bg-white/70 text-transparent hover:border-violet-400 hover:text-violet-400",
       )}
     >
       <Check className="h-4 w-4" />
@@ -357,7 +357,7 @@ function IconAction({
         "grid h-8 w-8 place-items-center rounded-full bg-white/90 shadow-sm backdrop-blur-md transition-all duration-200 hover:scale-110 active:scale-95",
         tone === "danger"
           ? "text-rose-600 hover:bg-rose-50"
-          : "text-gray-600 hover:bg-brand-light-bg hover:text-brand-red",
+          : "text-gray-600 hover:bg-violet-50 hover:text-violet-700",
       )}
     >
       {children}
@@ -382,7 +382,7 @@ function ActionButtons({
         type="button"
         onClick={onShare}
         aria-label="Share"
-        className="grid h-9 w-9 place-items-center rounded-xl border border-brand-border bg-brand-white text-gray-600 transition-colors hover:border-brand-red hover:bg-brand-light-bg hover:text-brand-red"
+        className="grid h-9 w-9 place-items-center rounded-xl border border-gray-200 bg-white text-gray-600 transition-colors hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700"
       >
         <Share2 className="h-4 w-4" />
       </button>
@@ -401,7 +401,7 @@ function ActionButtons({
         className={cn(
           "inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold transition-all duration-200",
           inStock
-            ? "bg-brand-red text-brand-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-md"
+            ? "bg-linear-to-r from-violet-600 to-indigo-600 text-white shadow-sm hover:-translate-y-0.5 hover:shadow-md"
             : "cursor-not-allowed bg-gray-100 text-gray-400",
         )}
       >

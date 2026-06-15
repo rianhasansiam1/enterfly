@@ -48,7 +48,7 @@ export default function CustomerForm({
   const isProfileLoading = profileStatus === "loading";
 
   return (
-    <section className="rounded-3xl border border-brand-border bg-brand-white p-5 shadow-sm sm:p-6">
+    <section className="rounded-3xl border border-violet-100 bg-white p-5 shadow-sm sm:p-6">
       <header className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-gray-900">Delivery details</h2>
@@ -63,7 +63,7 @@ export default function CustomerForm({
             className={cn(
               "rounded-full px-2.5 py-1 text-[11px] font-semibold",
               isProfileLoading
-                ? "bg-brand-light-bg text-brand-text-muted"
+                ? "bg-violet-50 text-violet-700"
                 : "bg-emerald-50 text-emerald-700",
             )}
           >
@@ -177,7 +177,7 @@ function EmailField({
   return (
     <div className="block">
       <span className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-gray-700">
-        <span className="text-brand-text-muted">
+        <span className="text-violet-600">
           <Mail className="h-4 w-4" />
         </span>
         Email
@@ -193,7 +193,7 @@ function EmailField({
           placeholder={loading ? "Loading your email..." : undefined}
           autoComplete="email"
           className={cn(
-            "h-11 w-full cursor-not-allowed rounded-xl border border-brand-border bg-brand-light-bg px-3 pr-10 text-sm font-medium text-gray-600 outline-none",
+            "h-11 w-full cursor-not-allowed rounded-xl border border-violet-200 bg-violet-50/60 px-3 pr-10 text-sm font-medium text-gray-600 outline-none",
           )}
         />
         <Lock className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -205,7 +205,7 @@ function EmailField({
         </span>
         <Link
           href="/profile?tab=settings"
-          className="font-semibold text-brand-red underline-offset-2 hover:text-brand-red-hover hover:underline"
+          className="font-semibold text-violet-600 underline-offset-2 hover:text-violet-700 hover:underline"
         >
           Update Profile
         </Link>
@@ -240,9 +240,9 @@ function Field({
   return (
     <label className="block">
       <span className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-gray-700">
-        <span className="text-brand-text-muted">{icon}</span>
+        <span className="text-violet-600">{icon}</span>
         {label}
-        {required && <span className="text-red-500">*</span>}
+        {required && <span className="text-rose-500">*</span>}
       </span>
       <input
         value={value}
@@ -253,11 +253,11 @@ function Field({
         disabled={disabled}
         className={cn(
           "h-11 w-full rounded-xl border bg-white px-3 text-sm text-gray-900 outline-none transition-all duration-200",
-          "focus-visible:border-brand-red focus-visible:ring-4 focus-visible:ring-brand-red/30",
+          "focus-visible:border-violet-500 focus-visible:ring-4 focus-visible:ring-violet-200",
           "disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400",
           error
             ? "border-red-300 focus-visible:border-red-500 focus-visible:ring-red-200"
-            : "border-brand-border",
+            : "border-violet-200",
         )}
       />
       {error && (
@@ -293,9 +293,9 @@ function FieldTextarea({
   return (
     <label className="block">
       <span className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-gray-700">
-        <span className="text-brand-text-muted">{icon}</span>
+        <span className="text-violet-600">{icon}</span>
         {label}
-        {required && <span className="text-red-500">*</span>}
+        {required && <span className="text-rose-500">*</span>}
       </span>
       <textarea
         value={value}
@@ -306,11 +306,11 @@ function FieldTextarea({
         disabled={disabled}
         className={cn(
           "min-h-[88px] w-full rounded-xl border bg-white px-3 py-2 text-sm text-gray-900 outline-none transition-all duration-200",
-          "focus-visible:border-brand-red focus-visible:ring-4 focus-visible:ring-brand-red/30",
+          "focus-visible:border-violet-500 focus-visible:ring-4 focus-visible:ring-violet-200",
           "disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400",
           error
             ? "border-red-300 focus-visible:border-red-500 focus-visible:ring-red-200"
-            : "border-brand-border",
+            : "border-violet-200",
         )}
       />
       {error && (

@@ -29,24 +29,24 @@ export default function MessagesToolbar({
   onRefresh: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-brand-border bg-brand-white p-4 shadow-sm sm:p-5">
+    <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
           <label className="relative flex flex-1 items-center">
-            <Search className="pointer-events-none absolute left-3 h-4 w-4 text-brand-text-muted" />
+            <Search className="pointer-events-none absolute left-3 h-4 w-4 text-violet-400" />
             <input
               type="text"
               value={query}
               onChange={(event) => onQueryChange(event.target.value)}
               placeholder="Search by name, email, subject, or content..."
-              className="h-10 w-full rounded-xl border border-brand-border pl-9 pr-3 text-sm outline-none transition focus:border-brand-red"
+              className="h-10 w-full rounded-xl border border-violet-200 pl-9 pr-3 text-sm outline-none transition focus:border-violet-500"
             />
           </label>
 
           <select
             value={statusFilter}
             onChange={(event) => onStatusChange(event.target.value as StatusFilter)}
-            className="h-10 rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           >
             <option value="ALL">All statuses</option>
             {STATUS_VALUES.map((status) => (
@@ -60,7 +60,7 @@ export default function MessagesToolbar({
         <button
           type="button"
           onClick={onRefresh}
-          className="inline-flex h-10 items-center gap-2 rounded-xl border border-brand-border px-3 text-sm font-semibold text-foreground transition hover:bg-brand-light-bg"
+          className="inline-flex h-10 items-center gap-2 rounded-xl border border-violet-200 px-3 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
         >
           <RotateCcw className="h-4 w-4" />
           Refresh

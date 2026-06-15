@@ -44,9 +44,9 @@ export default function ProductsGrid({
 }: Props) {
   if (products.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-brand-border bg-white px-6 py-16 text-center shadow-sm">
-        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-brand-light-bg">
-          <PackageX className="h-10 w-10 text-brand-text-muted" />
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-violet-100 bg-white px-6 py-16 text-center shadow-sm">
+        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-violet-100">
+          <PackageX className="h-10 w-10 text-violet-600" />
         </div>
         <h3 className="mb-1 text-lg font-bold text-gray-900">
           No products found
@@ -56,7 +56,7 @@ export default function ProductsGrid({
         </p>
         <button
           onClick={onClearFilters}
-          className="rounded-full bg-brand-red px-5 py-2 text-sm font-semibold text-brand-white transition hover:-translate-y-0.5 hover:bg-brand-red-hover hover:shadow-lg"
+          className="rounded-full bg-linear-to-r from-violet-600 to-indigo-600 px-5 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:from-violet-700 hover:to-indigo-700 hover:shadow-lg"
         >
           Clear all filters
         </button>
@@ -194,7 +194,7 @@ function ListItem({ product }: { product: Product }) {
   };
 
   return (
-    <div className="group flex gap-3 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:border-brand-red hover:shadow-md sm:gap-4">
+    <div className="group flex gap-3 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:border-violet-200 hover:shadow-md sm:gap-4">
       <Link
         href={`/products/${product.slug}`}
         className="relative aspect-square w-28 shrink-0 overflow-hidden bg-gray-50 sm:w-40 md:w-48"
@@ -207,12 +207,12 @@ function ListItem({ product }: { product: Product }) {
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
         {product.badge ? (
-          <span className="absolute left-2 top-2 rounded-full bg-brand-red px-2 py-0.5 text-[10px] font-semibold text-brand-white">
+          <span className="absolute left-2 top-2 rounded-full bg-linear-to-r from-violet-600 to-indigo-600 px-2 py-0.5 text-[10px] font-semibold text-white">
             {product.badge}
           </span>
         ) : (
           discount > 0 && (
-            <span className="absolute left-2 top-2 rounded-full bg-brand-red px-2 py-0.5 text-[10px] font-semibold text-brand-white">
+            <span className="absolute left-2 top-2 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-semibold text-white">
               -{discount}%
             </span>
           )
@@ -222,15 +222,15 @@ function ListItem({ product }: { product: Product }) {
       <div className="flex min-w-0 flex-1 flex-col py-2 pr-3 sm:py-3 sm:pr-4">
         <div className="mb-1 flex items-start justify-between gap-2">
           <Link href={`/products/${product.slug}`} className="min-w-0">
-            <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-gray-900 transition hover:text-brand-red sm:text-base">
+            <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-gray-900 transition hover:text-violet-700 sm:text-base">
               {product.name}
             </h3>
           </Link>
           <button
             aria-label="Add to wishlist"
-            className="shrink-0 rounded-full p-1.5 transition hover:bg-brand-light-bg"
+            className="shrink-0 rounded-full p-1.5 transition hover:bg-violet-50"
           >
-            <Heart className="h-4 w-4 text-gray-500 transition-colors hover:text-brand-red" />
+            <Heart className="h-4 w-4 text-gray-500 transition-colors hover:text-red-500" />
           </button>
         </div>
 
@@ -240,7 +240,7 @@ function ListItem({ product }: { product: Product }) {
               key={i}
               className={`h-3 w-3 ${
                 i < Math.round(product.rating)
-                  ? "fill-brand-gold text-brand-gold"
+                  ? "fill-amber-400 text-amber-400"
                   : "text-gray-200"
               }`}
             />
@@ -258,7 +258,7 @@ function ListItem({ product }: { product: Product }) {
 
         <div className="mt-auto flex items-end justify-between gap-2">
           <div className="flex flex-wrap items-baseline gap-1.5">
-            <span className="text-base font-bold text-brand-red sm:text-lg">
+            <span className="text-base font-bold text-violet-700 sm:text-lg">
               BDT {finalPrice.toLocaleString()}
             </span>
             {hasDiscount && (
@@ -266,7 +266,7 @@ function ListItem({ product }: { product: Product }) {
                 <span className="text-xs text-gray-400 line-through">
                   BDT {product.price.toLocaleString()}
                 </span>
-                <span className="text-[10px] font-bold text-brand-red sm:text-xs">
+                <span className="text-[10px] font-bold text-green-600 sm:text-xs">
                   {discount}% off
                 </span>
               </>
@@ -279,7 +279,7 @@ function ListItem({ product }: { product: Product }) {
                 void handleAddToCart();
               }}
               disabled={isCartBusy}
-              className="hidden items-center gap-1.5 rounded-full bg-brand-red px-3 py-1.5 text-xs font-semibold text-brand-white shadow-sm transition hover:bg-brand-red-hover hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 sm:flex"
+              className="hidden items-center gap-1.5 rounded-full bg-linear-to-r from-violet-600 to-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:from-violet-700 hover:to-indigo-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 sm:flex"
             >
               <ShoppingCart className="h-3.5 w-3.5" />
               Add to Cart

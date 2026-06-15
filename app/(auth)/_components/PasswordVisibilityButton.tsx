@@ -16,7 +16,7 @@ export default function PasswordVisibilityButton({
       type="button"
       aria-label={visible ? "Hide password" : "Show password"}
       onClick={onClick}
-      className="p-1 text-brand-text-muted transition-colors hover:text-brand-red"
+      className="p-1 text-gray-500 transition-colors hover:text-violet-700"
     >
       {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
     </button>

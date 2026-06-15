@@ -36,7 +36,7 @@ export default function ProductsTable({
 }) {
   if (isLoading && totalCount === 0) {
     return (
-      <div className="rounded-2xl border border-brand-border bg-brand-white p-10 text-center text-sm text-brand-text-muted shadow-sm">
+      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700 shadow-sm">
         <span className="inline-flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading products...
@@ -47,17 +47,17 @@ export default function ProductsTable({
 
   if (products.length === 0) {
     return (
-      <div className="rounded-2xl border border-brand-border bg-brand-white p-10 text-center text-sm text-gray-600 shadow-sm">
+      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-gray-600 shadow-sm">
         No products found for current filters.
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-brand-border bg-brand-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="bg-brand-light-bg text-left text-xs uppercase tracking-wider text-brand-text-muted">
+          <thead className="bg-violet-50 text-left text-xs uppercase tracking-wider text-violet-700">
             <tr>
               <th className="px-4 py-3">Product</th>
               <th className="px-4 py-3">Category</th>
@@ -83,20 +83,20 @@ export default function ProductsTable({
                   exit="exit"
                   variants={LIST_ITEM_VARIANTS}
                   transition={LIST_ITEM_TRANSITION}
-                  className="border-t border-brand-border"
+                  className="border-t border-violet-100/70"
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <img
                         src={product.image ?? FALLBACK_IMAGE}
                         alt={product.name}
-                        className="h-12 w-12 rounded-lg border border-brand-border object-cover"
+                        className="h-12 w-12 rounded-lg border border-violet-100 object-cover"
                       />
                       <div className="min-w-0">
                         <p className="truncate font-semibold text-gray-900">
                           {product.name}
                         </p>
-                        <p className="truncate font-mono text-xs text-brand-text-muted">
+                        <p className="truncate font-mono text-xs text-violet-600">
                           {product.productCode}
                         </p>
                       </div>
@@ -130,7 +130,7 @@ export default function ProductsTable({
                   </td>
                   <td className="px-4 py-3">
                     {typeof product.discountPrice === "number" ? (
-                      <p className="font-semibold text-brand-red">
+                      <p className="font-semibold text-emerald-700">
                         {formatBDT(product.discountPrice)}
                       </p>
                     ) : (
@@ -146,7 +146,7 @@ export default function ProductsTable({
                         type="button"
                         onClick={() => onEdit(product)}
                         disabled={isBusy}
-                        className="inline-flex items-center gap-1 rounded-lg border border-brand-border px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-brand-light-bg disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex items-center gap-1 rounded-lg border border-violet-200 px-2.5 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                         Edit
@@ -156,7 +156,7 @@ export default function ProductsTable({
                         type="button"
                         onClick={() => onToggleHide(product)}
                         disabled={isBusy}
-                        className="inline-flex items-center gap-1 rounded-lg border border-brand-border px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-brand-light-bg disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex items-center gap-1 rounded-lg border border-amber-200 px-2.5 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {product.status === "ACTIVE" ? (
                           <>

@@ -50,7 +50,7 @@ export function CarouselList({
           exit="exit"
           variants={LIST_ITEM_VARIANTS}
           transition={LIST_ITEM_TRANSITION}
-          className="overflow-hidden rounded-2xl border border-brand-border bg-brand-white shadow-sm"
+          className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm"
         >
           <div className="relative h-32 w-full overflow-hidden bg-gray-100">
             <img
@@ -70,7 +70,7 @@ export function CarouselList({
           <div className="space-y-2 p-4">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
+                <p className="text-xs font-semibold uppercase tracking-wide text-violet-500">
                   {banner.badge}
                 </p>
                 <h3 className="truncate text-base font-bold text-gray-900">
@@ -80,7 +80,7 @@ export function CarouselList({
                   </span>
                 </h3>
               </div>
-              <span className="rounded-lg bg-brand-light-bg px-2 py-1 text-xs font-semibold text-foreground">
+              <span className="rounded-lg bg-violet-50 px-2 py-1 text-xs font-semibold text-violet-700">
                 #{banner.position}
               </span>
             </div>
@@ -151,7 +151,7 @@ export function CategoryList({
           exit="exit"
           variants={LIST_ITEM_VARIANTS}
           transition={LIST_ITEM_TRANSITION}
-          className="overflow-hidden rounded-2xl border border-brand-border bg-brand-white shadow-sm"
+          className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm"
         >
           <div className="relative h-32 w-full overflow-hidden bg-gray-100">
             <img
@@ -171,14 +171,14 @@ export function CategoryList({
           <div className="space-y-2 p-4">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+                <p className="text-xs font-semibold uppercase tracking-wide text-rose-500">
                   {banner.label}
                 </p>
                 <h3 className="truncate text-base font-bold text-gray-900">
                   {banner.heading}
                 </h3>
               </div>
-              <span className="rounded-lg bg-brand-red/10 px-2 py-1 text-xs font-bold text-brand-red">
+              <span className="rounded-lg bg-yellow-100 px-2 py-1 text-xs font-bold text-amber-700">
                 {banner.discount}
               </span>
             </div>
@@ -187,7 +187,7 @@ export function CategoryList({
             </p>
             <p className="text-[11px] text-gray-400">
               Linked to:{" "}
-              <span className="font-semibold text-brand-black">
+              <span className="font-semibold text-violet-700">
                 {banner.category.name || banner.categoryId}
               </span>
               {banner.link && (
@@ -233,9 +233,9 @@ export function TopList({
           exit="exit"
           variants={LIST_ITEM_VARIANTS}
           transition={LIST_ITEM_TRANSITION}
-          className="overflow-hidden rounded-2xl border border-brand-border bg-brand-white shadow-sm"
+          className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm"
         >
-          <div className="relative bg-brand-black px-4 py-3 text-white">
+          <div className="relative bg-linear-to-r from-violet-600 via-violet-500 to-indigo-500 px-4 py-3 text-white">
             <span
               className={cn(
                 "absolute right-2 top-2 inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold ring-1 ring-inset",
@@ -248,7 +248,7 @@ export function TopList({
               {banner.icon} · {banner.badge}
             </p>
             <p className="text-sm">
-              <span className="text-brand-red font-extrabold">
+              <span className="text-yellow-300 font-extrabold">
                 {banner.discount}
               </span>{" "}
               {banner.description}
@@ -265,7 +265,7 @@ export function TopList({
           <div className="space-y-2 p-4">
             <p className="text-[11px] text-gray-400">
               Position{" "}
-              <span className="font-semibold text-brand-black">
+              <span className="font-semibold text-violet-700">
                 #{banner.position}
               </span>
               <span className="mx-2">·</span>
@@ -310,7 +310,7 @@ export function DealList({
           exit="exit"
           variants={LIST_ITEM_VARIANTS}
           transition={LIST_ITEM_TRANSITION}
-          className="overflow-hidden rounded-2xl border border-brand-border bg-brand-white shadow-sm"
+          className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm"
         >
           <div
             className="relative h-28 overflow-hidden"
@@ -386,7 +386,7 @@ export function PromoList({
           exit="exit"
           variants={LIST_ITEM_VARIANTS}
           transition={LIST_ITEM_TRANSITION}
-          className="overflow-hidden rounded-2xl border border-brand-border bg-brand-white shadow-sm"
+          className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm"
         >
           <div
             className="relative h-44 overflow-hidden"

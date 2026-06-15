@@ -34,7 +34,7 @@ export default function MessageDrawer({
         className="flex max-h-[90vh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl sm:max-w-2xl sm:rounded-2xl"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-brand-border bg-brand-light-bg px-5 py-4">
+        <div className="flex items-start justify-between gap-3 border-b border-violet-100 bg-linear-to-r from-violet-50 to-indigo-50 px-5 py-4">
           <div className="min-w-0">
             <p className="truncate text-base font-bold text-gray-900">
               {message.subject}
@@ -43,7 +43,7 @@ export default function MessageDrawer({
               {message.name} · {message.email}
               {message.phone ? ` · ${message.phone}` : ""}
             </p>
-            <p className="mt-1 text-[11px] uppercase tracking-wide text-brand-text-muted">
+            <p className="mt-1 text-[11px] uppercase tracking-wide text-violet-500">
               Received {formatDateTime(message.createdAt)}
             </p>
           </div>

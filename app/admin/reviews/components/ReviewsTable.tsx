@@ -18,7 +18,7 @@ import Stars from "@/app/admin/components/Stars";
 
 const SOURCE_BADGE: Record<ReviewSource, string> = {
   CUSTOMER: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  ADMIN: "bg-brand-light-bg text-brand-black ring-brand-border",
+  ADMIN: "bg-violet-50 text-violet-700 ring-violet-200",
 };
 
 export default function ReviewsTable({
@@ -36,7 +36,7 @@ export default function ReviewsTable({
 }) {
   if (isLoading && totalCount === 0) {
     return (
-      <div className="rounded-2xl border border-brand-border bg-brand-white p-10 text-center text-sm text-brand-text-muted shadow-sm">
+      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700 shadow-sm">
         <span className="inline-flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading reviews...
@@ -47,18 +47,18 @@ export default function ReviewsTable({
 
   if (reviews.length === 0) {
     return (
-      <div className="rounded-2xl border border-brand-border bg-brand-white p-10 text-center text-sm text-gray-600 shadow-sm">
-        <MessageSquareText className="mx-auto mb-2 h-8 w-8 text-brand-text-muted" />
+      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-gray-600 shadow-sm">
+        <MessageSquareText className="mx-auto mb-2 h-8 w-8 text-violet-300" />
         No reviews match the current filters.
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-brand-border bg-brand-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="bg-brand-light-bg text-left text-xs uppercase tracking-wider text-brand-text-muted">
+          <thead className="bg-violet-50 text-left text-xs uppercase tracking-wider text-violet-700">
             <tr>
               <th className="px-4 py-3">Product</th>
               <th className="px-4 py-3">Author</th>
@@ -82,13 +82,13 @@ export default function ReviewsTable({
                   exit="exit"
                   variants={LIST_ITEM_VARIANTS}
                   transition={LIST_ITEM_TRANSITION}
-                  className="border-t border-brand-border align-top"
+                  className="border-t border-violet-100/70 align-top"
                 >
                   <td className="px-4 py-3">
                     <p className="font-semibold text-gray-900">
                       {review.product?.name ?? "Deleted product"}
                     </p>
-                    <p className="mt-1 truncate font-mono text-xs text-brand-text-muted">
+                    <p className="mt-1 truncate font-mono text-xs text-violet-600">
                       {review.product?.productCode ?? "—"}
                     </p>
                   </td>
@@ -99,7 +99,7 @@ export default function ReviewsTable({
                     {review.authorPhone ? (
                       <a
                         href={`tel:${review.authorPhone}`}
-                        className="mt-0.5 inline-flex items-center gap-1 text-xs font-medium text-brand-black transition hover:text-brand-red hover:underline"
+                        className="mt-0.5 inline-flex items-center gap-1 text-xs font-medium text-violet-700 transition hover:text-violet-900 hover:underline"
                       >
                         <Phone className="h-3 w-3" />
                         {review.authorPhone}

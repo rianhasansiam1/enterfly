@@ -48,14 +48,14 @@ const DealsCarousel: React.FC<DealsCarouselProps> = ({
         <div className="flex gap-2">
           <button 
             onClick={() => scroll('left')}
-            className="p-2 rounded-full border border-gray-200 hover:bg-brand-light-bg hover:border-brand-red transition-colors"
+            className="p-2 rounded-full border border-gray-200 hover:bg-violet-50 hover:border-violet-300 transition-colors"
             aria-label="Scroll left"
           >
             <ChevronLeft className="w-4 h-4 text-gray-600" />
           </button>
           <button 
             onClick={() => scroll('right')}
-            className="p-2 rounded-full border border-gray-200 hover:bg-brand-light-bg hover:border-brand-red transition-colors"
+            className="p-2 rounded-full border border-gray-200 hover:bg-violet-50 hover:border-violet-300 transition-colors"
             aria-label="Scroll right"
           >
             <ChevronRight className="w-4 h-4 text-gray-600" />
@@ -71,7 +71,7 @@ const DealsCarousel: React.FC<DealsCarouselProps> = ({
           <Link
             key={deal.id}
             href={deal.link ?? "#"}
-            style={{ backgroundColor: resolveColorValue(deal.bgClass) ?? "var(--brand-black)" }}
+            style={{ backgroundColor: resolveColorValue(deal.bgClass) ?? "#f43f5e" }}
             className="relative min-w-[180px] h-24 rounded-xl overflow-hidden shrink-0 snap-start group"
           >
             <Image

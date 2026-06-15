@@ -20,7 +20,7 @@ export function RowFooter({
         type="button"
         onClick={onEdit}
         disabled={isBusy}
-        className="inline-flex items-center gap-1 rounded-lg border border-brand-border px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-brand-light-bg disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex items-center gap-1 rounded-lg border border-violet-200 px-2.5 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <Pencil className="h-3.5 w-3.5" /> Edit
       </button>
@@ -43,8 +43,8 @@ export function RowFooter({
 
 export function EmptyState({ label }: { label: string }) {
   return (
-    <div className="rounded-2xl border border-brand-border bg-brand-white p-10 text-center text-sm text-gray-600 shadow-sm">
-      <ImageIcon className="mx-auto mb-2 h-8 w-8 text-brand-text-muted" />
+    <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-gray-600 shadow-sm">
+      <ImageIcon className="mx-auto mb-2 h-8 w-8 text-violet-300" />
       {label}
     </div>
   );

@@ -45,16 +45,16 @@ export default function CategoryFormDrawer({
 
       <aside
         className={cn(
-          "fixed inset-y-0 right-0 z-70 w-full max-w-md border-l border-brand-border bg-brand-white shadow-2xl transition-transform duration-300",
+          "fixed inset-y-0 right-0 z-70 w-full max-w-md border-l border-violet-100 bg-white shadow-2xl transition-transform duration-300",
           open ? "translate-x-0" : "translate-x-full",
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="border-b border-brand-border bg-brand-black px-5 py-4 text-brand-white">
+          <div className="border-b border-violet-100 bg-linear-to-r from-violet-600 to-indigo-700 px-5 py-4 text-white">
             <h2 className="text-lg font-bold">
               {mode === "create" ? "Create Category" : "Edit Category"}
             </h2>
-            <p className="mt-0.5 text-xs text-brand-white/70">
+            <p className="mt-0.5 text-xs text-violet-100">
               {mode === "create"
                 ? "Add a category and publish it to the storefront."
                 : "Update category details and visibility."}
@@ -69,7 +69,7 @@ export default function CategoryFormDrawer({
                   onChange={(event) =>
                     onChange((prev) => ({ ...prev, name: event.target.value }))
                   }
-                  className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+                  className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
                   placeholder="Category name"
                 />
               </Field>
@@ -83,7 +83,7 @@ export default function CategoryFormDrawer({
                       status: event.target.value as CategoryStatus,
                     }))
                   }
-                  className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+                  className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
                 >
                   {STATUS_VALUES.map((status) => (
                     <option key={status} value={status}>
@@ -112,13 +112,13 @@ export default function CategoryFormDrawer({
                       description: event.target.value,
                     }))
                   }
-                  className="min-h-28 w-full rounded-xl border border-brand-border px-3 py-2 text-sm outline-none transition focus:border-brand-red"
+                  className="min-h-28 w-full rounded-xl border border-violet-200 px-3 py-2 text-sm outline-none transition focus:border-violet-500"
                   placeholder="What's in this category?"
                 />
               </Field>
 
               {mode === "edit" && editing && (
-                <div className="rounded-xl border border-brand-border bg-brand-light-bg p-3 text-xs text-brand-text-muted">
+                <div className="rounded-xl border border-violet-100 bg-violet-50/40 p-3 text-xs text-violet-700">
                   <p>
                     Slug:{" "}
                     <span className="font-mono font-semibold">
@@ -133,19 +133,19 @@ export default function CategoryFormDrawer({
               )}
             </div>
 
-            <div className="border-t border-brand-border bg-brand-white px-5 py-4">
+            <div className="border-t border-violet-100 bg-white px-5 py-4">
               <div className="flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="h-10 rounded-xl border border-brand-border px-4 text-sm font-semibold text-brand-black transition hover:bg-brand-light-bg"
+                  className="h-10 rounded-xl border border-violet-200 px-4 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-brand-red px-4 text-sm font-semibold text-brand-white transition hover:bg-brand-red-hover disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white transition hover:from-violet-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                   {mode === "create" ? "Create" : "Save changes"}

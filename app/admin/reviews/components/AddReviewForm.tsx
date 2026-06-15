@@ -85,7 +85,7 @@ export default function AddReviewForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-brand-border bg-brand-white p-4 shadow-sm sm:p-5"
+      className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5"
     >
       <h2 className="text-sm font-bold text-gray-900">Add a review</h2>
       <p className="mt-0.5 text-xs text-gray-500">
@@ -99,7 +99,7 @@ export default function AddReviewForm({
             value={productId}
             onChange={(event) => setProductId(event.target.value)}
             disabled={productsLoading}
-            className="h-10 rounded-xl border border-brand-border px-3 text-sm font-normal text-gray-900 outline-none transition focus:border-brand-red disabled:opacity-60"
+            className="h-10 rounded-xl border border-violet-200 px-3 text-sm font-normal text-gray-900 outline-none transition focus:border-violet-500 disabled:opacity-60"
           >
             <option value="">
               {productsLoading ? "Loading products..." : "Select a product"}
@@ -120,7 +120,7 @@ export default function AddReviewForm({
             value={authorName}
             onChange={(event) => setAuthorName(event.target.value)}
             placeholder="e.g. Rahim Uddin"
-            className="h-10 rounded-xl border border-brand-border px-3 text-sm font-normal text-gray-900 outline-none transition focus:border-brand-red"
+            className="h-10 rounded-xl border border-violet-200 px-3 text-sm font-normal text-gray-900 outline-none transition focus:border-violet-500"
           />
         </label>
 
@@ -129,7 +129,7 @@ export default function AddReviewForm({
           <select
             value={String(rating)}
             onChange={(event) => setRating(Number(event.target.value))}
-            className="h-10 rounded-xl border border-brand-border px-3 text-sm font-normal text-gray-900 outline-none transition focus:border-brand-red"
+            className="h-10 rounded-xl border border-violet-200 px-3 text-sm font-normal text-gray-900 outline-none transition focus:border-violet-500"
           >
             {[5, 4, 3, 2, 1].map((star) => (
               <option key={star} value={star}>
@@ -146,7 +146,7 @@ export default function AddReviewForm({
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             placeholder="Short summary"
-            className="h-10 rounded-xl border border-brand-border px-3 text-sm font-normal text-gray-900 outline-none transition focus:border-brand-red"
+            className="h-10 rounded-xl border border-violet-200 px-3 text-sm font-normal text-gray-900 outline-none transition focus:border-violet-500"
           />
         </label>
 
@@ -157,7 +157,7 @@ export default function AddReviewForm({
             onChange={(event) => setComment(event.target.value)}
             placeholder="What did the customer say?"
             rows={3}
-            className="rounded-xl border border-brand-border px-3 py-2 text-sm font-normal text-gray-900 outline-none transition focus:border-brand-red"
+            className="rounded-xl border border-violet-200 px-3 py-2 text-sm font-normal text-gray-900 outline-none transition focus:border-violet-500"
           />
         </label>
       </div>
@@ -173,7 +173,7 @@ export default function AddReviewForm({
         <button
           type="submit"
           disabled={submitting}
-          className="inline-flex h-10 items-center gap-2 rounded-xl bg-brand-red px-4 text-sm font-semibold text-brand-white shadow-sm transition hover:bg-brand-red-hover disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex h-10 items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:from-violet-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
           Add review

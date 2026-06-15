@@ -346,11 +346,11 @@ export default function AdminSettingsPage() {
           usedCount={totals.used}
         />
 
-        <div className="rounded-2xl border border-brand-border bg-brand-white p-4 shadow-sm sm:p-5">
+        <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="flex items-center gap-2 text-base font-bold text-gray-900">
-                <Ticket className="h-4 w-4 text-brand-red" />
+                <Ticket className="h-4 w-4 text-violet-600" />
                 Promo codes
               </h2>
               <p className="text-xs text-gray-500">
@@ -361,7 +361,7 @@ export default function AdminSettingsPage() {
             <button
               type="button"
               onClick={openCreatePromo}
-              className="inline-flex h-10 items-center gap-2 rounded-xl bg-brand-red px-4 text-sm font-semibold text-white transition hover:bg-brand-red-hover"
+              className="inline-flex h-10 items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white transition hover:from-violet-700 hover:to-indigo-700"
             >
               <Plus className="h-4 w-4" />
               New promo code

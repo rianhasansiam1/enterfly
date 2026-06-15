@@ -39,7 +39,7 @@ export function CarouselFormFields({
           <input
             value={form.title}
             onChange={(e) => update("title", e.target.value)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
             placeholder="25% OFF"
           />
         </Field>
@@ -47,7 +47,7 @@ export function CarouselFormFields({
           <input
             value={form.subtitle}
             onChange={(e) => update("subtitle", e.target.value)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
             placeholder="VEGETABLES"
           />
         </Field>
@@ -56,7 +56,7 @@ export function CarouselFormFields({
         <input
           value={form.badge}
           onChange={(e) => update("badge", e.target.value)}
-          className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           placeholder="Weekend Special"
         />
       </Field>
@@ -64,7 +64,7 @@ export function CarouselFormFields({
         <textarea
           value={form.description}
           onChange={(e) => update("description", e.target.value)}
-          className="min-h-24 w-full rounded-xl border border-brand-border px-3 py-2 text-sm outline-none transition focus:border-brand-red"
+          className="min-h-24 w-full rounded-xl border border-violet-200 px-3 py-2 text-sm outline-none transition focus:border-violet-500"
           placeholder="Short marketing copy"
         />
       </Field>
@@ -74,7 +74,7 @@ export function CarouselFormFields({
           onChange={(e) =>
             update("bgType", e.target.value as CarouselBgType)
           }
-          className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
         >
           {CAROUSEL_BG_TYPES.map((type) => (
             <option key={type} value={type}>
@@ -120,7 +120,7 @@ export function CarouselFormFields({
         <input
           value={form.link}
           onChange={(e) => update("link", e.target.value)}
-          className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           placeholder="/products?category=grocery"
         />
       </Field>
@@ -132,14 +132,14 @@ export function CarouselFormFields({
             step="1"
             value={form.position}
             onChange={(e) => update("position", e.target.value)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           />
         </Field>
         <Field label="Status" required>
           <select
             value={form.status}
             onChange={(e) => update("status", e.target.value as BannerStatus)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           >
             {STATUS_VALUES.map((s) => (
               <option key={s} value={s}>
@@ -173,7 +173,7 @@ export function CategoryBannerFormFields({
         <select
           value={form.categoryId}
           onChange={(e) => update("categoryId", e.target.value)}
-          className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
         >
           <option value="">Select category</option>
           {categories.map((category) => (
@@ -191,7 +191,7 @@ export function CategoryBannerFormFields({
           <input
             value={form.label}
             onChange={(e) => update("label", e.target.value)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
             placeholder="SALE"
           />
         </Field>
@@ -199,7 +199,7 @@ export function CategoryBannerFormFields({
           <input
             value={form.discount}
             onChange={(e) => update("discount", e.target.value)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
             placeholder="40%"
           />
         </Field>
@@ -208,7 +208,7 @@ export function CategoryBannerFormFields({
         <input
           value={form.heading}
           onChange={(e) => update("heading", e.target.value)}
-          className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           placeholder="FLASH SALE"
         />
       </Field>
@@ -216,7 +216,7 @@ export function CategoryBannerFormFields({
         <textarea
           value={form.description}
           onChange={(e) => update("description", e.target.value)}
-          className="min-h-24 w-full rounded-xl border border-brand-border px-3 py-2 text-sm outline-none transition focus:border-brand-red"
+          className="min-h-24 w-full rounded-xl border border-violet-200 px-3 py-2 text-sm outline-none transition focus:border-violet-500"
           placeholder="Short banner copy"
         />
       </Field>
@@ -224,7 +224,7 @@ export function CategoryBannerFormFields({
         <input
           value={form.link}
           onChange={(e) => update("link", e.target.value)}
-          className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           placeholder="/products?category=fashion"
         />
       </Field>
@@ -232,7 +232,7 @@ export function CategoryBannerFormFields({
         <select
           value={form.status}
           onChange={(e) => update("status", e.target.value as BannerStatus)}
-          className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
         >
           {STATUS_VALUES.map((s) => (
             <option key={s} value={s}>
@@ -267,7 +267,7 @@ export function DealFormFields({
           <input
             value={form.title}
             onChange={(e) => update("title", e.target.value)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
             placeholder="Up to 70% Off"
           />
         </Field>
@@ -275,7 +275,7 @@ export function DealFormFields({
           <input
             value={form.subtitle}
             onChange={(e) => update("subtitle", e.target.value)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
             placeholder="Black Friday"
           />
         </Field>
@@ -291,7 +291,7 @@ export function DealFormFields({
         <input
           value={form.link}
           onChange={(e) => update("link", e.target.value)}
-          className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           placeholder="/products?sale=black-friday"
         />
       </Field>
@@ -303,14 +303,14 @@ export function DealFormFields({
             step="1"
             value={form.position}
             onChange={(e) => update("position", e.target.value)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           />
         </Field>
         <Field label="Status" required>
           <select
             value={form.status}
             onChange={(e) => update("status", e.target.value as BannerStatus)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           >
             {STATUS_VALUES.map((s) => (
               <option key={s} value={s}>
@@ -346,7 +346,7 @@ export function PromoFormFields({
           <input
             value={form.title}
             onChange={(e) => update("title", e.target.value)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
             placeholder="Mega Sale"
           />
         </Field>
@@ -354,7 +354,7 @@ export function PromoFormFields({
           <input
             value={form.subtitle}
             onChange={(e) => update("subtitle", e.target.value)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
             placeholder="Save Big Today"
           />
         </Field>
@@ -363,7 +363,7 @@ export function PromoFormFields({
         <input
           value={form.discount}
           onChange={(e) => update("discount", e.target.value)}
-          className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           placeholder="UP TO 60% OFF"
         />
       </Field>
@@ -378,7 +378,7 @@ export function PromoFormFields({
         <input
           value={form.link}
           onChange={(e) => update("link", e.target.value)}
-          className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           placeholder="/products?sale=mega"
         />
       </Field>
@@ -390,14 +390,14 @@ export function PromoFormFields({
             step="1"
             value={form.position}
             onChange={(e) => update("position", e.target.value)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           />
         </Field>
         <Field label="Status" required>
           <select
             value={form.status}
             onChange={(e) => update("status", e.target.value as BannerStatus)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           >
             {STATUS_VALUES.map((s) => (
               <option key={s} value={s}>
@@ -430,7 +430,7 @@ export function TopFormFields({
           <input
             value={form.icon}
             onChange={(e) => update("icon", e.target.value)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
             placeholder="Tag, Gift, Percent..."
           />
         </Field>
@@ -438,7 +438,7 @@ export function TopFormFields({
           <input
             value={form.tagIcon}
             onChange={(e) => update("tagIcon", e.target.value)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
             placeholder="Sparkles, Zap..."
           />
         </Field>
@@ -447,7 +447,7 @@ export function TopFormFields({
         <input
           value={form.badge}
           onChange={(e) => update("badge", e.target.value)}
-          className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           placeholder="MEGA SALE"
         />
       </Field>
@@ -455,7 +455,7 @@ export function TopFormFields({
         <input
           value={form.discount}
           onChange={(e) => update("discount", e.target.value)}
-          className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           placeholder="70% OFF"
         />
       </Field>
@@ -463,7 +463,7 @@ export function TopFormFields({
         <input
           value={form.description}
           onChange={(e) => update("description", e.target.value)}
-          className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           placeholder="on all products"
         />
       </Field>
@@ -471,7 +471,7 @@ export function TopFormFields({
         <input
           value={form.tag}
           onChange={(e) => update("tag", e.target.value)}
-          className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           placeholder="Limited Time Only"
         />
       </Field>
@@ -479,7 +479,7 @@ export function TopFormFields({
         <input
           value={form.link}
           onChange={(e) => update("link", e.target.value)}
-          className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+          className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           placeholder="/products?sort=deals"
         />
       </Field>
@@ -491,14 +491,14 @@ export function TopFormFields({
             step="1"
             value={form.position}
             onChange={(e) => update("position", e.target.value)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           />
         </Field>
         <Field label="Status" required>
           <select
             value={form.status}
             onChange={(e) => update("status", e.target.value as BannerStatus)}
-            className="h-10 w-full rounded-xl border border-brand-border px-3 text-sm outline-none transition focus:border-brand-red"
+            className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
           >
             {STATUS_VALUES.map((s) => (
               <option key={s} value={s}>

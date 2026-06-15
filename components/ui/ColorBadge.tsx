@@ -36,7 +36,7 @@ export default function ColorBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 text-[11px] font-medium text-brand-text-muted",
+        "inline-flex items-center gap-1.5 text-[11px] font-medium text-violet-600",
         className,
       )}
     >

@@ -551,7 +551,7 @@ export default function WishlistPage() {
   };
 
   return (
-    <main className="min-h-screen bg-brand-light-bg">
+    <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <WishlistHero
           totalItems={items.length}
@@ -591,7 +591,7 @@ export default function WishlistPage() {
 
         <section className="mt-6 pb-24">
           {isLoading && items.length === 0 ? (
-            <div className="rounded-2xl border border-brand-border bg-brand-white p-6 text-center text-sm text-brand-text-muted">
+            <div className="rounded-2xl border border-violet-100 bg-white p-6 text-center text-sm text-violet-700">
               Loading wishlist...
             </div>
           ) : items.length === 0 ? (

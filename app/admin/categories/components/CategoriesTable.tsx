@@ -40,7 +40,7 @@ export default function CategoriesTable({
 }) {
   if (isLoading && totalCount === 0) {
     return (
-      <div className="rounded-2xl border border-brand-border bg-brand-white p-10 text-center text-sm text-brand-text-muted shadow-sm">
+      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700 shadow-sm">
         <span className="inline-flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading categories...
@@ -51,18 +51,18 @@ export default function CategoriesTable({
 
   if (categories.length === 0) {
     return (
-      <div className="rounded-2xl border border-brand-border bg-brand-white p-10 text-center text-sm text-gray-600 shadow-sm">
-        <FolderTree className="mx-auto mb-2 h-8 w-8 text-brand-text-muted" />
+      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-gray-600 shadow-sm">
+        <FolderTree className="mx-auto mb-2 h-8 w-8 text-violet-300" />
         No categories match the current filters.
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-brand-border bg-brand-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="bg-brand-light-bg text-left text-xs uppercase tracking-wider text-brand-text-muted">
+          <thead className="bg-violet-50 text-left text-xs uppercase tracking-wider text-violet-700">
             <tr>
               <th className="px-4 py-3">Category</th>
               <th className="px-4 py-3">Slug</th>
@@ -86,7 +86,7 @@ export default function CategoriesTable({
                   exit="exit"
                   variants={LIST_ITEM_VARIANTS}
                   transition={LIST_ITEM_TRANSITION}
-                  className="border-t border-brand-border align-top"
+                  className="border-t border-violet-100/70 align-top"
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-start gap-3">
@@ -94,10 +94,10 @@ export default function CategoriesTable({
                         <img
                           src={category.image}
                           alt={category.name}
-                          className="h-12 w-12 rounded-lg border border-brand-border object-cover"
+                          className="h-12 w-12 rounded-lg border border-violet-100 object-cover"
                         />
                       ) : (
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-brand-black text-xs font-bold text-brand-white">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-linear-to-br from-violet-500 to-indigo-600 text-xs font-bold text-white">
                           {category.name.slice(0, 2).toUpperCase() || "?"}
                         </div>
                       )}
@@ -138,7 +138,7 @@ export default function CategoriesTable({
                         type="button"
                         onClick={() => onEdit(category)}
                         disabled={isBusy}
-                        className="inline-flex items-center gap-1 rounded-lg border border-brand-border px-2.5 py-1.5 text-xs font-semibold text-brand-black transition hover:bg-brand-light-bg disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex items-center gap-1 rounded-lg border border-violet-200 px-2.5 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                         Edit

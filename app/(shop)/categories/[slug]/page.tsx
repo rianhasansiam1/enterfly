@@ -63,7 +63,7 @@ export default async function CategoryPage({ params }: Props) {
   ]);
 
   return (
-    <div className="min-h-screen bg-brand-light-bg">
+    <div className="min-h-screen bg-linear-to-b from-[#F5F3FF] via-white to-white">
       <JsonLd data={[collectionSchema, breadcrumbSchema]} />
 
       <div className="mx-auto max-w-7xl px-3 py-6 sm:px-4 sm:py-8 lg:px-6">
@@ -71,13 +71,13 @@ export default async function CategoryPage({ params }: Props) {
         <nav aria-label="Breadcrumb" className="mb-4 text-sm text-gray-500">
           <ol className="flex flex-wrap items-center gap-1.5">
             <li>
-              <Link href="/" className="hover:text-brand-red">
+              <Link href="/" className="hover:text-violet-700">
                 Home
               </Link>
             </li>
             <li aria-hidden>/</li>
             <li>
-              <Link href="/products" className="hover:text-brand-red">
+              <Link href="/products" className="hover:text-violet-700">
                 Products
               </Link>
             </li>
@@ -103,14 +103,14 @@ export default async function CategoryPage({ params }: Props) {
         </header>
 
         {category.products.length === 0 ? (
-          <div className="rounded-2xl border border-brand-border bg-white p-10 text-center shadow-sm">
+          <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center shadow-sm">
             <h2 className="text-lg font-bold text-gray-900">No products yet</h2>
             <p className="mt-2 text-sm text-gray-600">
               There are no products in this category right now. Check back soon.
             </p>
             <Link
               href="/products"
-              className="mt-5 inline-flex items-center gap-2 rounded-full bg-brand-red px-5 py-2.5 text-sm font-semibold text-brand-white shadow-md transition hover:-translate-y-0.5 hover:bg-brand-red-hover"
+              className="mt-5 inline-flex items-center gap-2 rounded-full bg-linear-to-r from-violet-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5"
             >
               Browse all products
             </Link>

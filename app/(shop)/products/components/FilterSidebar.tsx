@@ -60,13 +60,13 @@ export default function FilterSidebar({
   };
 
   return (
-    <aside className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-2xl border border-brand-border bg-white p-5 shadow-sm transition-shadow duration-300 hover:shadow-md">
+    <aside className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-2xl border border-violet-100 bg-white p-5 shadow-sm transition-shadow duration-300 hover:shadow-md">
       <div className="mb-4 flex items-center justify-between border-b border-gray-100 pb-3">
         <h2 className="text-base font-bold text-gray-900">Filters</h2>
         <button
           type="button"
           onClick={onReset}
-          className="group flex items-center gap-1 text-xs font-semibold text-brand-red transition-colors duration-200 hover:text-brand-red-hover"
+          className="group flex items-center gap-1 text-xs font-semibold text-violet-600 transition-colors duration-200 hover:text-violet-800"
         >
           <RotateCcw className="h-3 w-3 transition-transform duration-500 group-hover:-rotate-180" />
           Reset
@@ -81,9 +81,9 @@ export default function FilterSidebar({
                 type="checkbox"
                 checked={filters.categories.includes(cat)}
                 onChange={() => toggleCategory(cat)}
-                className="h-4 w-4 cursor-pointer accent-brand-red transition-transform duration-150 active:scale-90"
+                className="h-4 w-4 cursor-pointer accent-violet-600 transition-transform duration-150 active:scale-90"
               />
-              <span className="text-sm text-gray-700 transition-colors duration-200 group-hover:text-brand-red">
+              <span className="text-sm text-gray-700 transition-colors duration-200 group-hover:text-violet-700">
                 {cat}
               </span>
             </label>
@@ -95,7 +95,7 @@ export default function FilterSidebar({
         <div className="px-1">
           <div className="mb-2 flex items-center justify-between text-xs text-gray-600">
             <span>BDT {filters.priceRange[0]}</span>
-            <span className="font-semibold text-brand-red">
+            <span className="font-semibold text-violet-700">
               BDT {filters.priceRange[1].toLocaleString()}
             </span>
           </div>
@@ -106,7 +106,7 @@ export default function FilterSidebar({
             step={50}
             value={filters.priceRange[1]}
             onChange={(e) => setMaxPrice(Number(e.target.value))}
-            className="w-full cursor-pointer accent-brand-red"
+            className="w-full cursor-pointer accent-violet-600"
           />
           <div className="mt-1 flex items-center justify-between text-[10px] text-gray-400">
             <span>Min</span>
@@ -124,7 +124,7 @@ export default function FilterSidebar({
               onClick={() => setMinRating(r)}
               className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-all duration-200 hover:translate-x-0.5 ${
                 filters.minRating === r
-                  ? "bg-brand-red/10 text-brand-red"
+                  ? "bg-violet-50 text-violet-700"
                   : "text-gray-700 hover:bg-gray-50"
               }`}
             >
@@ -133,7 +133,7 @@ export default function FilterSidebar({
                   <Star
                     key={i}
                     className={`h-3.5 w-3.5 ${
-                      i < r ? "fill-brand-gold text-brand-gold" : "text-gray-300"
+                      i < r ? "fill-amber-400 text-amber-400" : "text-gray-300"
                     }`}
                   />
                 ))}
@@ -153,9 +153,9 @@ export default function FilterSidebar({
                   type="checkbox"
                   checked={filters.brands.includes(brand)}
                   onChange={() => toggleBrand(brand)}
-                  className="h-4 w-4 cursor-pointer accent-brand-red transition-transform duration-150 active:scale-90"
+                  className="h-4 w-4 cursor-pointer accent-violet-600 transition-transform duration-150 active:scale-90"
                 />
-                <span className="text-sm text-gray-700 transition-colors duration-200 group-hover:text-brand-red">
+                <span className="text-sm text-gray-700 transition-colors duration-200 group-hover:text-violet-700">
                   {brand}
                 </span>
               </label>
@@ -170,9 +170,9 @@ export default function FilterSidebar({
             type="checkbox"
             checked={filters.inStockOnly}
             onChange={toggleInStock}
-            className="h-4 w-4 cursor-pointer accent-brand-red transition-transform duration-150 active:scale-90"
+            className="h-4 w-4 cursor-pointer accent-violet-600 transition-transform duration-150 active:scale-90"
           />
-          <span className="text-sm text-gray-700 transition-colors duration-200 group-hover:text-brand-red">
+          <span className="text-sm text-gray-700 transition-colors duration-200 group-hover:text-violet-700">
             In stock only
           </span>
         </label>

@@ -32,8 +32,8 @@ const ProductGallery = ({
             onClick={() => setSelectedImage(index)}
             className={`relative w-14 h-14 rounded-lg overflow-hidden border-2 transition-all shrink-0 ${
               selectedImage === index
-                ? 'border-brand-red'
-                : 'border-gray-200 hover:border-brand-red'
+                ? 'border-violet-500'
+                : 'border-gray-200 hover:border-violet-300'
             }`}
           >
             <Image

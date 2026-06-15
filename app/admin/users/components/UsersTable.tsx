@@ -14,7 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const ROLE_BADGE: Record<Role, string> = {
-  USER: "bg-brand-light-bg text-brand-black ring-brand-border",
+  USER: "bg-violet-50 text-violet-700 ring-violet-200",
   ADMIN: "bg-emerald-50 text-emerald-700 ring-emerald-200",
 };
 
@@ -35,7 +35,7 @@ export default function UsersTable({
 }) {
   if (isLoading && totalCount === 0) {
     return (
-      <div className="rounded-2xl border border-brand-border bg-brand-white p-10 text-center text-sm text-brand-text-muted shadow-sm">
+      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700 shadow-sm">
         <span className="inline-flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading customers...
@@ -46,18 +46,18 @@ export default function UsersTable({
 
   if (users.length === 0) {
     return (
-      <div className="rounded-2xl border border-brand-border bg-brand-white p-10 text-center text-sm text-gray-600 shadow-sm">
-        <Users className="mx-auto mb-2 h-8 w-8 text-brand-text-muted" />
+      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-gray-600 shadow-sm">
+        <Users className="mx-auto mb-2 h-8 w-8 text-violet-300" />
         No customers match the current filters.
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-brand-border bg-brand-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="bg-brand-light-bg text-left text-xs uppercase tracking-wider text-brand-text-muted">
+          <thead className="bg-violet-50 text-left text-xs uppercase tracking-wider text-violet-700">
             <tr>
               <th className="px-4 py-3">Customer</th>
               <th className="px-4 py-3">Contact</th>
@@ -77,7 +77,7 @@ export default function UsersTable({
               return (
                 <tr
                   key={user.id}
-                  className="border-t border-brand-border align-top"
+                  className="border-t border-violet-100/70 align-top"
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
@@ -85,10 +85,10 @@ export default function UsersTable({
                         <img
                           src={user.image}
                           alt={user.name}
-                          className="h-10 w-10 rounded-full border border-brand-border object-cover"
+                          className="h-10 w-10 rounded-full border border-violet-100 object-cover"
                         />
                       ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-black text-xs font-bold text-brand-white">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-violet-500 to-indigo-600 text-xs font-bold text-white">
                           {getInitials(user.name, user.email)}
                         </div>
                       )}
@@ -118,7 +118,7 @@ export default function UsersTable({
                       {user.role}
                     </span>
                     {isSelf && (
-                      <p className="mt-1 text-[11px] uppercase tracking-wide text-brand-text-muted">
+                      <p className="mt-1 text-[11px] uppercase tracking-wide text-violet-500">
                         You
                       </p>
                     )}
