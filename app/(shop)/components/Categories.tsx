@@ -103,6 +103,18 @@ export default function Categories({ initialCategories }: CategoriesProps) {
           <div className="mb-4 h-0.5 rounded-full bg-linear-to-r from-violet-500 via-purple-400 to-transparent" />
 
           <div className="flex flex-col gap-4 lg:flex-row">
+            {category.categoryBanner && (
+              <CategoriesBanner
+                saleBanner={{
+                  image: category.categoryBanner.image,
+                  label: category.categoryBanner.label,
+                  heading: category.categoryBanner.heading,
+                  discount: category.categoryBanner.discount,
+                  description: category.categoryBanner.description,
+                }}
+              />
+            )}
+
             <div className="grid flex-1 grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
               {category.products.map((item) => (
                 <ProductCard
@@ -122,18 +134,6 @@ export default function Categories({ initialCategories }: CategoriesProps) {
                 />
               ))}
             </div>
-
-            {category.categoryBanner && (
-              <CategoriesBanner
-                saleBanner={{
-                  image: category.categoryBanner.image,
-                  label: category.categoryBanner.label,
-                  heading: category.categoryBanner.heading,
-                  discount: category.categoryBanner.discount,
-                  description: category.categoryBanner.description,
-                }}
-              />
-            )}
           </div>
 
           <div className="mt-5 text-center">
