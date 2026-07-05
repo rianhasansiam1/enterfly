@@ -33,6 +33,7 @@ export type AdvancedColorPickerProps = {
   alpha?: boolean;
   disabled?: boolean;
   className?: string;
+  popoverClassName?: string;
 };
 
 /* ----------------------------- hex helpers ------------------------------ */
@@ -85,6 +86,7 @@ export function AdvancedColorPicker({
   alpha = true,
   disabled = false,
   className,
+  popoverClassName,
 }: AdvancedColorPickerProps) {
   const [open, setOpen] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -175,7 +177,10 @@ export function AdvancedColorPicker({
         <div
           role="dialog"
           aria-label={`${label} picker`}
-          className="absolute z-50 mt-2 w-[min(20rem,calc(100vw-3rem))] rounded-2xl border border-violet-100 bg-white p-3 shadow-xl ring-1 ring-black/5"
+          className={cn(
+            "absolute z-50  mt-2 w-[min(20rem,calc(100vw-3rem))] rounded-2xl border border-violet-100 bg-white p-3 shadow-xl ring-1 ring-black/5", popoverClassName,
+           
+          )}
         >
           <HexColorPicker
             color={base}

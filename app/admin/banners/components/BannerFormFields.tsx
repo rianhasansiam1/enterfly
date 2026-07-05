@@ -98,6 +98,7 @@ export function CarouselFormFields({
               label="Gradient from color"
               value={form.bgFrom}
               onChange={(value) => update("bgFrom", value)}
+              popoverClassName="-left-3"
             />
           </Field>
           <Field label="Via">
@@ -105,6 +106,7 @@ export function CarouselFormFields({
               label="Gradient via color"
               value={form.bgVia}
               onChange={(value) => update("bgVia", value)}
+              popoverClassName="-right-10"
             />
           </Field>
           <Field label="To" required>
@@ -112,6 +114,7 @@ export function CarouselFormFields({
               label="Gradient to color"
               value={form.bgTo}
               onChange={(value) => update("bgTo", value)}
+              popoverClassName="right-24"
             />
           </Field>
         </div>
