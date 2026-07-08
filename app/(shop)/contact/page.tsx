@@ -23,7 +23,7 @@ export default function ContactPage() {
         <ContactHero />
         <ContactInfoCards />
         <ContactForm />
-        <ContactMap />
+   
         <FAQSection />
         <SocialConnect />
       </div>

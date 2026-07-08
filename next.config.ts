@@ -37,6 +37,7 @@ const NO_INDEX_PATHS = [
  *   for hydration data and chunk loading. A strict nonce-based CSP requires
  *   `experimental.nextScriptWorkers` or custom middleware — we keep
  *   `'unsafe-inline'` for compatibility and add `'self'` to restrict origins.
+ *   Local development also gets `'unsafe-eval'` for React/Next debugging.
  * - `connect-src` includes `api.emailjs.com` for the browser-side EmailJS SDK
  *   and `accounts.google.com` for Google OAuth token exchange.
  * - `img-src` whitelists all remote image hosts from `images.remotePatterns`.
@@ -49,18 +50,23 @@ const NO_INDEX_PATHS = [
  *   - New API / fetch call?  → add to `connect-src`
  *   - Embedding in iframe?   → relax `frame-ancestors`
  */
+const scriptSrcDirective =
+  process.env.NODE_ENV === "production"
+    ? "script-src 'self' 'unsafe-inline'"
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+
 const cspDirectives = [
   /* Fallback for any directive not explicitly listed. */
   "default-src 'self'",
 
   /* Scripts: self + inline (Next.js hydration). */
-  "script-src 'self' 'unsafe-inline'",
+  scriptSrcDirective,
 
   /* Styles: self + inline (React style props, framer-motion, Tailwind). */
   "style-src 'self' 'unsafe-inline'",
 
   /* Images: self + data URIs (Next.js blur placeholders) + known CDNs. */
-  "img-src 'self' data: blob: https://images.unsplash.com https://lh3.googleusercontent.com https://i.ibb.co https://picsum.photos",
+  "img-src 'self' data: blob: https://images.unsplash.com https://lh3.googleusercontent.com https://i.ibb.co https://picsum.photos https://i.pravatar.cc https://api.dicebear.com",
 
   /* Fonts: self only — next/font/google downloads at build time. */
   "font-src 'self'",
@@ -231,6 +237,14 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "picsum.photos",
+      },
+      {
+        protocol: "https",
+        hostname: "i.pravatar.cc",
+      },
+      {
+        protocol: "https",
+        hostname: "api.dicebear.com",
       },
     ],
   },

@@ -314,9 +314,14 @@ export async function fetchCategories(
     sort: "name-asc",
   });
 
-  const response = await fetch(`/api/categories?${params.toString()}`, {
-    signal: options?.signal,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`/api/categories?${params.toString()}`, {
+      signal: options?.signal,
+    });
+  } catch {
+    return [];
+  }
 
   let payload: unknown;
   try {

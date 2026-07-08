@@ -81,6 +81,10 @@ function buildOrderBy(
   sort: CategoryQueryInput["sort"],
 ): Prisma.CategoryOrderByWithRelationInput {
   switch (sort) {
+    case "name-asc":
+      return { name: "asc" };
+    case "name-desc":
+      return { name: "desc" };
     case "oldest":
       return { createdAt: "asc" };
     case "latest":

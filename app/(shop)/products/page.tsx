@@ -1,10 +1,16 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import FilterSidebar from "./components/FilterSidebar";
 import MobileFilterDrawer from "./components/MobileFilterDrawer";
-import Pagination from "./components/Pagination";
 import ProductsGrid from "./components/ProductsGrid";
 import ProductToolbar from "./components/ProductToolbar";
 import { useProductFilters } from "./hooks/useProductFilters";
@@ -16,8 +22,10 @@ import type {
   ApiMeta,
   CategoryOption,
   Product,
+  ProductQueryParams,
 } from "@/features/products/api";
 import {
+  LoadingSpinner,
   ProductGridSkeleton,
   ProductListingPageLoader,
 } from "@/components/ui/loading";
@@ -53,7 +61,12 @@ function AllProductsPageInner() {
   const [products, setProducts] = useState<Product[]>([]);
   const [meta, setMeta] = useState<ApiMeta>(DEFAULT_META);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAppending, setIsAppending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [appendError, setAppendError] = useState<string | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const latestQueryKeyRef = useRef("");
+  const appendControllerRef = useRef<AbortController | null>(null);
 
   // ── Category options for sidebar ─────────────────────────────────
   const [categories, setCategories] = useState<CategoryOption[]>([]);
@@ -67,20 +80,33 @@ function AllProductsPageInner() {
 
   // ── Fetch products when URL params change ────────────────────────
 
+  const baseQueryParams = useMemo(
+    () => ({ ...filters.queryParams, page: 1 }),
+    [filters.queryParams],
+  );
+
   // Serialise queryParams to a stable string so the effect only re-runs
-  // when the actual param values change (not on every render).
-  const queryKey = JSON.stringify(filters.queryParams);
+  // when the actual filter values change (not on every render).
+  const queryKey = JSON.stringify(baseQueryParams);
+
+  useEffect(() => {
+    latestQueryKeyRef.current = queryKey;
+  }, [queryKey]);
 
   useEffect(() => {
     const controller = new AbortController();
     let cancelled = false;
 
     async function load() {
+      appendControllerRef.current?.abort();
+      appendControllerRef.current = null;
+      setIsAppending(false);
       setIsLoading(true);
       setError(null);
+      setAppendError(null);
       try {
         const result = await fetchProductsPage(
-          JSON.parse(queryKey) as Record<string, unknown>,
+          JSON.parse(queryKey) as ProductQueryParams,
           { signal: controller.signal },
         );
         if (!cancelled) {
@@ -103,6 +129,87 @@ function AllProductsPageInner() {
       controller.abort();
     };
   }, [queryKey]);
+
+  const loadNextPage = useCallback(async () => {
+    if (
+      isLoading ||
+      isAppending ||
+      appendControllerRef.current ||
+      !meta.hasNextPage
+    ) {
+      return;
+    }
+
+    const nextPage = meta.page + 1;
+    const requestQueryKey = queryKey;
+    const controller = new AbortController();
+
+    appendControllerRef.current = controller;
+    setIsAppending(true);
+    setAppendError(null);
+
+    try {
+      const result = await fetchProductsPage(
+        {
+          ...(JSON.parse(requestQueryKey) as ProductQueryParams),
+          page: nextPage,
+        },
+        { signal: controller.signal },
+      );
+
+      if (
+        controller.signal.aborted ||
+        latestQueryKeyRef.current !== requestQueryKey
+      ) {
+        return;
+      }
+
+      setProducts((current) => {
+        const seen = new Set(current.map((product) => product.id));
+        const nextItems = result.items.filter((product) => !seen.has(product.id));
+        return [...current, ...nextItems];
+      });
+      setMeta(result.meta);
+    } catch (err) {
+      if (
+        controller.signal.aborted ||
+        latestQueryKeyRef.current !== requestQueryKey
+      ) {
+        return;
+      }
+
+      const message =
+        err instanceof Error ? err.message : "Failed to load more products.";
+      setAppendError(message);
+    } finally {
+      if (appendControllerRef.current === controller) {
+        appendControllerRef.current = null;
+      }
+      if (
+        !controller.signal.aborted &&
+        latestQueryKeyRef.current === requestQueryKey
+      ) {
+        setIsAppending(false);
+      }
+    }
+  }, [isAppending, isLoading, meta.hasNextPage, meta.page, queryKey]);
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target || !meta.hasNextPage || isLoading || appendError) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          void loadNextPage();
+        }
+      },
+      { rootMargin: "520px 0px", threshold: 0.01 },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [appendError, isLoading, loadNextPage, meta.hasNextPage]);
 
   // ── Handlers ─────────────────────────────────────────────────────
 
@@ -191,13 +298,39 @@ function AllProductsPageInner() {
                   />
                 </div>
 
-                <Pagination
-                  page={meta.page}
-                  totalPages={meta.totalPages}
-                  hasNextPage={meta.hasNextPage}
-                  hasPreviousPage={meta.hasPreviousPage}
-                  onPageChange={filters.setPage}
-                />
+                <div
+                  ref={loadMoreRef}
+                  className="mt-8 flex min-h-16 items-center justify-center text-sm"
+                  aria-live="polite"
+                >
+                  {isAppending ? (
+                    <div className="flex items-center gap-2 rounded-full border border-violet-100 bg-white px-4 py-2 font-medium text-violet-700 shadow-sm">
+                      <LoadingSpinner size="xs" label="Loading more products" />
+                      <span>Loading more products...</span>
+                    </div>
+                  ) : appendError ? (
+                    <div className="flex flex-col items-center gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-center text-red-700 sm:flex-row sm:text-left">
+                      <span>{appendError}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void loadNextPage();
+                        }}
+                        className="rounded-full bg-red-600 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700"
+                      >
+                        Try again
+                      </button>
+                    </div>
+                  ) : meta.hasNextPage ? (
+                    <span className="text-gray-500">
+                      Keep scrolling to load more products
+                    </span>
+                  ) : products.length > 0 ? (
+                    <span className="text-gray-400">
+                      You have reached the end
+                    </span>
+                  ) : null}
+                </div>
               </>
             )}
           </main>

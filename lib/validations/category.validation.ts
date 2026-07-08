@@ -10,7 +10,7 @@ import { z } from "zod";
 
 const CATEGORY_STATUS = ["ACTIVE", "INACTIVE"] as const;
 
-const SORT_VALUES = ["latest", "oldest"] as const;
+const SORT_VALUES = ["latest", "oldest", "name-asc", "name-desc"] as const;
 
 /** Reusable fragments. */
 const name = z

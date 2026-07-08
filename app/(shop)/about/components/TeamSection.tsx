@@ -8,7 +8,7 @@ const team = [
     name: "Rian Hasan Siam",
     role: "Head Of IT",
     image:
-      "/images/RianDP.png",
+      "/images/RianDp.png",
   },
   {
     name: "Md Moniruzzaman",
