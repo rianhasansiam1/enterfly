@@ -1,6 +1,7 @@
 import { Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { Spinner } from "./Spinner";
 
 type LoadingSize = "xs" | "sm" | "md" | "lg";
 
@@ -320,13 +321,15 @@ export function LoadingScreen({
       )}
     >
       <div className="w-full max-w-sm text-center">
-        <div className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-violet-600 via-indigo-600 to-fuchsia-600 text-xl font-black text-white shadow-xl shadow-violet-200/70">
-          EF
+        {/* <div className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-violet-600 via-indigo-600 to-fuchsia-600 text-xl font-black text-white shadow-xl shadow-violet-200/70">
+          EFdfsdfsdfdsf
           <span
             aria-hidden="true"
             className="absolute -inset-1 rounded-2xl border border-violet-300/70"
           />
-        </div>
+        </div> */}
+
+        <Spinner className="mx-auto h-16 w-16 text-violet-600" />
 
         <p className="mt-5 text-lg font-extrabold text-gray-950">EnterFly</p>
         <p className="mt-1 text-sm font-medium text-violet-700">{label}</p>
