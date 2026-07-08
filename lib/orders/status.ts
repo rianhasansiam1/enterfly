@@ -92,7 +92,7 @@ export const CUSTOMER_CANCELLABLE_STATUSES = [
 ] as const satisfies readonly OrderStatus[];
 
 /** Tailwind tones for the two badge shapes used across the app. */
-export type OrderStatusTone = {
+type OrderStatusTone = {
   /** Solid-ish pill: `bg-* text-*`. */
   pill: string;
   /** Ringed chip: `bg-* text-* ring-*`. */
@@ -228,24 +228,6 @@ export const ORDER_STATUS_META: Record<OrderStatus, OrderStatusMeta> = {
     },
   },
 };
-
-/** Type guard: is `value` one of the known statuses? */
-export function isOrderStatus(value: unknown): value is OrderStatus {
-  return (
-    typeof value === "string" &&
-    (ORDER_STATUSES as readonly string[]).includes(value)
-  );
-}
-
-/** Is moving `from → to` an allowed transition? */
-export function canTransition(from: OrderStatus, to: OrderStatus): boolean {
-  return STATUS_TRANSITIONS[from]?.includes(to) ?? false;
-}
-
-/** A status with no outgoing transitions (REFUNDED / CANCELLED). */
-export function isTerminalStatus(status: OrderStatus): boolean {
-  return STATUS_TRANSITIONS[status].length === 0;
-}
 
 /** Index of a status on the linear tracker rail, or -1 for branch states. */
 export function trackingStepIndex(status: OrderStatus): number {

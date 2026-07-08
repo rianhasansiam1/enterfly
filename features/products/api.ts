@@ -49,15 +49,44 @@ export type ApiProduct = {
 
 export type ApiMeta = {
   page: number;
-  pageSize: number;
+  limit: number;
   total: number;
   totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+};
+
+/** Query params accepted by `GET /api/products`. */
+export type ProductQueryParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  categoryId?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  sort?: string;
+  inStock?: boolean;
+  status?: string;
 };
 
 type ApiResponse<T> = {
   success: boolean;
   data: T;
   meta?: ApiMeta;
+};
+
+export type PaginatedProductsResponse = {
+  items: Product[];
+  meta: ApiMeta;
+};
+
+/** Lightweight category row for filter sidebar. */
+export type CategoryOption = {
+  id: string;
+  name: string;
+  slug: string;
+  image: string | null;
 };
 
 const FALLBACK_PRODUCT_IMAGE =
@@ -181,7 +210,7 @@ export async function searchProductsFromApi(
     status: "ACTIVE",
     search: trimmed,
     page: "1",
-    pageSize: String(options?.limit ?? 6),
+    limit: String(options?.limit ?? 6),
     sort: "latest",
   });
 
@@ -207,6 +236,113 @@ export async function searchProductsFromApi(
   return envelope.data.map(mapApiProduct);
 }
 
+/**
+ * Fetch a single page of products with server-side filtering and sorting.
+ *
+ * This is the primary function used by the public product listing page.
+ * Only the current page of items is fetched — no client-side catalog.
+ */
+export async function fetchProductsPage(
+  queryParams: ProductQueryParams,
+  options?: { signal?: AbortSignal },
+): Promise<PaginatedProductsResponse> {
+  const params = new URLSearchParams();
+
+  // Only append non-default / non-empty params.
+  if (queryParams.page != null && queryParams.page > 1) {
+    params.set("page", String(queryParams.page));
+  }
+  if (queryParams.limit != null) params.set("limit", String(queryParams.limit));
+  if (queryParams.search) params.set("search", queryParams.search);
+  if (queryParams.category) params.set("category", queryParams.category);
+  if (queryParams.categoryId) params.set("categoryId", queryParams.categoryId);
+  if (queryParams.minPrice != null) params.set("minPrice", String(queryParams.minPrice));
+  if (queryParams.maxPrice != null) params.set("maxPrice", String(queryParams.maxPrice));
+  if (queryParams.sort) params.set("sort", queryParams.sort);
+  if (queryParams.inStock) params.set("inStock", "true");
+  if (queryParams.status) params.set("status", queryParams.status);
+
+  // Always request only ACTIVE products for public listing.
+  if (!queryParams.status) params.set("status", "ACTIVE");
+
+  const response = await fetch(`/api/products?${params.toString()}`, {
+    signal: options?.signal,
+  });
+
+  let payload: unknown;
+  try {
+    payload = (await response.json()) as unknown;
+  } catch {
+    throw new Error("Failed to fetch products.");
+  }
+  if (!response.ok) {
+    throw new Error(readApiError(payload, "Failed to fetch products."));
+  }
+
+  const envelope = payload as ApiResponse<unknown>;
+  if (!envelope.success || !Array.isArray(envelope.data)) {
+    throw new Error("Products API returned an unexpected response.");
+  }
+
+  const meta = envelope.meta ?? {
+    page: 1,
+    limit: queryParams.limit ?? 12,
+    total: envelope.data.length,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  };
+
+  return {
+    items: envelope.data.map(mapApiProduct),
+    meta,
+  };
+}
+
+/**
+ * Fetch active categories for the filter sidebar.
+ *
+ * Uses the existing `/api/categories` endpoint. Only fetches active
+ * categories with a large page size to get them all in one call.
+ */
+export async function fetchCategories(
+  options?: { signal?: AbortSignal },
+): Promise<CategoryOption[]> {
+  const params = new URLSearchParams({
+    status: "ACTIVE",
+    pageSize: "100",
+    sort: "name-asc",
+  });
+
+  const response = await fetch(`/api/categories?${params.toString()}`, {
+    signal: options?.signal,
+  });
+
+  let payload: unknown;
+  try {
+    payload = (await response.json()) as unknown;
+  } catch {
+    return [];
+  }
+  if (!response.ok) return [];
+
+  const envelope = payload as ApiResponse<unknown>;
+  if (!envelope.success || !Array.isArray(envelope.data)) return [];
+
+  return envelope.data
+    .map((item: unknown) => {
+      const row = asRecord(item);
+      if (!row) return null;
+      return {
+        id: readString(row.id) ?? "",
+        name: readString(row.name) ?? "Unknown",
+        slug: readString(row.slug) ?? "",
+        image: readString(row.image),
+      };
+    })
+    .filter((c): c is CategoryOption => c !== null && c.slug.length > 0);
+}
+
 export async function fetchAllActiveProductsFromApi(): Promise<Product[]> {
   let page = 1;
   let totalPages = 1;
@@ -216,7 +352,7 @@ export async function fetchAllActiveProductsFromApi(): Promise<Product[]> {
     const params = new URLSearchParams({
       status: "ACTIVE",
       page: String(page),
-      pageSize: String(API_PAGE_SIZE),
+      limit: String(API_PAGE_SIZE),
       sort: "latest",
     });
 

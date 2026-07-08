@@ -3,26 +3,20 @@ import { readApiData, readApiError } from "@/features/http/api-envelope";
 /**
  * Client-side types and fetchers for product reviews.
  *
- * Mirrors `SerializedReview` from `lib/services/review.service` and the
+ * Mirrors `PublicSerializedReview` from `lib/services/review.service` and the
  * `{ data: items, meta: { ...page, summary } }` envelope from
  * `GET /api/reviews`.
  */
 
-export type ReviewSource = "CUSTOMER" | "ADMIN";
-
 export type Review = {
   id: string;
-  productId: string;
-  userId: string | null;
   authorName: string;
   authorImage: string | null;
   rating: number;
   title: string | null;
   comment: string | null;
-  source: ReviewSource;
   verified: boolean;
   createdAt: string;
-  updatedAt: string;
 };
 
 export type ReviewSummary = {

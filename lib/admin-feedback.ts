@@ -8,7 +8,7 @@ type ConfirmMajorActionOptions = {
   variant?: ConfirmVariant;
 };
 
-export function getActionErrorMessage(error: unknown, fallback: string): string {
+function getActionErrorMessage(error: unknown, fallback: string): string {
   if (typeof error === "string" && error.trim().length > 0) {
     return error;
   }

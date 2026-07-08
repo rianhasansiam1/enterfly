@@ -52,6 +52,10 @@ type RegisterApiError = {
   fieldErrors?: Record<string, string[]>;
 };
 
+type RegisterApiResponse = RegisterApiError & {
+  success?: boolean;
+};
+
 const GENERIC_REGISTER_ERROR =
   "We couldn't create your account. Please try again.";
 
@@ -114,11 +118,11 @@ export default function RegisterPage() {
         body: JSON.stringify(form),
       });
 
-      if (!response.ok) {
-        const data = (await response.json().catch(() => null)) as
-          | RegisterApiError
-          | null;
+      const data = (await response.json().catch(() => null)) as
+        | RegisterApiResponse
+        | null;
 
+      if (!response.ok || !data?.success) {
         const firstFieldError = data?.fieldErrors
           ? Object.values(data.fieldErrors).flat().filter(Boolean)[0]
           : undefined;

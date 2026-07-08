@@ -8,7 +8,7 @@ import {
   type AdminTestimonialRow,
 } from "@/features/admin-testimonials/api";
 import {
-  fetchAllAdminReviewsSnapshot,
+  fetchAdminReviewsPage,
   type AdminReviewRow,
 } from "@/features/admin-reviews/api";
 
@@ -43,8 +43,8 @@ export default function ImportReviewsPanel({
     let ignore = false;
     void (async () => {
       try {
-        const rows = await fetchAllAdminReviewsSnapshot();
-        if (!ignore) setReviews(rows);
+        const { items } = await fetchAdminReviewsPage({ pageSize: 100 });
+        if (!ignore) setReviews(items);
       } catch (loadError) {
         if (!ignore) {
           onError(

@@ -263,6 +263,7 @@ async function priceLines(items: ResolvedItem[]): Promise<PricedLine[]> {
 type PromoApplication =
   | {
       ok: true;
+      id: string;
       code: string;
       description: string | null;
       discount: Prisma.Decimal;
@@ -274,24 +275,62 @@ type PromoApplication =
     }
   | null;
 
-async function applyPromoCode(
-  rawCode: string | null | undefined,
-  subtotal: Prisma.Decimal,
-): Promise<PromoApplication> {
-  if (!rawCode) return null;
-  const trimmed = rawCode.trim();
-  if (!trimmed) return null;
+type CheckoutPromoRow = {
+  id: string;
+  code: string;
+  description: string | null;
+  discountType: Prisma.PromoCodeGetPayload<{
+    select: { discountType: true };
+  }>["discountType"];
+  value: Prisma.Decimal | number;
+  minOrder: Prisma.Decimal | number | null;
+  maxDiscount: Prisma.Decimal | number | null;
+  usageLimit: number | null;
+  usedCount: number;
+};
 
-  const code = trimmed.toUpperCase();
-  const promo = await findActivePromoCode(code);
+const checkoutPromoSelect = {
+  id: true,
+  code: true,
+  description: true,
+  discountType: true,
+  value: true,
+  minOrder: true,
+  maxDiscount: true,
+  usageLimit: true,
+  usedCount: true,
+} satisfies Prisma.PromoCodeSelect;
+
+function normalizePromoCode(rawCode: string | null | undefined): string | null {
+  if (!rawCode) return null;
+  const code = rawCode.trim().toUpperCase();
+  return code ? code : null;
+}
+
+function activePromoWindowWhere(now: Date): Prisma.PromoCodeWhereInput[] {
+  return [
+    { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
+    { OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
+  ];
+}
+
+function buildPromoApplication(
+  requestedCode: string,
+  promo: CheckoutPromoRow | null,
+  subtotal: Prisma.Decimal,
+): PromoApplication {
   if (!promo) {
-    return { ok: false, code, reason: "Promo code is invalid or expired." };
+    return {
+      ok: false,
+      code: requestedCode,
+      reason: "Promo code is invalid or expired.",
+    };
   }
 
   if (promo.usageLimit != null && promo.usedCount >= promo.usageLimit) {
     return {
       ok: false,
-      code,
+      code: promo.code,
       reason: "This promo code has reached its usage limit.",
     };
   }
@@ -299,8 +338,8 @@ async function applyPromoCode(
   if (promo.minOrder != null && subtotal.lessThan(toDecimal(promo.minOrder))) {
     return {
       ok: false,
-      code,
-      reason: `Spend at least BDT ${promo.minOrder.toLocaleString()} to use this code.`,
+      code: promo.code,
+      reason: `Spend at least BDT ${round2(promo.minOrder).toLocaleString()} to use this code.`,
     };
   }
 
@@ -318,10 +357,73 @@ async function applyPromoCode(
 
   return {
     ok: true,
-    code,
+    id: promo.id,
+    code: promo.code,
     description: promo.description,
     discount,
   };
+}
+
+async function applyPromoCode(
+  rawCode: string | null | undefined,
+  subtotal: Prisma.Decimal,
+): Promise<PromoApplication> {
+  const code = normalizePromoCode(rawCode);
+  if (!code) return null;
+
+  const promo = await findActivePromoCode(code);
+  return buildPromoApplication(code, promo, subtotal);
+}
+
+async function applyPromoCodeInTransaction(
+  tx: Prisma.TransactionClient,
+  rawCode: string | null | undefined,
+  subtotal: Prisma.Decimal,
+): Promise<PromoApplication> {
+  const code = normalizePromoCode(rawCode);
+  if (!code) return null;
+
+  const now = new Date();
+  const promo = await tx.promoCode.findFirst({
+    where: {
+      code,
+      status: "ACTIVE",
+      AND: activePromoWindowWhere(now),
+    },
+    select: checkoutPromoSelect,
+  });
+
+  return buildPromoApplication(code, promo, subtotal);
+}
+
+async function incrementPromoUsage(
+  tx: Prisma.TransactionClient,
+  promo: Extract<PromoApplication, { ok: true }>,
+) {
+  const now = new Date();
+  const result = await tx.promoCode.updateMany({
+    where: {
+      id: promo.id,
+      status: "ACTIVE",
+      AND: [
+        ...activePromoWindowWhere(now),
+        {
+          OR: [
+            { usageLimit: null },
+            { usedCount: { lt: tx.promoCode.fields.usageLimit } },
+          ],
+        },
+      ],
+    },
+    data: { usedCount: { increment: 1 } },
+  });
+
+  if (result.count !== 1) {
+    throw new CheckoutError(
+      409,
+      "This promo code has reached its usage limit.",
+    );
+  }
 }
 
 /** JSON-facing promo shape (Decimal discount converted to a number). */
@@ -487,13 +589,6 @@ export async function placeOrder(userId: string, input: CheckoutInput) {
 
   const settings = settingsToSnapshot(await getStoreSettings());
   const subtotal = sumDecimals(lines.map((line) => line.lineTotal));
-  const promo = await applyPromoCode(input.promoCode, subtotal);
-
-  if (input.promoCode && promo && !promo.ok) {
-    throw new CheckoutError(409, promo.reason);
-  }
-
-  const summary = summarize(lines, promo, settings);
 
   // Email is identity-bound: always resolve it from the authenticated
   // user's DB record, never from the request body. Even if the client
@@ -528,6 +623,17 @@ export async function placeOrder(userId: string, input: CheckoutInput) {
 
   try {
     return await prisma.$transaction(async (tx) => {
+      const promo = await applyPromoCodeInTransaction(
+        tx,
+        input.promoCode,
+        subtotal,
+      );
+      if (input.promoCode && promo && !promo.ok) {
+        throw new CheckoutError(409, promo.reason);
+      }
+
+      const summary = summarize(lines, promo, settings);
+
       // Atomic stock decrement on the variant: the WHERE clause guards
       // against the last unit being sold twice.
       for (const line of lines) {
@@ -594,11 +700,15 @@ export async function placeOrder(userId: string, input: CheckoutInput) {
         include: orderInclude,
       });
 
-      // Bump usedCount when a real promo was applied.
+      // Audit + bump usedCount when a real promo was applied.
       if (promo?.ok) {
-        await tx.promoCode.updateMany({
-          where: { code: promo.code },
-          data: { usedCount: { increment: 1 } },
+        await incrementPromoUsage(tx, promo);
+        await tx.promoCodeUsage.create({
+          data: {
+            promoCodeId: promo.id,
+            userId,
+            orderId: order.id,
+          },
         });
       }
 

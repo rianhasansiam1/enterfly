@@ -3,13 +3,12 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
-import { isAdminRequest, requireAdmin } from "@/lib/api/guards";
+import { requireAdmin } from "@/lib/api/guards";
 import { jsonError, created, ok } from "@/lib/api/response";
 import {
   createProduct,
-  listProducts,
-  serializeProduct,
-  type ProductWithCategory,
+  listPublicProductsCached,
+  serializePublicProduct,
 } from "@/lib/services/product.service";
 import {createProductSchema, productQuerySchema,} from "@/lib/validations/product.validation";
 
@@ -35,15 +34,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { items, meta } = await listProducts(parsed.data);
-    // Reveal admin-only fields (buyingPrice) only to signed-in admins.
-    const includeBuyingPrice = await isAdminRequest();
-    return ok(
-      items.map((item: ProductWithCategory) =>
-        serializeProduct(item, { includeBuyingPrice }),
-      ),
-      meta,
-    );
+    const { items, meta } = await listPublicProductsCached(parsed.data);
+    return ok(items, meta);
   } catch (error) {
     console.error("[products.GET] failed", error);
     return jsonError(500, "Failed to fetch products.");
@@ -92,11 +84,14 @@ export async function POST(request: NextRequest) {
 
   try {
     const product = await createProduct(parsed.data);
-    // No dedicated "products" cache exists; the catalog read is uncached.
-    // Bust the cached surfaces that embed product data.
+    // Bust all cached surfaces that embed product data.
+    revalidateTag("products", "max");
+    revalidateTag("product-detail", "max");
     revalidateTag("home-categories", "max");
     revalidateTag("categories", "max");
-    return created(serializeProduct(product, { includeBuyingPrice: true }));
+    revalidateTag("admin-dashboard", "max");
+    revalidateTag("admin-reports", "max");
+    return created(serializePublicProduct(product));
   } catch (error) {
     if (
       error instanceof PrismaClientKnownRequestError &&

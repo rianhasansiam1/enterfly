@@ -8,40 +8,32 @@ import {
 } from "lucide-react";
 import PromoCodeInput from "./PromoCodeInput";
 
-type AppliedPromo = {
-  code: string;
-  discount: number;
-  description: string;
-};
-
 type OrderSummaryProps = {
   subtotal: number;
-  discount: number;
   shipping: number;
   tax: number;
   total: number;
   totalSavings: number;
   itemCount: number;
-  promo: AppliedPromo | null;
-  onApplyPromo: (code: string) => AppliedPromo | null;
+  promoCode: string | null;
+  onApplyPromo: (code: string) => void;
   onRemovePromo: () => void;
   onCheckout: () => void;
 };
 
 export default function OrderSummary({
   subtotal,
-  discount,
   shipping,
   tax,
   total,
   totalSavings,
   itemCount,
-  promo,
+  promoCode,
   onApplyPromo,
   onRemovePromo,
   onCheckout,
 }: OrderSummaryProps) {
-  const totalSaved = totalSavings + discount;
+  const totalSaved = totalSavings;
 
   return (
     <aside className="sticky top-[88px] flex flex-col gap-4 rounded-3xl border border-violet-100 bg-white p-5 shadow-sm sm:p-6">
@@ -53,20 +45,13 @@ export default function OrderSummary({
       </div>
 
       <PromoCodeInput
-        applied={promo}
+        promoCode={promoCode}
         onApply={onApplyPromo}
         onRemove={onRemovePromo}
       />
 
       <div className="space-y-2.5 border-t border-dashed border-violet-100 pt-4 text-sm">
         <SummaryRow label="Subtotal" value={subtotal} />
-        {discount > 0 && (
-          <SummaryRow
-            label={`Promo (${promo?.code})`}
-            value={-discount}
-            tone="success"
-          />
-        )}
         <SummaryRow
           label="Shipping"
           value={shipping}

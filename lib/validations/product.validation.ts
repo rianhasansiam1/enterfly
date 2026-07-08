@@ -17,7 +17,14 @@ import { z } from "zod";
 
 const PRODUCT_STATUS = ["ACTIVE", "INACTIVE"] as const;
 
-const SORT_VALUES = ["latest", "price-low", "price-high"] as const;
+const SORT_VALUES = [
+  "latest",
+  "newest",
+  "price-low",
+  "price-high",
+  "popular",
+  "rating",
+] as const;
 
 /** Common reusable fragments. */
 const name = z
@@ -194,12 +201,23 @@ export const updateProductSchema = z
 export const productQuerySchema = z
   .object({
     page: z.coerce.number().int().min(1).default(1),
-    pageSize: z.coerce.number().int().min(1).max(100).default(20),
+    /** Preferred alias — maps to `pageSize` internally. */
+    limit: z.coerce.number().int().min(1).max(100).optional(),
+    /** Legacy name kept for backward compat; `limit` takes precedence. */
+    pageSize: z.coerce.number().int().min(1).max(100).optional(),
     search: z.string().trim().min(1).max(150).optional(),
     categoryId: z.string().trim().min(1).optional(),
+    /** Category **slug** — SEO-friendly alternative to `categoryId`. */
+    category: z.string().trim().min(1).max(100).optional(),
     status: z.enum(PRODUCT_STATUS).optional(),
     minPrice: z.coerce.number().nonnegative().optional(),
     maxPrice: z.coerce.number().nonnegative().optional(),
+    /** When true, only products with at least one variant in stock. */
+    inStock: z
+      .union([z.boolean(), z.string()])
+      .transform((v) => (typeof v === "string" ? v === "true" || v === "1" : v))
+      .pipe(z.boolean())
+      .optional(),
     sort: z.enum(SORT_VALUES).default("latest"),
   })
   .refine(
@@ -211,7 +229,12 @@ export const productQuerySchema = z
       path: ["minPrice"],
       message: "minPrice cannot be greater than maxPrice.",
     },
-  );
+  )
+  .transform((data) => ({
+    ...data,
+    // Normalise: downstream always reads `pageSize`.
+    pageSize: data.limit ?? data.pageSize ?? 20,
+  }));
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;

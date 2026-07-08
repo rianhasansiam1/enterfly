@@ -9,17 +9,11 @@ import {
   ShieldCheck,
   Truck,
 } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
 
 import {
-  setAdminOrders,
-  setAdminOrdersError,
-  setAdminOrdersLoading,
-} from "@/store/slices/admin-orders.slice";
-import type { AppDispatch, RootState } from "@/store";
-import {
-  fetchAllAdminOrdersSnapshot,
+  fetchAdminOrdersPage,
   formatDateTime,
+  type AdminOrderRow,
 } from "@/features/admin-orders/api";
 import {
   checkCourierInfo,
@@ -28,18 +22,33 @@ import {
 import { cn } from "@/lib/utils";
 import CourierReportPanel from "./components/CourierReportPanel";
 
+/**
+ * Walk every page of admin orders to build the full customer-by-phone
+ * list.  The courier page genuinely needs cross-page aggregation so
+ * a full fetch is appropriate here.  This is a local helper — no Redux.
+ */
+async function fetchAllOrdersForCourier(): Promise<AdminOrderRow[]> {
+  let page = 1;
+  let totalPages = 1;
+  const merged: AdminOrderRow[] = [];
+
+  while (page <= totalPages) {
+    const { items, meta } = await fetchAdminOrdersPage({
+      page,
+      pageSize: 100,
+    });
+    merged.push(...items);
+    totalPages = meta.totalPages;
+    page += 1;
+  }
+
+  return merged;
+}
+
 export default function AdminCourierPage() {
-  const dispatch = useDispatch<AppDispatch>();
-  const orders = useSelector((state: RootState) => state.adminOrders.items);
-  const ordersLoading = useSelector(
-    (state: RootState) => state.adminOrders.isLoading,
-  );
-  const ordersHydrated = useSelector(
-    (state: RootState) => state.adminOrders.isHydrated,
-  );
-  const ordersError = useSelector(
-    (state: RootState) => state.adminOrders.error,
-  );
+  const [orders, setOrders] = useState<AdminOrderRow[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
 
   const [orderQuery, setOrderQuery] = useState("");
   const [manualPhone, setManualPhone] = useState("");
@@ -50,26 +59,45 @@ export default function AdminCourierPage() {
   const [activePhone, setActivePhone] = useState<string | null>(null);
 
   const refreshOrders = useCallback(async () => {
-    dispatch(setAdminOrdersLoading(true));
-    dispatch(setAdminOrdersError(null));
+    setOrdersLoading(true);
+    setOrdersError(null);
     try {
-      const items = await fetchAllAdminOrdersSnapshot();
-      dispatch(setAdminOrders(items));
+      const items = await fetchAllOrdersForCourier();
+      setOrders(items);
     } catch (loadError) {
       const message =
         loadError instanceof Error
           ? loadError.message
           : "Failed to load orders.";
-      dispatch(setAdminOrdersError(message));
+      setOrdersError(message);
     } finally {
-      dispatch(setAdminOrdersLoading(false));
+      setOrdersLoading(false);
     }
-  }, [dispatch]);
+  }, []);
 
   useEffect(() => {
-    if (ordersHydrated) return;
-    void refreshOrders();
-  }, [ordersHydrated, refreshOrders]);
+    let ignore = false;
+
+    fetchAllOrdersForCourier()
+      .then((items) => {
+        if (!ignore) setOrders(items);
+      })
+      .catch((loadError: unknown) => {
+        if (ignore) return;
+        const message =
+          loadError instanceof Error
+            ? loadError.message
+            : "Failed to load orders.";
+        setOrdersError(message);
+      })
+      .finally(() => {
+        if (!ignore) setOrdersLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const runCheck = useCallback(async (phone: string) => {
     const trimmed = phone.trim();

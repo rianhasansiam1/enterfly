@@ -11,20 +11,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type SortOption =
-  | "popular"
-  | "price-low"
-  | "price-high"
-  | "rating"
-  | "newest";
+type SortOption = "latest" | "newest" | "price-low" | "price-high";
 
 type ViewMode = "grid" | "list";
 
 type Props = {
+  /** Total matching products from the server (across all pages). */
   resultsCount: number;
-  totalCount: number;
-  sort: SortOption;
-  onSortChange: (sort: SortOption) => void;
+  sort: string;
+  onSortChange: (sort: string) => void;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   onOpenMobileFilter: () => void;
@@ -33,18 +28,25 @@ type Props = {
 };
 
 const SORT_LABELS: Record<SortOption, string> = {
-  popular: "Most Popular",
+  latest: "Newest First",
   newest: "Newest First",
   "price-low": "Price: Low to High",
   "price-high": "Price: High to Low",
-  rating: "Top Rated",
 };
 
-const SORT_OPTIONS = Object.keys(SORT_LABELS) as SortOption[];
+/** Deduplicated options for the dropdown (newest is an alias of latest). */
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "latest", label: "Newest First" },
+  { value: "price-low", label: "Price: Low to High" },
+  { value: "price-high", label: "Price: High to Low" },
+];
+
+function sortLabel(sort: string): string {
+  return SORT_LABELS[sort as SortOption] ?? "Newest First";
+}
 
 export default function ProductToolbar({
   resultsCount,
-  totalCount,
   sort,
   onSortChange,
   viewMode,
@@ -86,12 +88,10 @@ export default function ProductToolbar({
         </Button>
 
         <p className="hidden text-xs text-gray-600 sm:block sm:text-sm">
-          Showing{" "}
           <span className="font-semibold text-gray-900 transition-colors">
             {resultsCount}
           </span>{" "}
-          of <span className="font-semibold text-gray-900">{totalCount}</span>{" "}
-          products
+          products found
         </p>
         <p className="text-xs text-gray-600 sm:hidden">
           <span className="font-semibold text-gray-900">{resultsCount}</span>{" "}
@@ -109,18 +109,18 @@ export default function ProductToolbar({
               className="group bg-gray-50 text-gray-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-violet-50 hover:text-violet-700 active:translate-y-0 data-[state=open]:bg-violet-50 data-[state=open]:text-violet-700"
             >
               <span className="hidden sm:inline">Sort:</span>
-              <span className="font-semibold">{SORT_LABELS[sort]}</span>
+              <span className="font-semibold">{sortLabel(sort)}</span>
               <ChevronDown className="size-3.5 transition-transform duration-300 group-data-[state=open]:rotate-180" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
             <DropdownMenuRadioGroup
               value={sort}
-              onValueChange={(v) => onSortChange(v as SortOption)}
+              onValueChange={(v) => onSortChange(v)}
             >
               {SORT_OPTIONS.map((opt) => (
-                <DropdownMenuRadioItem key={opt} value={opt}>
-                  {SORT_LABELS[opt]}
+                <DropdownMenuRadioItem key={opt.value} value={opt.value}>
+                  {opt.label}
                 </DropdownMenuRadioItem>
               ))}
             </DropdownMenuRadioGroup>

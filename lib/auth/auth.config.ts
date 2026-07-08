@@ -1,5 +1,10 @@
 import type { NextAuthConfig } from "next-auth";
 
+import {
+  normalizeOrigin,
+  validateOriginConfig,
+} from "@/lib/config/origin";
+
 /**
  * Edge-safe portion of the NextAuth config. The middleware imports this
  * file and must NOT pull in Prisma or bcrypt (they don't run on the Edge
@@ -12,6 +17,21 @@ export const authConfig = {
   // Providers are added in auth.ts so the middleware bundle stays small.
   providers: [],
   callbacks: {
+    redirect: async ({ url, baseUrl }) => {
+      const validation = validateOriginConfig();
+      if (!validation.ok) {
+        throw new Error(
+          `Invalid production origin configuration: ${validation.errors.join(" ")}`,
+        );
+      }
+
+      const baseOrigin = validation.authOrigin ?? normalizeOrigin(baseUrl);
+      if (!baseOrigin) return "/";
+
+      if (url.startsWith("/")) return `${baseOrigin}${url}`;
+
+      return normalizeOrigin(url) === baseOrigin ? url : baseOrigin;
+    },
     jwt: async ({ token, user, trigger, session }) => {
       if (user) {
         token.id = (user as { id?: string }).id ?? token.id;

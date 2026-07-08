@@ -1,17 +1,17 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-import type { AdminReviewRow } from "@/features/admin-reviews/api";
+import type { AdminReviewRow, ApiMeta } from "@/features/admin-reviews/api";
 
 type AdminReviewsState = {
   items: AdminReviewRow[];
-  isHydrated: boolean;
+  meta: ApiMeta | null;
   isLoading: boolean;
   error: string | null;
 };
 
 const initialState: AdminReviewsState = {
   items: [],
-  isHydrated: false,
+  meta: null,
   isLoading: false,
   error: null,
 };
@@ -20,9 +20,12 @@ const adminReviewsSlice = createSlice({
   name: "adminReviews",
   initialState,
   reducers: {
-    setAdminReviews(state, action: PayloadAction<AdminReviewRow[]>) {
-      state.items = action.payload;
-      state.isHydrated = true;
+    setAdminReviewsPage(
+      state,
+      action: PayloadAction<{ items: AdminReviewRow[]; meta: ApiMeta }>,
+    ) {
+      state.items = action.payload.items;
+      state.meta = action.payload.meta;
       state.error = null;
     },
     prependAdminReview(state, action: PayloadAction<AdminReviewRow>) {
@@ -41,7 +44,7 @@ const adminReviewsSlice = createSlice({
 });
 
 export const {
-  setAdminReviews,
+  setAdminReviewsPage,
   prependAdminReview,
   removeAdminReview,
   setAdminReviewsLoading,

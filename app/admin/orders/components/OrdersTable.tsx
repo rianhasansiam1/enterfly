@@ -8,11 +8,13 @@ import {
   formatDateTime,
   STATUS_TRANSITIONS,
   type AdminOrderRow,
+  type ApiMeta,
   type OrderStatus,
   type PaymentStatus,
 } from "@/features/admin-orders/api";
 import { ORDER_STATUS_META } from "@/lib/orders/status";
 import { cn } from "@/lib/utils";
+import AdminPagination from "@/components/admin/AdminPagination";
 
 const PAYMENT_BADGE: Record<PaymentStatus, string> = {
   PAID: "bg-emerald-50 text-emerald-700 ring-emerald-200",
@@ -39,23 +41,25 @@ function DetailBlock({
 export default function OrdersTable({
   orders,
   isLoading,
-  totalCount,
+  meta,
   busyOrderId,
   expandedId,
   onToggleExpand,
   onChangeStatus,
   onTogglePayment,
+  onPageChange,
 }: {
   orders: AdminOrderRow[];
   isLoading: boolean;
-  totalCount: number;
+  meta: ApiMeta | null;
   busyOrderId: string | null;
   expandedId: string | null;
   onToggleExpand: (id: string | null) => void;
   onChangeStatus: (order: AdminOrderRow, next: OrderStatus) => void;
   onTogglePayment: (order: AdminOrderRow) => void;
+  onPageChange: (page: number) => void;
 }) {
-  if (isLoading && totalCount === 0) {
+  if (isLoading && orders.length === 0) {
     return (
       <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700 shadow-sm">
         <span className="inline-flex items-center gap-2">
@@ -236,6 +240,14 @@ export default function OrdersTable({
           </tbody>
         </table>
       </div>
+
+      {meta && (
+        <AdminPagination
+          meta={meta}
+          isLoading={isLoading}
+          onPageChange={onPageChange}
+        />
+      )}
     </div>
   );
 }

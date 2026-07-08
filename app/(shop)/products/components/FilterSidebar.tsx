@@ -1,63 +1,32 @@
 "use client";
 
-import { Star, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
+import type { CategoryOption } from "@/features/products/api";
 
-type Filters = {
-  categories: string[];
-  brands: string[];
-  priceRange: [number, number];
-  minRating: number;
-  inStockOnly: boolean;
-};
+const PRICE_BOUNDS: [number, number] = [0, 50000];
 
 type Props = {
-  filters: Filters;
-  onChange: (next: Filters) => void;
+  categories: CategoryOption[];
+  selectedCategory: string;
+  onCategoryChange: (slug: string) => void;
+  maxPrice: number | undefined;
+  onMaxPriceChange: (max: number) => void;
+  inStockOnly: boolean;
+  onInStockChange: () => void;
   onReset: () => void;
-  categories: string[];
-  brands: string[];
-  priceBounds: [number, number];
 };
 
 export default function FilterSidebar({
-  filters,
-  onChange,
-  onReset,
   categories,
-  brands,
-  priceBounds,
+  selectedCategory,
+  onCategoryChange,
+  maxPrice,
+  onMaxPriceChange,
+  inStockOnly,
+  onInStockChange,
+  onReset,
 }: Props) {
-  const toggleCategory = (cat: string) => {
-    const exists = filters.categories.includes(cat);
-    onChange({
-      ...filters,
-      categories: exists
-        ? filters.categories.filter((c) => c !== cat)
-        : [...filters.categories, cat],
-    });
-  };
-
-  const toggleBrand = (brand: string) => {
-    const exists = filters.brands.includes(brand);
-    onChange({
-      ...filters,
-      brands: exists
-        ? filters.brands.filter((b) => b !== brand)
-        : [...filters.brands, brand],
-    });
-  };
-
-  const setMaxPrice = (value: number) => {
-    onChange({ ...filters, priceRange: [filters.priceRange[0], value] });
-  };
-
-  const setMinRating = (rating: number) => {
-    onChange({ ...filters, minRating: filters.minRating === rating ? 0 : rating });
-  };
-
-  const toggleInStock = () => {
-    onChange({ ...filters, inStockOnly: !filters.inStockOnly });
-  };
+  const currentMax = maxPrice ?? PRICE_BOUNDS[1];
 
   return (
     <aside className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-2xl border border-violet-100 bg-white p-5 shadow-sm transition-shadow duration-300 hover:shadow-md">
@@ -73,103 +42,60 @@ export default function FilterSidebar({
         </button>
       </div>
 
+      {/* ── Category ─────────────────────────────────────── */}
       <FilterGroup title="Category">
         <div className="space-y-1.5">
           {categories.map((cat) => (
-            <label key={cat} className="group flex cursor-pointer items-center gap-2">
+            <label key={cat.slug} className="group flex cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
-                checked={filters.categories.includes(cat)}
-                onChange={() => toggleCategory(cat)}
+                checked={selectedCategory === cat.slug}
+                onChange={() => onCategoryChange(cat.slug)}
                 className="h-4 w-4 cursor-pointer accent-violet-600 transition-transform duration-150 active:scale-90"
               />
               <span className="text-sm text-gray-700 transition-colors duration-200 group-hover:text-violet-700">
-                {cat}
+                {cat.name}
               </span>
             </label>
           ))}
+          {categories.length === 0 && (
+            <p className="text-xs text-gray-400">Loading categories…</p>
+          )}
         </div>
       </FilterGroup>
 
+      {/* ── Price Range ───────────────────────────────────── */}
       <FilterGroup title="Price Range">
         <div className="px-1">
           <div className="mb-2 flex items-center justify-between text-xs text-gray-600">
-            <span>BDT {filters.priceRange[0]}</span>
+            <span>BDT {PRICE_BOUNDS[0]}</span>
             <span className="font-semibold text-violet-700">
-              BDT {filters.priceRange[1].toLocaleString()}
+              BDT {currentMax.toLocaleString()}
             </span>
           </div>
           <input
             type="range"
-            min={priceBounds[0]}
-            max={priceBounds[1]}
+            min={PRICE_BOUNDS[0]}
+            max={PRICE_BOUNDS[1]}
             step={50}
-            value={filters.priceRange[1]}
-            onChange={(e) => setMaxPrice(Number(e.target.value))}
+            value={currentMax}
+            onChange={(e) => onMaxPriceChange(Number(e.target.value))}
             className="w-full cursor-pointer accent-violet-600"
           />
           <div className="mt-1 flex items-center justify-between text-[10px] text-gray-400">
             <span>Min</span>
-            <span>Max BDT {priceBounds[1].toLocaleString()}</span>
+            <span>Max BDT {PRICE_BOUNDS[1].toLocaleString()}</span>
           </div>
         </div>
       </FilterGroup>
 
-      <FilterGroup title="Customer Rating">
-        <div className="space-y-1.5">
-          {[4, 3, 2, 1].map((r) => (
-            <button
-              key={r}
-              type="button"
-              onClick={() => setMinRating(r)}
-              className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-all duration-200 hover:translate-x-0.5 ${
-                filters.minRating === r
-                  ? "bg-violet-50 text-violet-700"
-                  : "text-gray-700 hover:bg-gray-50"
-              }`}
-            >
-              <div className="flex items-center">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-3.5 w-3.5 ${
-                      i < r ? "fill-amber-400 text-amber-400" : "text-gray-300"
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-xs">& up</span>
-            </button>
-          ))}
-        </div>
-      </FilterGroup>
-
-      {brands.length > 0 && (
-        <FilterGroup title="Brand">
-          <div className="space-y-1.5">
-            {brands.map((brand) => (
-              <label key={brand} className="group flex cursor-pointer items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={filters.brands.includes(brand)}
-                  onChange={() => toggleBrand(brand)}
-                  className="h-4 w-4 cursor-pointer accent-violet-600 transition-transform duration-150 active:scale-90"
-                />
-                <span className="text-sm text-gray-700 transition-colors duration-200 group-hover:text-violet-700">
-                  {brand}
-                </span>
-              </label>
-            ))}
-          </div>
-        </FilterGroup>
-      )}
-
+      {/* ── Availability ──────────────────────────────────── */}
       <FilterGroup title="Availability" last>
         <label className="group flex cursor-pointer items-center gap-2">
           <input
             type="checkbox"
-            checked={filters.inStockOnly}
-            onChange={toggleInStock}
+            checked={inStockOnly}
+            onChange={onInStockChange}
             className="h-4 w-4 cursor-pointer accent-violet-600 transition-transform duration-150 active:scale-90"
           />
           <span className="text-sm text-gray-700 transition-colors duration-200 group-hover:text-violet-700">

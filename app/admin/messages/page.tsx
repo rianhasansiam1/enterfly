@@ -1,21 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import {
   patchAdminMessage,
   removeAdminMessage,
-  setAdminMessages,
+  setAdminMessagesPage,
   setAdminMessagesError,
   setAdminMessagesLoading,
 } from "@/store/slices/admin-messages.slice";
 import type { AppDispatch, RootState } from "@/store";
 import {
   deleteAdminMessage,
-  fetchAllAdminMessagesSnapshot,
+  fetchAdminMessagesPage,
   patchMessageStatus,
   type AdminMessageRow,
+  type AdminMessageQueryParams,
   type ContactMessageStatus,
 } from "@/features/admin-messages/api";
 import {
@@ -23,30 +24,36 @@ import {
   notifyActionError,
   notifyActionSuccess,
 } from "@/lib/admin-feedback";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useAnimatedRemoval } from "@/hooks/useAnimatedRemoval";
 
 import MessageSummaryCards from "./components/MessageSummaryCards";
 import MessagesToolbar from "./components/MessagesToolbar";
 import MessagesTable from "./components/MessagesTable";
 import MessageDrawer from "./components/MessageDrawer";
+import AdminPagination from "@/components/admin/AdminPagination";
 
 type StatusFilter = "ALL" | ContactMessageStatus;
+
+const PAGE_SIZE = 20;
 
 export default function AdminMessagesPage() {
   const dispatch = useDispatch<AppDispatch>();
   const messages = useSelector(
     (state: RootState) => state.adminMessages.items,
   );
+  const meta = useSelector((state: RootState) => state.adminMessages.meta);
   const isLoading = useSelector(
     (state: RootState) => state.adminMessages.isLoading,
   );
-  const isHydrated = useSelector(
-    (state: RootState) => state.adminMessages.isHydrated,
-  );
   const error = useSelector((state: RootState) => state.adminMessages.error);
 
-  const [query, setQuery] = useState("");
+  // --- Server-driven query params ---
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+
+  const debouncedSearch = useDebounce(search, 300);
 
   const [busyId, setBusyId] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
@@ -57,56 +64,56 @@ export default function AdminMessagesPage() {
       getId: (message) => message.id,
     });
 
-  const refreshMessages = useCallback(async () => {
-    dispatch(setAdminMessagesLoading(true));
-    dispatch(setAdminMessagesError(null));
-    try {
-      const items = await fetchAllAdminMessagesSnapshot();
-      dispatch(setAdminMessages(items));
-    } catch (loadError) {
-      const message =
-        loadError instanceof Error
-          ? loadError.message
-          : "Failed to load messages.";
-      dispatch(setAdminMessagesError(message));
-    } finally {
-      dispatch(setAdminMessagesLoading(false));
-    }
-  }, [dispatch]);
+  const fetchPage = useCallback(
+    async (params: AdminMessageQueryParams) => {
+      dispatch(setAdminMessagesLoading(true));
+      dispatch(setAdminMessagesError(null));
+      try {
+        const result = await fetchAdminMessagesPage(params);
+        dispatch(setAdminMessagesPage(result));
+      } catch (loadError) {
+        const message =
+          loadError instanceof Error
+            ? loadError.message
+            : "Failed to load messages.";
+        dispatch(setAdminMessagesError(message));
+      } finally {
+        dispatch(setAdminMessagesLoading(false));
+      }
+    },
+    [dispatch],
+  );
 
   useEffect(() => {
-    if (isHydrated) return;
-    void refreshMessages();
-  }, [isHydrated, refreshMessages]);
+    const params: AdminMessageQueryParams = {
+      page,
+      pageSize: PAGE_SIZE,
+    };
+    if (debouncedSearch) params.search = debouncedSearch;
+    if (statusFilter !== "ALL") params.status = statusFilter;
 
-  const visibleMessages = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return animatedMessages.filter((row) => {
-      const matchQuery =
-        !q ||
-        row.name.toLowerCase().includes(q) ||
-        row.email.toLowerCase().includes(q) ||
-        (row.phone ?? "").toLowerCase().includes(q) ||
-        row.subject.toLowerCase().includes(q) ||
-        row.message.toLowerCase().includes(q);
+    void fetchPage(params);
+  }, [page, debouncedSearch, statusFilter, fetchPage]);
 
-      const matchStatus =
-        statusFilter === "ALL" || row.status === statusFilter;
-      return matchQuery && matchStatus;
-    });
-  }, [animatedMessages, query, statusFilter]);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    setPage(1);
+  }, []);
 
-  const totals = useMemo(() => {
-    let newCount = 0;
-    let readCount = 0;
-    let archivedCount = 0;
-    for (const row of messages) {
-      if (row.status === "NEW") newCount += 1;
-      else if (row.status === "READ") readCount += 1;
-      else if (row.status === "ARCHIVED") archivedCount += 1;
-    }
-    return { newCount, readCount, archivedCount };
-  }, [messages]);
+  const handleStatusChange = useCallback((value: StatusFilter) => {
+    setStatusFilter(value);
+    setPage(1);
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    const params: AdminMessageQueryParams = {
+      page,
+      pageSize: PAGE_SIZE,
+    };
+    if (debouncedSearch) params.search = debouncedSearch;
+    if (statusFilter !== "ALL") params.status = statusFilter;
+    void fetchPage(params);
+  }, [page, debouncedSearch, statusFilter, fetchPage]);
 
   const handleSetStatus = async (
     row: AdminMessageRow,
@@ -189,22 +196,20 @@ export default function AdminMessagesPage() {
   return (
     <section className="space-y-4">
       <MessageSummaryCards
-        newCount={totals.newCount}
-        readCount={totals.readCount}
-        archivedCount={totals.archivedCount}
+        newCount={meta?.newCount ?? 0}
+        readCount={meta?.readCount ?? 0}
+        archivedCount={meta?.archivedCount ?? 0}
       />
 
       <MessagesToolbar
-        query={query}
+        query={search}
         statusFilter={statusFilter}
-        visibleCount={visibleMessages.length}
-        totalCount={messages.length}
+        visibleCount={animatedMessages.length}
+        totalCount={meta?.total ?? messages.length}
         isLoading={isLoading}
-        onQueryChange={setQuery}
-        onStatusChange={setStatusFilter}
-        onRefresh={() => {
-          void refreshMessages();
-        }}
+        onQueryChange={handleSearchChange}
+        onStatusChange={handleStatusChange}
+        onRefresh={handleRefresh}
       />
 
       {error && (
@@ -220,9 +225,9 @@ export default function AdminMessagesPage() {
       )}
 
       <MessagesTable
-        messages={visibleMessages}
+        messages={animatedMessages}
         isLoading={isLoading}
-        totalCount={messages.length}
+        totalCount={meta?.total ?? messages.length}
         busyId={busyId}
         onOpen={handleOpen}
         onSetStatus={(row, next) => {
@@ -232,6 +237,14 @@ export default function AdminMessagesPage() {
           void handleDelete(row);
         }}
       />
+
+      {meta && meta.totalPages > 1 && (
+        <AdminPagination
+          meta={meta}
+          isLoading={isLoading}
+          onPageChange={setPage}
+        />
+      )}
 
       {openMessage && (
         <MessageDrawer

@@ -25,6 +25,8 @@ export type ApiMeta = {
   pageSize: number;
   total: number;
   totalPages: number;
+  averageRating?: number;
+  adminCount?: number;
 };
 
 export type ApiEnvelope<T> = {
@@ -33,7 +35,7 @@ export type ApiEnvelope<T> = {
   meta?: ApiMeta;
 };
 
-export const API_PAGE_SIZE = 100;
+
 
 export const REVIEW_SOURCE_VALUES: readonly ReviewSource[] = [
   "CUSTOMER",
@@ -86,7 +88,7 @@ function parseRow(entry: unknown): AdminReviewRow {
 
 export function parseReviewsPayload(payload: unknown): {
   items: AdminReviewRow[];
-  meta: ApiMeta | null;
+  meta: ApiMeta;
 } {
   const envelope = payload as ApiEnvelope<unknown>;
   if (!envelope?.success || !Array.isArray(envelope.data)) {
@@ -95,49 +97,49 @@ export function parseReviewsPayload(payload: unknown): {
 
   return {
     items: envelope.data.map(parseRow),
-    meta: envelope.meta ?? null,
+    meta: envelope.meta ?? { page: 1, pageSize: 20, total: 0, totalPages: 1 },
   };
 }
 
+
+export type AdminReviewQueryParams = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  rating?: number;
+  source?: ReviewSource;
+};
+
 /**
- * Walk every page of `/api/admin/reviews` and return the full list.
- * Same in-memory snapshot trade-off as orders/messages: a few requests
- * up front for instant client-side search and filtering afterwards.
+ * Fetch a single page of admin reviews from the server.
  */
-export async function fetchAllAdminReviewsSnapshot(): Promise<AdminReviewRow[]> {
-  let page = 1;
-  let totalPages = 1;
-  const merged: AdminReviewRow[] = [];
+export async function fetchAdminReviewsPage(
+  params: AdminReviewQueryParams = {},
+): Promise<{ items: AdminReviewRow[]; meta: ApiMeta }> {
+  const qs = new URLSearchParams();
+  qs.set("page", String(params.page ?? 1));
+  qs.set("pageSize", String(params.pageSize ?? 20));
+  if (params.search) qs.set("search", params.search);
+  if (params.rating) qs.set("rating", String(params.rating));
+  if (params.source) qs.set("source", params.source);
 
-  while (page <= totalPages) {
-    const params = new URLSearchParams({
-      page: String(page),
-      pageSize: String(API_PAGE_SIZE),
-    });
+  const response = await fetch(`/api/admin/reviews?${qs.toString()}`, {
+    method: "GET",
+    cache: "no-store",
+  });
 
-    const response = await fetch(`/api/admin/reviews?${params.toString()}`, {
-      method: "GET",
-      cache: "no-store",
-    });
-
-    let payload: unknown;
-    try {
-      payload = (await response.json()) as unknown;
-    } catch {
-      throw new Error("Failed to parse reviews response.");
-    }
-
-    if (!response.ok) {
-      throw new Error(readApiError(payload, "Failed to load reviews."));
-    }
-
-    const { items, meta } = parseReviewsPayload(payload);
-    merged.push(...items);
-    totalPages = meta?.totalPages ?? 1;
-    page += 1;
+  let payload: unknown;
+  try {
+    payload = (await response.json()) as unknown;
+  } catch {
+    throw new Error("Failed to parse reviews response.");
   }
 
-  return merged;
+  if (!response.ok) {
+    throw new Error(readApiError(payload, "Failed to load reviews."));
+  }
+
+  return parseReviewsPayload(payload);
 }
 
 export type CreateAdminReviewPayload = {

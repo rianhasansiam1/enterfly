@@ -7,8 +7,7 @@ import {
 } from "@/lib/services/banner.service";
 import {
   getActiveProductBySlug,
-  getProductBySlug,
-  getProductSlugById,
+  getActiveProductSlugById,
   listProducts,
   type ProductWithCategory,
 } from "@/lib/services/product.service";
@@ -95,14 +94,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductDetailsPage({ params }: Props) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  const product = await getActiveProductBySlug(slug);
 
   // Backward compatibility: older links (cart, wishlist, orders, shared
   // URLs) reference a product by its cuid id. If the slug lookup misses,
-  // try treating the param as an id and 308-redirect to the canonical
-  // slug URL so the clean URL becomes the single source of truth.
+  // try treating the param as an id. Only ACTIVE products in ACTIVE
+  // categories redirect; inactive/soft-deleted products 404.
   if (!product) {
-    const canonicalSlug = await getProductSlugById(slug);
+    const canonicalSlug = await getActiveProductSlugById(slug);
     if (canonicalSlug && canonicalSlug !== slug) {
       redirect(`/products/${canonicalSlug}`);
     }

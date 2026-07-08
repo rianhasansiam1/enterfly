@@ -7,7 +7,9 @@
  * fallback — never hardcode localhost into shipped metadata.
  */
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+import { getCanonicalSiteOrigin } from "@/lib/config/origin";
+
+const siteUrl = getCanonicalSiteOrigin();
 
 // Strip a trailing slash so URL composition (`${url}${path}`) never
 // produces a double slash.

@@ -379,7 +379,7 @@ export async function generateOrderPdf(order: OrderDetail): Promise<jsPDF> {
 
   const note = safeText(order.customerNote);
   if (note) {
-    y = drawNoteCard(doc, y, note);
+    drawNoteCard(doc, y, note);
   }
 
   drawBrandFooter(doc, [

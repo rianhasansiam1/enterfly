@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { Prisma } from "@prisma/client";
+import { unstable_cache } from "next/cache";
 
 import { prisma } from "@/lib/db/prisma";
 import { round2, toNumber } from "@/lib/money";
@@ -568,4 +569,20 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
     topProducts,
     activity,
   };
+}
+
+/**
+ * Cache layer over `getDashboardOverview`. Tagged `admin-dashboard` so
+ * order / product / user mutations can bust it on demand via
+ * `revalidateTag("admin-dashboard", "max")`. Short 30 s TTL keeps the
+ * dashboard nearly-live while absorbing repeated admin page loads.
+ */
+const getCachedDashboardOverview = unstable_cache(
+  async () => getDashboardOverview(),
+  ["admin-dashboard-overview"],
+  { revalidate: 30, tags: ["admin-dashboard"] },
+);
+
+export function getDashboardOverviewCached(): Promise<DashboardOverview> {
+  return getCachedDashboardOverview();
 }

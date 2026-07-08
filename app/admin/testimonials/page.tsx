@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import {
   removeAdminTestimonial,
-  setAdminTestimonials,
+  setAdminTestimonialsPage,
   setAdminTestimonialsError,
   setAdminTestimonialsLoading,
   upsertAdminTestimonial,
@@ -16,9 +16,10 @@ import {
   createTestimonial,
   deleteTestimonial,
   EMPTY_FORM,
-  fetchAllAdminTestimonialsSnapshot,
+  fetchAdminTestimonialsPage,
   updateTestimonial,
   type AdminTestimonialRow,
+  type AdminTestimonialQueryParams,
   type TestimonialFormState,
   type TestimonialStatus,
 } from "@/features/admin-testimonials/api";
@@ -28,12 +29,14 @@ import {
   notifyActionSuccess,
 } from "@/lib/admin-feedback";
 import { useAnimatedRemoval } from "@/hooks/useAnimatedRemoval";
+import { useDebounce } from "@/hooks/useDebounce";
 
 import TestimonialSummaryCards from "./components/TestimonialSummaryCards";
 import TestimonialsToolbar from "./components/TestimonialsToolbar";
 import TestimonialsTable from "./components/TestimonialsTable";
 import TestimonialForm from "./components/TestimonialForm";
 import ImportReviewsPanel from "./components/ImportReviewsPanel";
+import AdminPagination from "@/components/admin/AdminPagination";
 
 type StatusFilter = "ALL" | TestimonialStatus;
 
@@ -42,16 +45,18 @@ export default function AdminTestimonialsPage() {
   const testimonials = useSelector(
     (state: RootState) => state.adminTestimonials.items,
   );
+  const meta = useSelector((state: RootState) => state.adminTestimonials.meta);
   const isLoading = useSelector(
     (state: RootState) => state.adminTestimonials.isLoading,
   );
-  const isHydrated = useSelector(
-    (state: RootState) => state.adminTestimonials.isHydrated,
-  );
   const error = useSelector((state: RootState) => state.adminTestimonials.error);
 
-  const [query, setQuery] = useState("");
+  // --- Server-driven query params ---
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+
+  const debouncedSearch = useDebounce(search, 300);
 
   const [busyId, setBusyId] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
@@ -72,47 +77,64 @@ export default function AdminTestimonialsPage() {
     getId: (testimonial) => testimonial.id,
   });
 
-  const refresh = useCallback(async () => {
-    dispatch(setAdminTestimonialsLoading(true));
-    dispatch(setAdminTestimonialsError(null));
-    try {
-      const items = await fetchAllAdminTestimonialsSnapshot();
-      dispatch(setAdminTestimonials(items));
-    } catch (loadError) {
-      dispatch(
-        setAdminTestimonialsError(
-          loadError instanceof Error
-            ? loadError.message
-            : "Failed to load testimonials.",
-        ),
-      );
-    } finally {
-      dispatch(setAdminTestimonialsLoading(false));
-    }
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (isHydrated) return;
-    void refresh();
-  }, [isHydrated, refresh]);
-
-  const activeCount = useMemo(
-    () => testimonials.filter((t) => t.status === "ACTIVE").length,
-    [testimonials],
+  const fetchPage = useCallback(
+    async (params: AdminTestimonialQueryParams) => {
+      dispatch(setAdminTestimonialsLoading(true));
+      dispatch(setAdminTestimonialsError(null));
+      try {
+        const result = await fetchAdminTestimonialsPage(params);
+        dispatch(setAdminTestimonialsPage(result));
+      } catch (loadError) {
+        dispatch(
+          setAdminTestimonialsError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Failed to load testimonials.",
+          ),
+        );
+      } finally {
+        dispatch(setAdminTestimonialsLoading(false));
+      }
+    },
+    [dispatch],
   );
 
-  const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return animatedTestimonials.filter((t) => {
-      const matchQuery =
-        !q ||
-        t.name.toLowerCase().includes(q) ||
-        (t.location ?? "").toLowerCase().includes(q) ||
-        t.text.toLowerCase().includes(q);
-      const matchStatus = statusFilter === "ALL" || t.status === statusFilter;
-      return matchQuery && matchStatus;
-    });
-  }, [animatedTestimonials, query, statusFilter]);
+  useEffect(() => {
+    const params: AdminTestimonialQueryParams = {
+      page,
+      pageSize: 100,
+    };
+    if (statusFilter !== "ALL") params.status = statusFilter;
+
+    void fetchPage(params);
+  }, [page, statusFilter, fetchPage]);
+
+  const handleStatusChange = useCallback((value: StatusFilter) => {
+    setStatusFilter(value);
+    setPage(1);
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    const params: AdminTestimonialQueryParams = {
+      page,
+      pageSize: 100,
+    };
+    if (statusFilter !== "ALL") params.status = statusFilter;
+    void fetchPage(params);
+  }, [page, statusFilter, fetchPage]);
+
+  // Client-side search for testimonials (small dataset, typically < 50)
+  const visible = (() => {
+    const q = debouncedSearch.trim().toLowerCase();
+    if (!q) return animatedTestimonials;
+    return animatedTestimonials.filter((t) =>
+      t.name.toLowerCase().includes(q) ||
+      (t.location ?? "").toLowerCase().includes(q) ||
+      t.text.toLowerCase().includes(q),
+    );
+  })();
+
+  const activeCount = testimonials.filter((t) => t.status === "ACTIVE").length;
 
   const openCreate = () => {
     setForm({ ...EMPTY_FORM, position: testimonials.length });
@@ -236,22 +258,20 @@ export default function AdminTestimonialsPage() {
       </div>
 
       <TestimonialsToolbar
-        query={query}
+        query={search}
         statusFilter={statusFilter}
         visibleCount={visible.length}
         totalCount={testimonials.length}
         isLoading={isLoading}
-        onQueryChange={setQuery}
-        onStatusChange={setStatusFilter}
+        onQueryChange={setSearch}
+        onStatusChange={handleStatusChange}
         onToggleImport={() => {
           setShowImport((open) => !open);
           setMutationError(null);
           setSuccessNote(null);
         }}
         onCreate={openCreate}
-        onRefresh={() => {
-          void refresh();
-        }}
+        onRefresh={handleRefresh}
       />
 
       {showImport && (
@@ -308,6 +328,14 @@ export default function AdminTestimonialsPage() {
           void handleDelete(id);
         }}
       />
+
+      {meta && meta.totalPages > 1 && (
+        <AdminPagination
+          meta={meta}
+          isLoading={isLoading}
+          onPageChange={setPage}
+        />
+      )}
     </section>
   );
 }

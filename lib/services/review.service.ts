@@ -21,8 +21,7 @@ import type {
  */
 
 const reviewInclude = {
-  user: { select: { id: true, name: true, image: true } },
-  product: { select: { id: true, name: true, slug: true, productCode: true } },
+  user: { select: { image: true } },
 } satisfies Prisma.ReviewInclude;
 
 type ReviewWithRelations = Prisma.ReviewGetPayload<{
@@ -32,8 +31,7 @@ type ReviewWithRelations = Prisma.ReviewGetPayload<{
 /**
  * Admin-only include/serializer. Adds the reviewer's phone (and email),
  * which must NEVER be exposed on the public product reviews endpoint —
- * that's why the admin path uses its own shape instead of widening the
- * shared `reviewInclude`/`serializeReview`.
+ * that's why the admin path uses its own include and serializer.
  */
 const adminReviewInclude = {
   user: { select: { id: true, name: true, image: true, phone: true, email: true } },
@@ -44,12 +42,30 @@ type AdminReviewWithRelations = Prisma.ReviewGetPayload<{
   include: typeof adminReviewInclude;
 }>;
 
-export type SerializedReview = {
+export type PublicSerializedReview = {
+  id: string;
+  authorName: string;
+  authorImage: string | null;
+  rating: number;
+  title: string | null;
+  comment: string | null;
+  verified: boolean;
+  createdAt: string;
+};
+
+/**
+ * Admin-only serialized shape. Includes the internal identifiers and reviewer
+ * contact info needed by admin tooling, only ever returned from admin-guarded
+ * endpoints.
+ */
+export type AdminSerializedReview = {
   id: string;
   productId: string;
   userId: string | null;
   authorName: string;
   authorImage: string | null;
+  authorPhone: string | null;
+  authorEmail: string | null;
   rating: number;
   title: string | null;
   comment: string | null;
@@ -60,24 +76,34 @@ export type SerializedReview = {
   product: { id: string; name: string; slug: string; productCode: string } | null;
 };
 
-/**
- * Admin-only serialized shape. Same as `SerializedReview` plus the
- * reviewer's contact info (phone/email), only ever returned from
- * admin-guarded endpoints.
- */
-export type AdminSerializedReview = SerializedReview & {
-  authorPhone: string | null;
-  authorEmail: string | null;
-};
+/** Public review DTO for product pages. Do not add internal user fields here. */
+export function serializePublicReview(
+  review: ReviewWithRelations,
+): PublicSerializedReview {
+  return {
+    id: review.id,
+    authorName: review.authorName,
+    authorImage: review.user?.image ?? null,
+    rating: review.rating,
+    title: review.title,
+    comment: review.comment,
+    verified: review.verified,
+    createdAt: review.createdAt.toISOString(),
+  };
+}
 
-/** Normalize a review row for JSON responses. */
-export function serializeReview(review: ReviewWithRelations): SerializedReview {
+/** Admin serializer: keeps fields needed by protected moderation screens. */
+function serializeAdminReview(
+  review: AdminReviewWithRelations,
+): AdminSerializedReview {
   return {
     id: review.id,
     productId: review.productId,
     userId: review.userId,
     authorName: review.authorName,
     authorImage: review.user?.image ?? null,
+    authorPhone: review.user?.phone ?? null,
+    authorEmail: review.user?.email ?? null,
     rating: review.rating,
     title: review.title,
     comment: review.comment,
@@ -93,17 +119,6 @@ export function serializeReview(review: ReviewWithRelations): SerializedReview {
           productCode: review.product.productCode,
         }
       : null,
-  };
-}
-
-/** Admin serializer: the public shape plus the reviewer's contact info. */
-function serializeAdminReview(
-  review: AdminReviewWithRelations,
-): AdminSerializedReview {
-  return {
-    ...serializeReview(review),
-    authorPhone: review.user?.phone ?? null,
-    authorEmail: review.user?.email ?? null,
   };
 }
 
@@ -169,7 +184,7 @@ export async function listProductReviews(query: ReviewQueryInput) {
   ]);
 
   return {
-    items: items.map(serializeReview),
+    items: items.map(serializePublicReview),
     summary,
     meta: {
       page: query.page,
@@ -210,7 +225,7 @@ async function hasDeliveredProduct(
 export async function createCustomerReview(
   userId: string,
   input: CreateReviewInput,
-): Promise<SerializedReview> {
+): Promise<PublicSerializedReview> {
   const product = await prisma.product.findUnique({
     where: { id: input.productId },
     select: { id: true },
@@ -254,7 +269,7 @@ export async function createCustomerReview(
     include: reviewInclude,
   });
 
-  return serializeReview(review);
+  return serializePublicReview(review);
 }
 
 /**
@@ -264,7 +279,7 @@ export async function createCustomerReview(
  */
 export async function createAdminReview(
   input: CreateAdminReviewInput,
-): Promise<SerializedReview> {
+): Promise<AdminSerializedReview> {
   const product = await prisma.product.findUnique({
     where: { id: input.productId },
     select: { id: true },
@@ -284,10 +299,10 @@ export async function createAdminReview(
       source: "ADMIN",
       verified: false,
     },
-    include: reviewInclude,
+    include: adminReviewInclude,
   });
 
-  return serializeReview(review);
+  return serializeAdminReview(review);
 }
 
 /** Admin moderation list: search, filter by rating/source, newest first. */
@@ -307,7 +322,7 @@ export async function listReviewsForAdmin(query: AdminReviewQueryInput) {
 
   const skip = (query.page - 1) * query.pageSize;
 
-  const [items, total] = await Promise.all([
+  const [items, total, avgAgg, adminCount] = await Promise.all([
     prisma.review.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -316,6 +331,8 @@ export async function listReviewsForAdmin(query: AdminReviewQueryInput) {
       include: adminReviewInclude,
     }),
     prisma.review.count({ where }),
+    prisma.review.aggregate({ _avg: { rating: true } }),
+    prisma.review.count({ where: { source: "ADMIN" } }),
   ]);
 
   return {
@@ -325,6 +342,8 @@ export async function listReviewsForAdmin(query: AdminReviewQueryInput) {
       pageSize: query.pageSize,
       total,
       totalPages: Math.max(1, Math.ceil(total / query.pageSize)),
+      averageRating: avgAgg._avg.rating ?? 0,
+      adminCount,
     },
   };
 }

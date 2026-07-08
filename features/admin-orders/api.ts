@@ -42,6 +42,12 @@ export type ApiMeta = {
   pageSize: number;
   total: number;
   totalPages: number;
+  /** Revenue (excl. cancelled) — populated for the orders list. */
+  revenue?: number;
+  /** Count of orders with PENDING status — populated for the orders list. */
+  pendingCount?: number;
+  /** Count of unpaid non-cancelled orders — populated for the orders list. */
+  unpaidCount?: number;
 };
 
 export type ApiEnvelope<T> = {
@@ -49,8 +55,6 @@ export type ApiEnvelope<T> = {
   data: T;
   meta?: ApiMeta;
 };
-
-export const API_PAGE_SIZE = 100;
 
 export const ORDER_STATUS_VALUES: readonly OrderStatus[] = ORDER_STATUSES;
 
@@ -117,7 +121,7 @@ function parseRow(entry: unknown): AdminOrderRow {
 
 export function parseOrdersPayload(payload: unknown): {
   items: AdminOrderRow[];
-  meta: ApiMeta | null;
+  meta: ApiMeta;
 } {
   const envelope = payload as ApiEnvelope<unknown>;
   if (!envelope?.success || !Array.isArray(envelope.data)) {
@@ -126,50 +130,55 @@ export function parseOrdersPayload(payload: unknown): {
 
   return {
     items: envelope.data.map(parseRow),
-    meta: envelope.meta ?? null,
+    meta: envelope.meta ?? { page: 1, pageSize: 20, total: 0, totalPages: 1 },
   };
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Query params type for server-driven pagination                            */
+/* -------------------------------------------------------------------------- */
+
+export type AdminOrderQueryParams = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  status?: OrderStatus;
+  paymentStatus?: PaymentStatus;
+};
+
 /**
- * Walk every page of `/api/admin/orders` and return the full list.
- * The admin panel is the only consumer and the payload is small enough
- * to keep in memory; we trade a few requests for fully client-side
- * filtering / search after the initial sync.
+ * Fetch a single page of admin orders from the server.
+ *
+ * All filtering, search, and pagination happen server-side via Prisma.
+ * The client only receives the current page's rows plus pagination meta.
  */
-export async function fetchAllAdminOrdersSnapshot(): Promise<AdminOrderRow[]> {
-  let page = 1;
-  let totalPages = 1;
-  const merged: AdminOrderRow[] = [];
+export async function fetchAdminOrdersPage(
+  params: AdminOrderQueryParams = {},
+): Promise<{ items: AdminOrderRow[]; meta: ApiMeta }> {
+  const qs = new URLSearchParams();
+  qs.set("page", String(params.page ?? 1));
+  qs.set("pageSize", String(params.pageSize ?? 20));
+  if (params.search) qs.set("search", params.search);
+  if (params.status) qs.set("status", params.status);
+  if (params.paymentStatus) qs.set("paymentStatus", params.paymentStatus);
 
-  while (page <= totalPages) {
-    const params = new URLSearchParams({
-      page: String(page),
-      pageSize: String(API_PAGE_SIZE),
-    });
+  const response = await fetch(`/api/admin/orders?${qs.toString()}`, {
+    method: "GET",
+    cache: "no-store",
+  });
 
-    const response = await fetch(`/api/admin/orders?${params.toString()}`, {
-      method: "GET",
-      cache: "no-store",
-    });
-
-    let payload: unknown;
-    try {
-      payload = (await response.json()) as unknown;
-    } catch {
-      throw new Error("Failed to parse orders response.");
-    }
-
-    if (!response.ok) {
-      throw new Error(readApiError(payload, "Failed to load orders."));
-    }
-
-    const { items, meta } = parseOrdersPayload(payload);
-    merged.push(...items);
-    totalPages = meta?.totalPages ?? 1;
-    page += 1;
+  let payload: unknown;
+  try {
+    payload = (await response.json()) as unknown;
+  } catch {
+    throw new Error("Failed to parse orders response.");
   }
 
-  return merged;
+  if (!response.ok) {
+    throw new Error(readApiError(payload, "Failed to load orders."));
+  }
+
+  return parseOrdersPayload(payload);
 }
 
 export async function patchOrderStatus(

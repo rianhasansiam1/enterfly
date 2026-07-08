@@ -1,12 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import {
   patchAdminCategory,
-  removeAdminCategory,
-  setAdminCategories,
+  setAdminCategoriesPage,
   setAdminCategoriesError,
   setAdminCategoriesLoading,
   upsertAdminCategory,
@@ -17,9 +16,10 @@ import {
   createCategory,
   deleteCategory,
   EMPTY_FORM,
-  fetchAllAdminCategoriesSnapshot,
+  fetchAdminCategoriesPage,
   updateCategory,
   type AdminCategoryRow,
+  type AdminCategoryQueryParams,
   type CategoryFormState,
   type CategoryStatus,
 } from "@/features/admin-categories/api";
@@ -28,29 +28,35 @@ import {
   notifyActionError,
   notifyActionSuccess,
 } from "@/lib/admin-feedback";
+import { useDebounce } from "@/hooks/useDebounce";
 
 import CategorySummaryCards from "./components/CategorySummaryCards";
 import CategoriesToolbar from "./components/CategoriesToolbar";
 import CategoriesTable from "./components/CategoriesTable";
 import CategoryFormDrawer from "./components/CategoryFormDrawer";
+import AdminPagination from "@/components/admin/AdminPagination";
 
 type StatusFilter = "ALL" | CategoryStatus;
+
+const PAGE_SIZE = 20;
 
 export default function AdminCategoriesPage() {
   const dispatch = useDispatch<AppDispatch>();
   const categories = useSelector(
     (state: RootState) => state.adminCategories.items,
   );
+  const meta = useSelector((state: RootState) => state.adminCategories.meta);
   const isLoading = useSelector(
     (state: RootState) => state.adminCategories.isLoading,
   );
-  const isHydrated = useSelector(
-    (state: RootState) => state.adminCategories.isHydrated,
-  );
   const error = useSelector((state: RootState) => state.adminCategories.error);
 
-  const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  // --- Server-driven query params ---
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ACTIVE");
+
+  const debouncedSearch = useDebounce(search, 300);
 
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelMode, setPanelMode] = useState<"create" | "edit">("create");
@@ -62,52 +68,56 @@ export default function AdminCategoriesPage() {
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [successNote, setSuccessNote] = useState<string | null>(null);
 
-  const refreshCategories = useCallback(async () => {
-    dispatch(setAdminCategoriesLoading(true));
-    dispatch(setAdminCategoriesError(null));
-    try {
-      const items = await fetchAllAdminCategoriesSnapshot();
-      dispatch(setAdminCategories(items));
-    } catch (loadError) {
-      const message =
-        loadError instanceof Error
-          ? loadError.message
-          : "Failed to load categories.";
-      dispatch(setAdminCategoriesError(message));
-    } finally {
-      dispatch(setAdminCategoriesLoading(false));
-    }
-  }, [dispatch]);
+  const fetchPage = useCallback(
+    async (params: AdminCategoryQueryParams) => {
+      dispatch(setAdminCategoriesLoading(true));
+      dispatch(setAdminCategoriesError(null));
+      try {
+        const result = await fetchAdminCategoriesPage(params);
+        dispatch(setAdminCategoriesPage(result));
+      } catch (loadError) {
+        const message =
+          loadError instanceof Error
+            ? loadError.message
+            : "Failed to load categories.";
+        dispatch(setAdminCategoriesError(message));
+      } finally {
+        dispatch(setAdminCategoriesLoading(false));
+      }
+    },
+    [dispatch],
+  );
 
   useEffect(() => {
-    if (isHydrated) return;
-    void refreshCategories();
-  }, [isHydrated, refreshCategories]);
+    const params: AdminCategoryQueryParams = {
+      page,
+      pageSize: PAGE_SIZE,
+    };
+    if (debouncedSearch) params.search = debouncedSearch;
+    if (statusFilter !== "ALL") params.status = statusFilter;
 
-  const visibleCategories = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return categories.filter((category) => {
-      const matchQuery =
-        !q ||
-        category.name.toLowerCase().includes(q) ||
-        category.slug.toLowerCase().includes(q) ||
-        (category.description ?? "").toLowerCase().includes(q);
+    void fetchPage(params);
+  }, [page, debouncedSearch, statusFilter, fetchPage]);
 
-      const matchStatus =
-        statusFilter === "ALL" || category.status === statusFilter;
-      return matchQuery && matchStatus;
-    });
-  }, [categories, query, statusFilter]);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    setPage(1);
+  }, []);
 
-  const totals = useMemo(() => {
-    let active = 0;
-    let products = 0;
-    for (const category of categories) {
-      if (category.status === "ACTIVE") active += 1;
-      products += category.productCount;
-    }
-    return { active, products };
-  }, [categories]);
+  const handleStatusChange = useCallback((value: StatusFilter) => {
+    setStatusFilter(value);
+    setPage(1);
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    const params: AdminCategoryQueryParams = {
+      page,
+      pageSize: PAGE_SIZE,
+    };
+    if (debouncedSearch) params.search = debouncedSearch;
+    if (statusFilter !== "ALL") params.status = statusFilter;
+    void fetchPage(params);
+  }, [page, debouncedSearch, statusFilter, fetchPage]);
 
   const openCreatePanel = () => {
     setPanelMode("create");
@@ -241,12 +251,12 @@ export default function AdminCategoriesPage() {
 
   const handleDelete = async (category: AdminCategoryRow) => {
     const confirmed = await confirmMajorAction({
-      title: `Delete "${category.name}"?`,
+      title: `Remove "${category.name}" from the storefront?`,
       description:
         category.productCount > 0
-          ? `This will permanently delete this category and ${category.productCount} product(s) in it.`
-          : "This will permanently delete this category.",
-      confirmLabel: "Delete category",
+          ? `This will move the category and ${category.productCount} product(s) in it to Inactive. History and analytics stay intact.`
+          : "This will move the category to Inactive. History and analytics stay intact.",
+      confirmLabel: "Move to inactive",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -257,22 +267,22 @@ export default function AdminCategoriesPage() {
 
     try {
       await deleteCategory(category.id);
-      dispatch(removeAdminCategory(category.id));
+      handleRefresh();
       if (editing?.id === category.id) closePanel();
 
       const message =
         category.productCount > 0
-          ? `Category deleted with ${category.productCount} product(s).`
-          : "Category deleted successfully.";
+          ? `Category and ${category.productCount} product(s) moved to inactive.`
+          : "Category moved to inactive.";
       setSuccessNote(message);
       notifyActionSuccess(message);
     } catch (mutation) {
       const message =
         mutation instanceof Error
           ? mutation.message
-          : "Failed to delete category.";
+          : "Failed to deactivate category.";
       setMutationError(message);
-      notifyActionError(mutation, "Failed to delete category.");
+      notifyActionError(mutation, "Failed to deactivate category.");
     } finally {
       setBusyId(null);
     }
@@ -281,22 +291,20 @@ export default function AdminCategoriesPage() {
   return (
     <section className="space-y-4">
       <CategorySummaryCards
-        totalCategories={categories.length}
-        active={totals.active}
-        productsMapped={totals.products}
+        totalCategories={meta?.total ?? categories.length}
+        active={meta?.activeCount ?? 0}
+        productsMapped={meta?.totalProducts ?? 0}
       />
 
       <CategoriesToolbar
-        query={query}
+        query={search}
         statusFilter={statusFilter}
-        visibleCount={visibleCategories.length}
-        totalCount={categories.length}
+        visibleCount={categories.length}
+        totalCount={meta?.total ?? categories.length}
         isLoading={isLoading}
-        onQueryChange={setQuery}
-        onStatusChange={setStatusFilter}
-        onRefresh={() => {
-          void refreshCategories();
-        }}
+        onQueryChange={handleSearchChange}
+        onStatusChange={handleStatusChange}
+        onRefresh={handleRefresh}
         onCreate={openCreatePanel}
       />
 
@@ -319,9 +327,9 @@ export default function AdminCategoriesPage() {
       )}
 
       <CategoriesTable
-        categories={visibleCategories}
+        categories={categories}
         isLoading={isLoading}
-        totalCount={categories.length}
+        totalCount={meta?.total ?? categories.length}
         busyId={busyId}
         onEdit={openEditPanel}
         onToggleVisibility={(category) => {
@@ -331,6 +339,14 @@ export default function AdminCategoriesPage() {
           void handleDelete(category);
         }}
       />
+
+      {meta && meta.totalPages > 1 && (
+        <AdminPagination
+          meta={meta}
+          isLoading={isLoading}
+          onPageChange={setPage}
+        />
+      )}
 
       <CategoryFormDrawer
         open={panelOpen}

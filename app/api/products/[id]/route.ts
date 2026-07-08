@@ -3,12 +3,13 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
-import { isAdminRequest, requireAdmin } from "@/lib/api/guards";
+import { requireAdmin } from "@/lib/api/guards";
 import { jsonError, ok } from "@/lib/api/response";
 import {
   getProductById,
-  hardDeleteProduct,
-  serializeProduct,
+  getPublicProductByIdCached,
+  serializePublicProduct,
+  softDeleteProduct,
   updateProduct,
 } from "@/lib/services/product.service";
 import { updateProductSchema } from "@/lib/validations/product.validation";
@@ -26,10 +27,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
 
   try {
-    const product = await getProductById(id);
-    if (!product) return jsonError(404, "Product not found.");
-    const includeBuyingPrice = await isAdminRequest();
-    return ok(serializeProduct(product, { includeBuyingPrice }));
+    const cached = await getPublicProductByIdCached(id);
+    if (!cached) return jsonError(404, "Product not found.");
+    return ok(cached);
   } catch (error) {
     console.error("[products/[id].GET] failed", error);
     return jsonError(500, "Failed to fetch product.");
@@ -98,9 +98,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   try {
     const product = await updateProduct(id, parsed.data);
+    revalidateTag("products", "max");
+    revalidateTag("product-detail", "max");
     revalidateTag("home-categories", "max");
     revalidateTag("categories", "max");
-    return ok(serializeProduct(product, { includeBuyingPrice: true }));
+    revalidateTag("admin-dashboard", "max");
+    revalidateTag("admin-reports", "max");
+    return ok(serializePublicProduct(product));
   } catch (error) {
     if (
       error instanceof PrismaClientKnownRequestError &&
@@ -143,7 +147,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 /**
  * DELETE /api/products/[id]
  *
- * Admin only. Hard delete removes the product permanently.
+ * Admin only. Normal delete is a safe soft delete: the product is moved
+ * to INACTIVE so order history, reviews, and analytics remain intact.
  */
 export async function DELETE(_request: NextRequest, context: RouteContext) {
   const guard = await requireAdmin();
@@ -155,10 +160,14 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
   if (!existing) return jsonError(404, "Product not found.");
 
   try {
-    await hardDeleteProduct(id);
+    const product = await softDeleteProduct(id);
+    revalidateTag("products", "max");
+    revalidateTag("product-detail", "max");
     revalidateTag("home-categories", "max");
     revalidateTag("categories", "max");
-    return ok(serializeProduct(existing));
+    revalidateTag("admin-dashboard", "max");
+    revalidateTag("admin-reports", "max");
+    return ok(serializePublicProduct(product));
   } catch (error) {
     if (
       error instanceof PrismaClientKnownRequestError &&
@@ -167,6 +176,6 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
       return jsonError(404, "Product not found.");
     }
     console.error("[products/[id].DELETE] failed", error);
-    return jsonError(500, "Failed to delete product.");
+    return jsonError(500, "Failed to deactivate product.");
   }
 }

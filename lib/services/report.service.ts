@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { Prisma } from "@prisma/client";
+import { unstable_cache } from "next/cache";
 
 import { prisma } from "@/lib/db/prisma";
 import { round2, toNumber } from "@/lib/money";
@@ -92,7 +93,8 @@ function orderDateWhere(window: Window): Prisma.OrderWhereInput {
 async function buildSalesReport(window: Window, limit: number) {
   const where: Prisma.OrderWhereInput = orderDateWhere(window);
 
-  const [orders, statusGroups, paymentGroups] = await Promise.all([
+  // All five queries share the same date window; run them in parallel.
+  const [orders, statusGroups, paymentGroups, totals, liveAggregate, cancelledAggregate] = await Promise.all([
     prisma.order.findMany({
       where,
       select: {
@@ -123,29 +125,26 @@ async function buildSalesReport(window: Window, limit: number) {
       _count: { _all: true },
       _sum: { totalAmount: true },
     }),
+    prisma.order.aggregate({
+      where,
+      _count: { _all: true },
+    }),
+    prisma.order.aggregate({
+      where: { ...where, status: { not: "CANCELLED" } },
+      _sum: {
+        totalAmount: true,
+        subtotal: true,
+        deliveryCharge: true,
+        discountAmount: true,
+      },
+      _count: { _all: true },
+    }),
+    prisma.order.aggregate({
+      where: { ...where, status: "CANCELLED" },
+      _sum: { totalAmount: true },
+      _count: { _all: true },
+    }),
   ]);
-
-  const totals = await prisma.order.aggregate({
-    where,
-    _count: { _all: true },
-  });
-
-  const liveAggregate = await prisma.order.aggregate({
-    where: { ...where, status: { not: "CANCELLED" } },
-    _sum: {
-      totalAmount: true,
-      subtotal: true,
-      deliveryCharge: true,
-      discountAmount: true,
-    },
-    _count: { _all: true },
-  });
-
-  const cancelledAggregate = await prisma.order.aggregate({
-    where: { ...where, status: "CANCELLED" },
-    _sum: { totalAmount: true },
-    _count: { _all: true },
-  });
 
   // Daily series — bucket by UTC date for a tidy chart.
   const dailyMap = new Map<
@@ -699,41 +698,54 @@ async function buildCustomersReport(window: Window, limit: number) {
  * revenue earned by category in the window.
  */
 async function buildCategoriesReport(window: Window, limit: number) {
-  const categories = await prisma.category.findMany({
-    select: {
-      id: true,
-      name: true,
-      status: true,
-      _count: { select: { products: true } },
-    },
-    orderBy: { name: "asc" },
-  });
-
-  // Pull every order item in the window; small-shop catalog so a bulk
-  // fetch is fine. If this grows, switch to a raw SQL aggregate.
-  const items = await prisma.orderItem.findMany({
-    where: {
-      order: {
-        createdAt: { gte: window.from, lte: window.to },
-        status: { not: "CANCELLED" },
+  // Step 1: categories + product counts, and per-product aggregation
+  // via groupBy (avoids fetching every OrderItem row into JS).
+  const [categories, productAgg] = await Promise.all([
+    prisma.category.findMany({
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        _count: { select: { products: true } },
       },
-    },
-    select: {
-      quantity: true,
-      totalPrice: true,
-      product: { select: { categoryId: true } },
-    },
-  });
+      orderBy: { name: "asc" },
+    }),
+    prisma.orderItem.groupBy({
+      by: ["productId"],
+      where: {
+        productId: { not: null },
+        order: {
+          createdAt: { gte: window.from, lte: window.to },
+          status: { not: "CANCELLED" },
+        },
+      },
+      _sum: { quantity: true, totalPrice: true },
+    }),
+  ]);
+
+  // Step 2: map productId → categoryId so we can roll up per category.
+  const productIds = productAgg
+    .map((row) => row.productId)
+    .filter((id): id is string => id !== null);
 
   const aggregate = new Map<string, { units: number; revenue: number }>();
-  for (const item of items) {
-    // Skip items whose product was deleted — no category to attribute to.
-    if (!item.product) continue;
-    const key = item.product.categoryId;
-    const bucket = aggregate.get(key) ?? { units: 0, revenue: 0 };
-    bucket.units += item.quantity;
-    bucket.revenue = round2(bucket.revenue + toNumber(item.totalPrice));
-    aggregate.set(key, bucket);
+
+  if (productIds.length > 0) {
+    const productCats = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, categoryId: true },
+    });
+    const catLookup = new Map(productCats.map((p) => [p.id, p.categoryId]));
+
+    for (const row of productAgg) {
+      if (row.productId == null) continue;
+      const catId = catLookup.get(row.productId);
+      if (!catId) continue; // product deleted
+      const bucket = aggregate.get(catId) ?? { units: 0, revenue: 0 };
+      bucket.units += row._sum.quantity ?? 0;
+      bucket.revenue = round2(bucket.revenue + toNumber(row._sum.totalPrice));
+      aggregate.set(catId, bucket);
+    }
   }
 
   const rows = categories
@@ -804,4 +816,19 @@ export async function buildReport(query: ReportQueryInput) {
       // Should be unreachable thanks to Zod, but keep TS happy.
       throw new ReportError(400, "Unknown report type.");
   }
+}
+
+/**
+ * Cache layer over `buildReport`. Tagged `admin-reports` so order /
+ * product mutations can bust it on demand. 60 s TTL balances freshness
+ * against the cost of heavy aggregations.
+ */
+const getCachedReport = unstable_cache(
+  async (query: ReportQueryInput) => buildReport(query),
+  ["admin-reports"],
+  { revalidate: 60, tags: ["admin-reports"] },
+);
+
+export function buildReportCached(query: ReportQueryInput) {
+  return getCachedReport(query);
 }

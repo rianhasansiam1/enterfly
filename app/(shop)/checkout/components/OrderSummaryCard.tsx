@@ -56,6 +56,7 @@ export default function OrderSummaryCard({
   const totalSaved = summary
     ? summary.totalSavings + summary.discount
     : 0;
+  const isCheckingPromo = Boolean(appliedPromo && isLoading);
 
   const buttonLabel = isPlacing
     ? "Placing order..."
@@ -85,13 +86,17 @@ export default function OrderSummaryCard({
                 <span className="rounded-md bg-white px-1.5 py-0.5 font-mono text-xs text-emerald-700">
                   {appliedPromo}
                 </span>
-                applied
+                {isCheckingPromo ? "checking" : "applied"}
               </p>
-              {summary && (
+              {isCheckingPromo ? (
+                <p className="truncate text-xs text-emerald-700">
+                  Verifying with checkout pricing...
+                </p>
+              ) : summary ? (
                 <p className="truncate text-xs text-emerald-700">
                   -BDT {summary.discount.toLocaleString()} off
                 </p>
-              )}
+              ) : null}
             </div>
             <button
               type="button"

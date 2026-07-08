@@ -13,9 +13,14 @@ import { NextResponse } from "next/server";
 
 export type ApiMeta = {
   page?: number;
+  /** Preferred name for items-per-page (replaces `pageSize`). */
+  limit?: number;
+  /** @deprecated Use `limit`. Kept for backward compat. */
   pageSize?: number;
   total?: number;
   totalPages?: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
   [key: string]: unknown;
 };
 

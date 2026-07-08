@@ -17,7 +17,7 @@ export const PATCH = adminJsonRoute<
 >({
   schema: updatePaymentStatusSchema,
   scope: "admin.orders/[id].payment-status.PATCH",
-  revalidate: ["admin-orders"],
+  revalidate: ["admin-orders", "admin-dashboard", "admin-reports"],
   handler: async ({ body, params }) => {
     const order = await updatePaymentStatus(params.id, body);
     return { data: order };

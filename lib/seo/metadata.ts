@@ -12,7 +12,7 @@ import { absoluteUrl, siteConfig } from "./site";
  */
 
 /** Truncate free-form text to a search-friendly length on a word boundary. */
-export function clampDescription(input: string | null | undefined, max = 160): string {
+function clampDescription(input: string | null | undefined, max = 160): string {
   const text = (input ?? "").replace(/\s+/g, " ").trim();
   if (text.length <= max) return text || siteConfig.description;
   const sliced = text.slice(0, max);

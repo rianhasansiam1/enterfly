@@ -28,7 +28,7 @@ export type ApiEnvelope<T> = {
   meta?: ApiMeta;
 };
 
-export const API_PAGE_SIZE = 100;
+
 
 export const STATUS_VALUES: readonly TestimonialStatus[] = [
   "ACTIVE",
@@ -85,7 +85,7 @@ function parseRow(entry: unknown): AdminTestimonialRow {
 
 export function parseTestimonialsPayload(payload: unknown): {
   items: AdminTestimonialRow[];
-  meta: ApiMeta | null;
+  meta: ApiMeta;
 } {
   const envelope = payload as ApiEnvelope<unknown>;
   if (!envelope?.success || !Array.isArray(envelope.data)) {
@@ -93,46 +93,44 @@ export function parseTestimonialsPayload(payload: unknown): {
   }
   return {
     items: envelope.data.map(parseRow),
-    meta: envelope.meta ?? null,
+    meta: envelope.meta ?? { page: 1, pageSize: 100, total: 0, totalPages: 1 },
   };
 }
 
-export async function fetchAllAdminTestimonialsSnapshot(): Promise<
-  AdminTestimonialRow[]
-> {
-  let page = 1;
-  let totalPages = 1;
-  const merged: AdminTestimonialRow[] = [];
+export type AdminTestimonialQueryParams = {
+  page?: number;
+  pageSize?: number;
+  status?: TestimonialStatus;
+};
 
-  while (page <= totalPages) {
-    const params = new URLSearchParams({
-      page: String(page),
-      pageSize: String(API_PAGE_SIZE),
-    });
+/**
+ * Fetch a single page of admin testimonials from the server.
+ */
+export async function fetchAdminTestimonialsPage(
+  params: AdminTestimonialQueryParams = {},
+): Promise<{ items: AdminTestimonialRow[]; meta: ApiMeta }> {
+  const qs = new URLSearchParams();
+  qs.set("page", String(params.page ?? 1));
+  qs.set("pageSize", String(params.pageSize ?? 100));
+  if (params.status) qs.set("status", params.status);
 
-    const response = await fetch(
-      `/api/admin/testimonials?${params.toString()}`,
-      { method: "GET", cache: "no-store" },
-    );
+  const response = await fetch(`/api/admin/testimonials?${qs.toString()}`, {
+    method: "GET",
+    cache: "no-store",
+  });
 
-    let payload: unknown;
-    try {
-      payload = (await response.json()) as unknown;
-    } catch {
-      throw new Error("Failed to parse testimonials response.");
-    }
-
-    if (!response.ok) {
-      throw new Error(readApiError(payload, "Failed to load testimonials."));
-    }
-
-    const { items, meta } = parseTestimonialsPayload(payload);
-    merged.push(...items);
-    totalPages = meta?.totalPages ?? 1;
-    page += 1;
+  let payload: unknown;
+  try {
+    payload = (await response.json()) as unknown;
+  } catch {
+    throw new Error("Failed to parse testimonials response.");
   }
 
-  return merged;
+  if (!response.ok) {
+    throw new Error(readApiError(payload, "Failed to load testimonials."));
+  }
+
+  return parseTestimonialsPayload(payload);
 }
 
 type CreateBody = {

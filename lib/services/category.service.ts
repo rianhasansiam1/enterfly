@@ -55,14 +55,23 @@ export function slugify(input: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+type CategoryListOptions = {
+  /** Public category reads must only expose active categories. */
+  publicOnly?: boolean;
+};
+
 /** Build the Prisma `where` clause from validated query params. */
-function buildWhere(query: CategoryQueryInput): Prisma.CategoryWhereInput {
+function buildWhere(
+  query: CategoryQueryInput,
+  options: CategoryListOptions = {},
+): Prisma.CategoryWhereInput {
   const where: Prisma.CategoryWhereInput = {};
 
   if (query.search) {
     where.name = { contains: query.search, mode: "insensitive" };
   }
   if (query.status) where.status = query.status;
+  if (options.publicOnly) where.status = "ACTIVE";
 
   return where;
 }
@@ -81,23 +90,35 @@ function buildOrderBy(
 }
 
 /** Paginated, filtered, sorted category list. */
-export async function listCategories(query: CategoryQueryInput) {
-  const where = buildWhere(query);
+export async function listCategories(
+  query: CategoryQueryInput,
+  options: CategoryListOptions = {},
+) {
+  const where = buildWhere(query, options);
   const orderBy = buildOrderBy(query.sort);
   const skip = (query.page - 1) * query.pageSize;
+  const productCountSelect = options.publicOnly
+    ? { products: { where: { status: "ACTIVE" as const } } }
+    : { products: true };
+  const totalProductsWhere: Prisma.ProductWhereInput | undefined =
+    options.publicOnly
+      ? { status: "ACTIVE", category: { status: "ACTIVE" } }
+      : undefined;
 
   // Count + page in parallel so we only pay one round-trip's latency.
-  const [rows, total] = await Promise.all([
+  const [rows, total, activeCount, totalProducts] = await Promise.all([
     prisma.category.findMany({
       where,
       orderBy,
       skip,
       take: query.pageSize,
       select: query.withProductCount
-        ? { ...categorySelect, _count: { select: { products: true } } }
+        ? { ...categorySelect, _count: { select: productCountSelect } }
         : categorySelect,
     }),
     prisma.category.count({ where }),
+    prisma.category.count({ where: { status: "ACTIVE" } }),
+    prisma.product.count({ where: totalProductsWhere }),
   ]);
 
   // Flatten `_count.products` into `productCount` so the API stays simple.
@@ -117,6 +138,8 @@ export async function listCategories(query: CategoryQueryInput) {
       pageSize: query.pageSize,
       total,
       totalPages: Math.max(1, Math.ceil(total / query.pageSize)),
+      activeCount,
+      totalProducts,
     },
   };
 }
@@ -127,13 +150,17 @@ export async function listCategories(query: CategoryQueryInput) {
  * as products and orders to stay consistent across the admin panel.
  */
 const getCachedCategoryList = unstable_cache(
-  async (query: CategoryQueryInput) => listCategories(query),
+  async (query: CategoryQueryInput, options: CategoryListOptions = {}) =>
+    listCategories(query, options),
   ["categories-list"],
   { revalidate: 300, tags: ["categories"] },
 );
 
-export function listCategoriesCached(query: CategoryQueryInput) {
-  return getCachedCategoryList(query);
+export function listCategoriesCached(
+  query: CategoryQueryInput,
+  options: CategoryListOptions = {},
+) {
+  return getCachedCategoryList(query, options);
 }
 
 /** Single category + product count, or `null` if not found. */
@@ -148,6 +175,24 @@ export async function getCategoryById(
 
   const { _count, ...rest } = row;
   return { ...rest, productCount: _count.products };
+}
+
+/** Public-safe category detail, or null when missing/inactive. */
+export async function getActiveCategoryById(
+  id: string,
+): Promise<CategoryWithProductCount | null> {
+  const [row, productCount] = await Promise.all([
+    prisma.category.findFirst({
+      where: { id, status: "ACTIVE" },
+      select: categorySelect,
+    }),
+    prisma.product.count({
+      where: { categoryId: id, status: "ACTIVE" },
+    }),
+  ]);
+  if (!row) return null;
+
+  return { ...row, productCount };
 }
 
 /**
@@ -326,7 +371,39 @@ export function softDeleteCategory(id: string) {
 }
 
 /**
+ * Soft delete a category and deactivate the products under it.
+ *
+ * This preserves every catalog row and historical FK while matching the
+ * previous admin "delete category with products" behavior from the
+ * storefront's perspective: the category and its products disappear from
+ * public reads and checkout because product status also becomes INACTIVE.
+ */
+export async function softDeleteCategoryWithProducts(id: string) {
+  return prisma.$transaction(async (tx) => {
+    const deactivatedProducts = await tx.product.updateMany({
+      where: { categoryId: id, status: { not: "INACTIVE" } },
+      data: { status: "INACTIVE" },
+    });
+
+    const category = await tx.category.update({
+      where: { id },
+      data: { status: "INACTIVE" },
+      select: categorySelect,
+    });
+
+    return {
+      category,
+      deactivatedProducts: deactivatedProducts.count,
+    };
+  });
+}
+
+/**
  * Hard delete a category and all products under it.
+ *
+ * Internal dangerous maintenance helper only. Do not wire this to normal
+ * admin UI/API flows; use `softDeleteCategoryWithProducts` for catalog
+ * removal.
  *
  * Product delete cascades to ProductImage/ProductVariant/CartItem/Wishlist/
  * Review, while OrderItem keeps snapshots by nulling product/variant FKs.

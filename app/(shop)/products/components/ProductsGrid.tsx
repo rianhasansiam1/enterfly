@@ -32,7 +32,6 @@ type Props = {
   viewMode: ViewMode;
   onClearFilters: () => void;
   wide?: boolean;
-  animateFrom?: number;
 };
 
 export default function ProductsGrid({
@@ -40,7 +39,6 @@ export default function ProductsGrid({
   viewMode,
   onClearFilters,
   wide,
-  animateFrom = 0,
 }: Props) {
   if (products.length === 0) {
     return (
@@ -70,19 +68,11 @@ export default function ProductsGrid({
         {products.map((p, idx) => (
           <div
             key={p.id}
-            className={
-              idx >= animateFrom
-                ? "animate-in fade-in slide-in-from-bottom-2 duration-500"
-                : undefined
-            }
-            style={
-              idx >= animateFrom
-                ? {
-                    animationDelay: `${Math.min((idx - animateFrom) * 40, 400)}ms`,
-                    animationFillMode: "backwards",
-                  }
-                : undefined
-            }
+            className="animate-in fade-in slide-in-from-bottom-2 duration-500"
+            style={{
+              animationDelay: `${Math.min(idx * 40, 400)}ms`,
+              animationFillMode: "backwards",
+            }}
           >
             <ListItem product={p} />
           </div>
@@ -100,19 +90,11 @@ export default function ProductsGrid({
       {products.map((p, idx) => (
         <div
           key={p.id}
-          className={
-            idx >= animateFrom
-              ? "animate-in fade-in slide-in-from-bottom-3 duration-500"
-              : undefined
-          }
-          style={
-            idx >= animateFrom
-              ? {
-                  animationDelay: `${Math.min((idx - animateFrom) * 40, 400)}ms`,
-                  animationFillMode: "backwards",
-                }
-              : undefined
-          }
+          className="animate-in fade-in slide-in-from-bottom-3 duration-500"
+          style={{
+            animationDelay: `${Math.min(idx * 40, 400)}ms`,
+            animationFillMode: "backwards",
+          }}
         >
           <ProductCard
             id={p.id}

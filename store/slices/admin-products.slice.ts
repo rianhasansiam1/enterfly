@@ -1,17 +1,17 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-import type { AdminProduct } from "@/features/admin-products/api";
+import type { AdminProduct, ApiMeta } from "@/features/admin-products/api";
 
 type AdminProductsState = {
   items: AdminProduct[];
-  isHydrated: boolean;
+  meta: ApiMeta | null;
   isLoading: boolean;
   error: string | null;
 };
 
 const initialState: AdminProductsState = {
   items: [],
-  isHydrated: false,
+  meta: null,
   isLoading: false,
   error: null,
 };
@@ -20,9 +20,12 @@ const adminProductsSlice = createSlice({
   name: "adminProducts",
   initialState,
   reducers: {
-    setAdminProducts(state, action: PayloadAction<AdminProduct[]>) {
-      state.items = action.payload;
-      state.isHydrated = true;
+    setAdminProductsPage(
+      state,
+      action: PayloadAction<{ items: AdminProduct[]; meta: ApiMeta }>,
+    ) {
+      state.items = action.payload.items;
+      state.meta = action.payload.meta;
       state.error = null;
     },
     upsertAdminProduct(state, action: PayloadAction<AdminProduct>) {
@@ -46,7 +49,7 @@ const adminProductsSlice = createSlice({
 });
 
 export const {
-  setAdminProducts,
+  setAdminProductsPage,
   upsertAdminProduct,
   removeAdminProduct,
   setAdminProductsLoading,

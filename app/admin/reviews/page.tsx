@@ -1,19 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import {
   prependAdminReview,
   removeAdminReview,
-  setAdminReviews,
+  setAdminReviewsPage,
   setAdminReviewsError,
   setAdminReviewsLoading,
 } from "@/store/slices/admin-reviews.slice";
 import type { AppDispatch, RootState } from "@/store";
 import {
   deleteAdminReview,
-  fetchAllAdminReviewsSnapshot,
+  fetchAdminReviewsPage,
+  type AdminReviewQueryParams,
   type ReviewSource,
 } from "@/features/admin-reviews/api";
 import {
@@ -21,30 +22,36 @@ import {
   notifyActionError,
   notifyActionSuccess,
 } from "@/lib/admin-feedback";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useAnimatedRemoval } from "@/hooks/useAnimatedRemoval";
 
 import ReviewSummaryCards from "./components/ReviewSummaryCards";
 import ReviewsToolbar from "./components/ReviewsToolbar";
 import ReviewsTable from "./components/ReviewsTable";
 import AddReviewForm from "./components/AddReviewForm";
+import AdminPagination from "@/components/admin/AdminPagination";
 
 type SourceFilter = "ALL" | ReviewSource;
 type RatingFilter = "ALL" | 1 | 2 | 3 | 4 | 5;
 
+const PAGE_SIZE = 20;
+
 export default function AdminReviewsPage() {
   const dispatch = useDispatch<AppDispatch>();
   const reviews = useSelector((state: RootState) => state.adminReviews.items);
+  const meta = useSelector((state: RootState) => state.adminReviews.meta);
   const isLoading = useSelector(
     (state: RootState) => state.adminReviews.isLoading,
   );
-  const isHydrated = useSelector(
-    (state: RootState) => state.adminReviews.isHydrated,
-  );
   const error = useSelector((state: RootState) => state.adminReviews.error);
 
-  const [query, setQuery] = useState("");
+  // --- Server-driven query params ---
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("ALL");
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>("ALL");
+
+  const debouncedSearch = useDebounce(search, 300);
 
   const [busyId, setBusyId] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
@@ -56,55 +63,63 @@ export default function AdminReviewsPage() {
       getId: (review) => review.id,
     });
 
-  const refreshReviews = useCallback(async () => {
-    dispatch(setAdminReviewsLoading(true));
-    dispatch(setAdminReviewsError(null));
-    try {
-      const items = await fetchAllAdminReviewsSnapshot();
-      dispatch(setAdminReviews(items));
-    } catch (loadError) {
-      const message =
-        loadError instanceof Error
-          ? loadError.message
-          : "Failed to load reviews.";
-      dispatch(setAdminReviewsError(message));
-    } finally {
-      dispatch(setAdminReviewsLoading(false));
-    }
-  }, [dispatch]);
+  const fetchPage = useCallback(
+    async (params: AdminReviewQueryParams) => {
+      dispatch(setAdminReviewsLoading(true));
+      dispatch(setAdminReviewsError(null));
+      try {
+        const result = await fetchAdminReviewsPage(params);
+        dispatch(setAdminReviewsPage(result));
+      } catch (loadError) {
+        const message =
+          loadError instanceof Error
+            ? loadError.message
+            : "Failed to load reviews.";
+        dispatch(setAdminReviewsError(message));
+      } finally {
+        dispatch(setAdminReviewsLoading(false));
+      }
+    },
+    [dispatch],
+  );
 
   useEffect(() => {
-    if (isHydrated) return;
-    void refreshReviews();
-  }, [isHydrated, refreshReviews]);
+    const params: AdminReviewQueryParams = {
+      page,
+      pageSize: PAGE_SIZE,
+    };
+    if (debouncedSearch) params.search = debouncedSearch;
+    if (sourceFilter !== "ALL") params.source = sourceFilter;
+    if (ratingFilter !== "ALL") params.rating = ratingFilter;
 
-  const visibleReviews = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return animatedReviews.filter((review) => {
-      const matchQuery =
-        !q ||
-        review.authorName.toLowerCase().includes(q) ||
-        (review.authorPhone ?? "").toLowerCase().includes(q) ||
-        (review.title ?? "").toLowerCase().includes(q) ||
-        (review.comment ?? "").toLowerCase().includes(q) ||
-        (review.product?.name ?? "").toLowerCase().includes(q);
+    void fetchPage(params);
+  }, [page, debouncedSearch, sourceFilter, ratingFilter, fetchPage]);
 
-      const matchSource =
-        sourceFilter === "ALL" || review.source === sourceFilter;
-      const matchRating =
-        ratingFilter === "ALL" || review.rating === ratingFilter;
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    setPage(1);
+  }, []);
 
-      return matchQuery && matchSource && matchRating;
-    });
-  }, [animatedReviews, query, ratingFilter, sourceFilter]);
+  const handleSourceChange = useCallback((value: SourceFilter) => {
+    setSourceFilter(value);
+    setPage(1);
+  }, []);
 
-  const stats = useMemo(() => {
-    const total = reviews.length;
-    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
-    const average = total > 0 ? Math.round((sum / total) * 10) / 10 : 0;
-    const adminCount = reviews.filter((r) => r.source === "ADMIN").length;
-    return { total, average, adminCount };
-  }, [reviews]);
+  const handleRatingChange = useCallback((value: RatingFilter) => {
+    setRatingFilter(value);
+    setPage(1);
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    const params: AdminReviewQueryParams = {
+      page,
+      pageSize: PAGE_SIZE,
+    };
+    if (debouncedSearch) params.search = debouncedSearch;
+    if (sourceFilter !== "ALL") params.source = sourceFilter;
+    if (ratingFilter !== "ALL") params.rating = ratingFilter;
+    void fetchPage(params);
+  }, [page, debouncedSearch, sourceFilter, ratingFilter, fetchPage]);
 
   const handleDelete = async (id: string) => {
     const confirmed = await confirmMajorAction({
@@ -146,30 +161,28 @@ export default function AdminReviewsPage() {
   return (
     <section className="space-y-4">
       <ReviewSummaryCards
-        total={stats.total}
-        average={stats.average}
-        adminCount={stats.adminCount}
+        total={meta?.total ?? reviews.length}
+        average={meta?.averageRating ?? 0}
+        adminCount={meta?.adminCount ?? 0}
       />
 
       <ReviewsToolbar
-        query={query}
+        query={search}
         sourceFilter={sourceFilter}
         ratingFilter={ratingFilter}
-        visibleCount={visibleReviews.length}
-        totalCount={reviews.length}
+        visibleCount={animatedReviews.length}
+        totalCount={meta?.total ?? reviews.length}
         isLoading={isLoading}
         showAddForm={showAddForm}
-        onQueryChange={setQuery}
-        onSourceChange={setSourceFilter}
-        onRatingChange={setRatingFilter}
+        onQueryChange={handleSearchChange}
+        onSourceChange={handleSourceChange}
+        onRatingChange={handleRatingChange}
         onToggleAddForm={() => {
           setShowAddForm((open) => !open);
           setMutationError(null);
           setSuccessNote(null);
         }}
-        onRefresh={() => {
-          void refreshReviews();
-        }}
+        onRefresh={handleRefresh}
       />
 
       {showAddForm && (
@@ -208,14 +221,22 @@ export default function AdminReviewsPage() {
       )}
 
       <ReviewsTable
-        reviews={visibleReviews}
+        reviews={animatedReviews}
         isLoading={isLoading}
-        totalCount={reviews.length}
+        totalCount={meta?.total ?? reviews.length}
         busyId={busyId}
         onDelete={(id) => {
           void handleDelete(id);
         }}
       />
+
+      {meta && meta.totalPages > 1 && (
+        <AdminPagination
+          meta={meta}
+          isLoading={isLoading}
+          onPageChange={setPage}
+        />
+      )}
     </section>
   );
 }

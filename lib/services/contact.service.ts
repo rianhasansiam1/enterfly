@@ -87,7 +87,7 @@ export async function listMessagesForAdmin(query: AdminMessageQueryInput) {
   const where = buildAdminWhere(query);
   const skip = (query.page - 1) * query.pageSize;
 
-  const [rows, total, newCount] = await Promise.all([
+  const [rows, total, newCount, readCount, archivedCount] = await Promise.all([
     prisma.contactMessage.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -107,6 +107,8 @@ export async function listMessagesForAdmin(query: AdminMessageQueryInput) {
     }),
     prisma.contactMessage.count({ where }),
     prisma.contactMessage.count({ where: { status: "NEW" } }),
+    prisma.contactMessage.count({ where: { status: "READ" } }),
+    prisma.contactMessage.count({ where: { status: "ARCHIVED" } }),
   ]);
 
   return {
@@ -117,6 +119,8 @@ export async function listMessagesForAdmin(query: AdminMessageQueryInput) {
       total,
       totalPages: Math.max(1, Math.ceil(total / query.pageSize)),
       newCount,
+      readCount,
+      archivedCount,
     },
   };
 }

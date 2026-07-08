@@ -64,7 +64,7 @@ export async function listUsersForAdmin(query: AdminUserQueryInput) {
   const where = buildAdminWhere(query);
   const skip = (query.page - 1) * query.pageSize;
 
-  const [rows, total] = await Promise.all([
+  const [rows, total, adminCount, withOrdersCount, revenueAgg] = await Promise.all([
     prisma.user.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -85,6 +85,13 @@ export async function listUsersForAdmin(query: AdminUserQueryInput) {
       },
     }),
     prisma.user.count({ where }),
+    // Global aggregates (unfiltered) for summary cards
+    prisma.user.count({ where: { role: "ADMIN" } }),
+    prisma.user.count({ where: { orders: { some: {} } } }),
+    prisma.order.aggregate({
+      where: { status: { not: "CANCELLED" } },
+      _sum: { totalAmount: true },
+    }),
   ]);
 
   // Pull per-user spend / last order date in one round trip.
@@ -135,6 +142,9 @@ export async function listUsersForAdmin(query: AdminUserQueryInput) {
       pageSize: query.pageSize,
       total,
       totalPages: Math.max(1, Math.ceil(total / query.pageSize)),
+      adminCount,
+      withOrdersCount,
+      lifetimeRevenue: revenueAgg._sum.totalAmount ?? 0,
     },
   };
 }

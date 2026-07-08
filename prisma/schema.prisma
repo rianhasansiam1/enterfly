@@ -341,6 +341,7 @@ model OrderItem {
 
   @@index([orderId])
   @@index([productId])
+  @@index([productId, orderId])
   @@index([variantId])
 }
 

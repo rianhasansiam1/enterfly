@@ -1,13 +1,17 @@
 import type { NextRequest } from "next/server";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
-import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
-import { requireAdmin } from "@/lib/api/guards";
+import { isAdminRequest, requireAdmin } from "@/lib/api/guards";
 import { jsonError, ok } from "@/lib/api/response";
 import {
+  CATEGORY_MUTATION_CACHE_TAGS,
+  revalidateCacheTags,
+} from "@/lib/cache/revalidation";
+import {
+  getActiveCategoryById,
   getCategoryById,
-  hardDeleteCategoryWithProducts,
+  softDeleteCategoryWithProducts,
   updateCategory,
 } from "@/lib/services/category.service";
 import { updateCategorySchema } from "@/lib/validations/category.validation";
@@ -19,7 +23,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
 
   try {
-    const category = await getCategoryById(id);
+    const category = (await isAdminRequest())
+      ? await getCategoryById(id)
+      : await getActiveCategoryById(id);
     if (!category) return jsonError(404, "Category not found.");
     return ok(category);
   } catch (error) {
@@ -60,8 +66,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   try {
     const category = await updateCategory(id, parsed.data);
-    revalidateTag("categories", "max");
-    revalidateTag("home-categories", "max");
+    revalidateCacheTags(CATEGORY_MUTATION_CACHE_TAGS);
     return ok(category);
   } catch (error) {
     if (error instanceof PrismaClientKnownRequestError) {
@@ -80,7 +85,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 /**
  * DELETE /api/categories/[id]
  *
- * Admin only. Hard delete the category and all products under it.
+ * Admin only. Normal delete is a safe soft delete: the category and
+ * its products are moved to INACTIVE instead of being removed.
  */
 export async function DELETE(_request: NextRequest, context: RouteContext) {
   const guard = await requireAdmin();
@@ -92,9 +98,8 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
   if (!existing) return jsonError(404, "Category not found.");
 
   try {
-    const result = await hardDeleteCategoryWithProducts(id);
-    revalidateTag("categories", "max");
-    revalidateTag("home-categories", "max");
+    const result = await softDeleteCategoryWithProducts(id);
+    revalidateCacheTags(CATEGORY_MUTATION_CACHE_TAGS);
     return ok(result.category);
   } catch (error) {
     if (
@@ -104,6 +109,6 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
       return jsonError(404, "Category not found.");
     }
     console.error("[categories/[id].DELETE] failed", error);
-    return jsonError(500, "Failed to delete category.");
+    return jsonError(500, "Failed to deactivate category.");
   }
 }

@@ -35,8 +35,8 @@ export async function POST(request: NextRequest) {
   }
 
   const ip = getClientIp(request);
-  const limit = rateLimit(
-    `contact:${ip}`,
+  const limit = await rateLimit(
+    `rate:contact:${ip}`,
     CONTACT_MAX_ATTEMPTS,
     CONTACT_WINDOW_MS,
   );

@@ -19,6 +19,8 @@ export type ApiMeta = {
   pageSize: number;
   total: number;
   totalPages: number;
+  activeCount?: number;
+  totalProducts?: number;
 };
 
 export type ApiEnvelope<T> = {
@@ -27,7 +29,7 @@ export type ApiEnvelope<T> = {
   meta?: ApiMeta;
 };
 
-export const API_PAGE_SIZE = 100;
+
 
 export const STATUS_VALUES: readonly CategoryStatus[] = ["ACTIVE", "INACTIVE"];
 
@@ -74,7 +76,7 @@ function parseRow(entry: unknown): AdminCategoryRow {
 
 export function parseCategoriesPayload(payload: unknown): {
   items: AdminCategoryRow[];
-  meta: ApiMeta | null;
+  meta: ApiMeta;
 } {
   const envelope = payload as ApiEnvelope<unknown>;
   if (!envelope?.success || !Array.isArray(envelope.data)) {
@@ -83,53 +85,48 @@ export function parseCategoriesPayload(payload: unknown): {
 
   return {
     items: envelope.data.map(parseRow),
-    meta: envelope.meta ?? null,
+    meta: envelope.meta ?? { page: 1, pageSize: 20, total: 0, totalPages: 1 },
   };
 }
 
+export type AdminCategoryQueryParams = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  status?: CategoryStatus;
+};
+
 /**
- * Walk every page of `/api/categories` (with product counts) and
- * return the full list. Same trade-off as orders / users — small
- * payload, keep it in memory for instant client-side filtering.
+ * Fetch a single page of admin categories from the server.
  */
-export async function fetchAllAdminCategoriesSnapshot(): Promise<
-  AdminCategoryRow[]
-> {
-  let page = 1;
-  let totalPages = 1;
-  const merged: AdminCategoryRow[] = [];
+export async function fetchAdminCategoriesPage(
+  params: AdminCategoryQueryParams = {},
+): Promise<{ items: AdminCategoryRow[]; meta: ApiMeta }> {
+  const qs = new URLSearchParams();
+  qs.set("page", String(params.page ?? 1));
+  qs.set("pageSize", String(params.pageSize ?? 20));
+  qs.set("sort", "latest");
+  qs.set("withProductCount", "true");
+  if (params.search) qs.set("search", params.search);
+  if (params.status) qs.set("status", params.status);
 
-  while (page <= totalPages) {
-    const params = new URLSearchParams({
-      page: String(page),
-      pageSize: String(API_PAGE_SIZE),
-      sort: "latest",
-      withProductCount: "true",
-    });
+  const response = await fetch(`/api/categories?${qs.toString()}`, {
+    method: "GET",
+    cache: "no-store",
+  });
 
-    const response = await fetch(`/api/categories?${params.toString()}`, {
-      method: "GET",
-      cache: "no-store",
-    });
-
-    let payload: unknown;
-    try {
-      payload = (await response.json()) as unknown;
-    } catch {
-      throw new Error("Failed to parse categories response.");
-    }
-
-    if (!response.ok) {
-      throw new Error(readApiError(payload, "Failed to load categories."));
-    }
-
-    const { items, meta } = parseCategoriesPayload(payload);
-    merged.push(...items);
-    totalPages = meta?.totalPages ?? 1;
-    page += 1;
+  let payload: unknown;
+  try {
+    payload = (await response.json()) as unknown;
+  } catch {
+    throw new Error("Failed to parse categories response.");
   }
 
-  return merged;
+  if (!response.ok) {
+    throw new Error(readApiError(payload, "Failed to load categories."));
+  }
+
+  return parseCategoriesPayload(payload);
 }
 
 type CreateBody = {
@@ -217,12 +214,12 @@ export async function deleteCategory(
   }
 
   if (!response.ok) {
-    throw new Error(readApiError(payload, "Failed to delete category."));
+    throw new Error(readApiError(payload, "Failed to deactivate category."));
   }
 
   const envelope = payload as ApiEnvelope<unknown>;
   if (!envelope?.success) {
-    throw new Error(readApiError(payload, "Failed to delete category."));
+    throw new Error(readApiError(payload, "Failed to deactivate category."));
   }
 
   return parseRow(envelope.data);

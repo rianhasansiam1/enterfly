@@ -6,7 +6,7 @@ import { z } from "zod";
 import { isAllowedOrigin } from "@/lib/auth/origin";
 import { hashPassword } from "@/lib/auth/passwords";
 import { getClientIp, rateLimit } from "@/lib/auth/rate-limit";
-import { jsonError, tooManyRequests } from "@/lib/api/response";
+import { created, jsonError, tooManyRequests } from "@/lib/api/response";
 import { registerSchema } from "@/lib/validations/auth.validation";
 import { prisma } from "@/lib/db/prisma";
 
@@ -19,8 +19,6 @@ const REGISTER_MAX_ATTEMPTS = 8;
 const REGISTER_WINDOW_MS = 10 * 60 * 1000;
 
 export async function POST(request: NextRequest) {
-
-
   // Defense in depth: reject obvious cross-site POSTs early.
   if (!isAllowedOrigin(request)) {
     return jsonError(403, "Request blocked.");
@@ -34,8 +32,8 @@ export async function POST(request: NextRequest) {
   }
 
   const ip = getClientIp(request);
-  const limit = rateLimit(
-    `register:${ip}`,
+  const limit = await rateLimit(
+    `rate:register:${ip}`,
     REGISTER_MAX_ATTEMPTS,
     REGISTER_WINDOW_MS,
   );
@@ -75,8 +73,9 @@ export async function POST(request: NextRequest) {
     });
 
     revalidateTag("admin-users", "max");
+    revalidateTag("admin-dashboard", "max");
 
-    return Response.json({ user }, { status: 201 });
+    return created(user);
   } catch (error) {
     // P2002 = unique constraint violation. Race-safe duplicate handling.
     if (

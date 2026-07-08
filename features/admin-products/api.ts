@@ -50,6 +50,7 @@ export type CategoryOption = {
 export type ApiMeta = {
   page: number;
   pageSize: number;
+  limit?: number;
   total: number;
   totalPages: number;
 };
@@ -86,7 +87,6 @@ export type ProductFormState = {
 
 export const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400";
-export const API_PAGE_SIZE = 100;
 
 export function makeEmptyVariant(): VariantFormRow {
   return {
@@ -190,50 +190,59 @@ function readVariants(value: unknown): AdminVariant[] {
   return out;
 }
 
-export function parseProductsPayload(payload: unknown): AdminProduct[] {
+export function parseProductsPayload(payload: unknown): {
+  items: AdminProduct[];
+  meta: ApiMeta;
+} {
   const envelope = payload as ApiEnvelope<unknown>;
   if (!envelope?.success || !Array.isArray(envelope.data)) {
     throw new Error("Products API returned an invalid response.");
   }
 
-  return envelope.data.map((entry) => {
-    const row = asRecord(entry);
-    if (!row) {
-      throw new Error("Products API returned an invalid product row.");
-    }
+  return {
+    items: envelope.data.map((entry) => {
+      const row = asRecord(entry);
+      if (!row) {
+        throw new Error("Products API returned an invalid product row.");
+      }
 
-    const category = readCategory(row);
-    const images = readStringArray(row.images);
-    const image = readString(row.image) ?? images[0] ?? null;
-    // `price` is the public alias of the regular selling price; prefer the
-    // explicit `salePrice` when present.
-    const salePrice = readNumber(row.salePrice) ?? readNumber(row.price) ?? 0;
-    const discountPrice = readNumber(row.discountPrice);
-    // buyingPrice is admin-only: present only when an admin fetched the row.
-    const buyingPrice = readNumber(row.buyingPrice) ?? 0;
-    const stock = readNumber(row.stock) ?? 0;
-    const variants = readVariants(row.variants);
+      const category = readCategory(row);
+      const images = readStringArray(row.images);
+      const image = readString(row.image) ?? images[0] ?? null;
+      const salePrice = readNumber(row.salePrice) ?? readNumber(row.price) ?? 0;
+      const discountPrice = readNumber(row.discountPrice);
+      const buyingPrice = readNumber(row.buyingPrice) ?? 0;
+      const stock = readNumber(row.stock) ?? 0;
+      const variants = readVariants(row.variants);
 
-    return {
-      id: readString(row.id) ?? "",
-      productCode: readString(row.productCode) ?? "",
-      name: readString(row.name) ?? "Untitled Product",
-      description: readString(row.description),
-      buyingPrice,
-      salePrice,
-      discountPrice,
-      image,
-      images,
-      rating: readNumber(row.rating) ?? 0,
-      reviewCount: readNumber(row.reviewCount) ?? 0,
-      status: row.status === "INACTIVE" ? "INACTIVE" : "ACTIVE",
-      stock,
-      variants,
-      createdAt: readString(row.createdAt) ?? new Date(0).toISOString(),
-      categoryId: readString(row.categoryId) ?? category.id,
-      category,
-    };
-  });
+      return {
+        id: readString(row.id) ?? "",
+        productCode: readString(row.productCode) ?? "",
+        name: readString(row.name) ?? "Untitled Product",
+        description: readString(row.description),
+        buyingPrice,
+        salePrice,
+        discountPrice,
+        image,
+        images,
+        rating: readNumber(row.rating) ?? 0,
+        reviewCount: readNumber(row.reviewCount) ?? 0,
+        status: row.status === "INACTIVE" ? "INACTIVE" : "ACTIVE",
+        stock,
+        variants,
+        createdAt: readString(row.createdAt) ?? new Date(0).toISOString(),
+        categoryId: readString(row.categoryId) ?? category.id,
+        category,
+      };
+    }),
+    meta: {
+      page: envelope.meta?.page ?? 1,
+      pageSize: envelope.meta?.pageSize ?? envelope.meta?.limit ?? 20,
+      total: envelope.meta?.total ?? 0,
+      totalPages: envelope.meta?.totalPages ?? 1,
+      ...(envelope.meta?.limit != null ? { limit: envelope.meta.limit } : {}),
+    },
+  };
 }
 
 export function parseCategoriesPayload(payload: unknown): CategoryOption[] {
@@ -258,49 +267,54 @@ export function parseCategoriesPayload(payload: unknown): CategoryOption[] {
     .filter((item): item is CategoryOption => item !== null);
 }
 
-export async function fetchAllProductsSnapshot(): Promise<AdminProduct[]> {
-  let page = 1;
-  let totalPages = 1;
-  const merged: AdminProduct[] = [];
+export type AdminProductQueryParams = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  status?: ProductStatus;
+  categoryId?: string;
+};
 
-  while (page <= totalPages) {
-    const params = new URLSearchParams({
-      page: String(page),
-      pageSize: String(API_PAGE_SIZE),
-      sort: "latest",
-    });
+/**
+ * Fetch a single page of admin products from the server.
+ *
+ * All filtering, search, and pagination happen server-side.
+ */
+export async function fetchAdminProductsPage(
+  params: AdminProductQueryParams = {},
+): Promise<{ items: AdminProduct[]; meta: ApiMeta }> {
+  const qs = new URLSearchParams();
+  qs.set("page", String(params.page ?? 1));
+  qs.set("pageSize", String(params.pageSize ?? 20));
+  qs.set("sort", "latest");
+  if (params.search) qs.set("search", params.search);
+  if (params.status) qs.set("status", params.status);
+  if (params.categoryId) qs.set("categoryId", params.categoryId);
 
-    const response = await fetch(`/api/products?${params.toString()}`, {
-      method: "GET",
-      cache: "no-store",
-    });
+  const response = await fetch(`/api/admin/products?${qs.toString()}`, {
+    method: "GET",
+    cache: "no-store",
+  });
 
-    let payload: unknown;
-    try {
-      payload = (await response.json()) as unknown;
-    } catch {
-      throw new Error("Failed to parse products response.");
-    }
-
-    if (!response.ok) {
-      throw new Error(readApiError(payload, "Failed to load products."));
-    }
-
-    const envelope = payload as ApiEnvelope<unknown>;
-    const items = parseProductsPayload(payload);
-    merged.push(...items);
-    totalPages = envelope.meta?.totalPages ?? 1;
-    page += 1;
+  let payload: unknown;
+  try {
+    payload = (await response.json()) as unknown;
+  } catch {
+    throw new Error("Failed to parse products response.");
   }
 
-  return merged;
+  if (!response.ok) {
+    throw new Error(readApiError(payload, "Failed to load products."));
+  }
+
+  return parseProductsPayload(payload);
 }
 
 export async function fetchActiveCategories(): Promise<CategoryOption[]> {
   const params = new URLSearchParams({
     status: "ACTIVE",
     page: "1",
-    pageSize: String(API_PAGE_SIZE),
+    pageSize: "100",
     sort: "latest",
   });
 

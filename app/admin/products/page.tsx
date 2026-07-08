@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import {
-  setAdminProducts,
+  setAdminProductsPage,
   setAdminProductsError,
   setAdminProductsLoading,
 } from "@/store/slices/admin-products.slice";
@@ -13,12 +13,13 @@ import {
   buildFormFromProduct,
   EMPTY_FORM,
   fetchActiveCategories,
-  fetchAllProductsSnapshot,
+  fetchAdminProductsPage,
   normalizeImagesInput,
   parseNumericField,
 } from "@/features/admin-products/api";
 import type {
   AdminProduct,
+  AdminProductQueryParams,
   CategoryOption,
   ProductFormState,
   ProductStatus,
@@ -29,24 +30,32 @@ import {
   notifyActionError,
   notifyActionSuccess,
 } from "@/lib/admin-feedback";
+import { useDebounce } from "@/hooks/useDebounce";
 
 import ProductsToolbar from "./components/ProductsToolbar";
 import ProductsTable from "./components/ProductsTable";
 import ProductFormDrawer from "./components/ProductFormDrawer";
+import AdminPagination from "@/components/admin/AdminPagination";
+
+const PAGE_SIZE = 20;
 
 export default function AdminProductsPage() {
   const dispatch = useDispatch<AppDispatch>();
   const products = useSelector((state: RootState) => state.adminProducts.items);
+  const meta = useSelector((state: RootState) => state.adminProducts.meta);
   const isLoading = useSelector((state: RootState) => state.adminProducts.isLoading);
-  const isHydrated = useSelector((state: RootState) => state.adminProducts.isHydrated);
   const error = useSelector((state: RootState) => state.adminProducts.error);
 
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
 
-  const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | ProductStatus>("ALL");
+  // --- Server-driven query params ---
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | ProductStatus>("ACTIVE");
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | string>("ALL");
+
+  const debouncedSearch = useDebounce(search, 300);
 
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelMode, setPanelMode] = useState<"create" | "edit">("create");
@@ -58,26 +67,38 @@ export default function AdminProductsPage() {
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [successNote, setSuccessNote] = useState<string | null>(null);
 
-  const refreshProducts = useCallback(async () => {
-    dispatch(setAdminProductsLoading(true));
-    dispatch(setAdminProductsError(null));
-    try {
-      const items = await fetchAllProductsSnapshot();
-      dispatch(setAdminProducts(items));
-    } catch (loadError) {
-      const message =
-        loadError instanceof Error ? loadError.message : "Failed to load products.";
-      dispatch(setAdminProductsError(message));
-    } finally {
-      dispatch(setAdminProductsLoading(false));
-    }
-  }, [dispatch]);
+  const fetchPage = useCallback(
+    async (params: AdminProductQueryParams) => {
+      dispatch(setAdminProductsLoading(true));
+      dispatch(setAdminProductsError(null));
+      try {
+        const result = await fetchAdminProductsPage(params);
+        dispatch(setAdminProductsPage(result));
+      } catch (loadError) {
+        const message =
+          loadError instanceof Error ? loadError.message : "Failed to load products.";
+        dispatch(setAdminProductsError(message));
+      } finally {
+        dispatch(setAdminProductsLoading(false));
+      }
+    },
+    [dispatch],
+  );
 
+  // Fetch whenever server query params change
   useEffect(() => {
-    if (isHydrated) return;
-    void refreshProducts();
-  }, [isHydrated, refreshProducts]);
+    const params: AdminProductQueryParams = {
+      page,
+      pageSize: PAGE_SIZE,
+    };
+    if (debouncedSearch) params.search = debouncedSearch;
+    if (statusFilter !== "ALL") params.status = statusFilter;
+    if (categoryFilter !== "ALL") params.categoryId = categoryFilter;
 
+    void fetchPage(params);
+  }, [page, debouncedSearch, statusFilter, categoryFilter, fetchPage]);
+
+  // Fetch categories for the form dropdown (one-time)
   useEffect(() => {
     let ignore = false;
     const run = async () => {
@@ -116,21 +137,32 @@ export default function AdminProductsPage() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [categories, products]);
 
-  const visibleProducts = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return products.filter((product) => {
-      const matchQuery =
-        !q ||
-        product.name.toLowerCase().includes(q) ||
-        product.productCode.toLowerCase().includes(q) ||
-        product.category.name.toLowerCase().includes(q) ||
-        (product.description ?? "").toLowerCase().includes(q);
+  // Reset to page 1 when filters change
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    setPage(1);
+  }, []);
 
-      const matchStatus = statusFilter === "ALL" || product.status === statusFilter;
-      const matchCategory = categoryFilter === "ALL" || product.categoryId === categoryFilter;
-      return matchQuery && matchStatus && matchCategory;
-    });
-  }, [categoryFilter, products, query, statusFilter]);
+  const handleStatusChange = useCallback((value: "ALL" | ProductStatus) => {
+    setStatusFilter(value);
+    setPage(1);
+  }, []);
+
+  const handleCategoryChange = useCallback((value: "ALL" | string) => {
+    setCategoryFilter(value);
+    setPage(1);
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    const params: AdminProductQueryParams = {
+      page,
+      pageSize: PAGE_SIZE,
+    };
+    if (debouncedSearch) params.search = debouncedSearch;
+    if (statusFilter !== "ALL") params.status = statusFilter;
+    if (categoryFilter !== "ALL") params.categoryId = categoryFilter;
+    void fetchPage(params);
+  }, [page, debouncedSearch, statusFilter, categoryFilter, fetchPage]);
 
   const openCreatePanel = () => {
     setPanelMode("create");
@@ -303,7 +335,7 @@ export default function AdminProductsPage() {
           throw new Error(readApiError(payload, "Failed to create product."));
         }
 
-        await refreshProducts();
+        handleRefresh();
         const message = "Product created successfully.";
         setSuccessNote(message);
         notifyActionSuccess(message);
@@ -326,8 +358,6 @@ export default function AdminProductsPage() {
           images.every((value, index) => value === editingProduct.images[index]);
         if (!sameImages) patch.images = images;
 
-        // Variants are reconciled server-side; send them whenever the set
-        // differs from what we loaded.
         const currentVariants = editingProduct.variants.map((v) => ({
           id: v.id,
           size: v.size,
@@ -368,7 +398,7 @@ export default function AdminProductsPage() {
           throw new Error(readApiError(payload, "Failed to update product."));
         }
 
-        await refreshProducts();
+        handleRefresh();
         const message = "Product updated successfully.";
         setSuccessNote(message);
         notifyActionSuccess(message);
@@ -402,7 +432,7 @@ export default function AdminProductsPage() {
         throw new Error(readApiError(payload, "Failed to update visibility."));
       }
 
-      await refreshProducts();
+      handleRefresh();
       const message =
         product.status === "ACTIVE"
           ? "Product hidden successfully."
@@ -421,9 +451,10 @@ export default function AdminProductsPage() {
 
   const handleDelete = async (product: AdminProduct) => {
     const confirmed = await confirmMajorAction({
-      title: `Delete "${product.name}"?`,
-      description: "This will permanently delete the product.",
-      confirmLabel: "Delete",
+      title: `Remove "${product.name}" from the storefront?`,
+      description:
+        "This will move the product to Inactive. Catalog data, order history, reviews, and analytics stay intact.",
+      confirmLabel: "Move to inactive",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -439,17 +470,18 @@ export default function AdminProductsPage() {
       });
       const payload = (await response.json()) as unknown;
       if (!response.ok) {
-        throw new Error(readApiError(payload, "Failed to delete product."));
+        throw new Error(readApiError(payload, "Failed to deactivate product."));
       }
 
-      await refreshProducts();
-      const message = "Product deleted successfully.";
+      handleRefresh();
+      const message = "Product moved to inactive successfully.";
       setSuccessNote(message);
       notifyActionSuccess(message);
     } catch (mutation) {
-      const message = mutation instanceof Error ? mutation.message : "Failed to delete product.";
+      const message =
+        mutation instanceof Error ? mutation.message : "Failed to deactivate product.";
       setMutationError(message);
-      notifyActionError(mutation, "Failed to delete product.");
+      notifyActionError(mutation, "Failed to deactivate product.");
     } finally {
       setBusyActionProductId(null);
     }
@@ -458,19 +490,17 @@ export default function AdminProductsPage() {
   return (
     <section className="space-y-4">
       <ProductsToolbar
-        query={query}
+        query={search}
         statusFilter={statusFilter}
         categoryFilter={categoryFilter}
         categoryOptions={categoryOptions}
-        visibleCount={visibleProducts.length}
-        totalCount={products.length}
+        visibleCount={products.length}
+        totalCount={meta?.total ?? products.length}
         isLoading={isLoading}
-        onQueryChange={setQuery}
-        onStatusChange={setStatusFilter}
-        onCategoryChange={setCategoryFilter}
-        onRefresh={() => {
-          void refreshProducts();
-        }}
+        onQueryChange={handleSearchChange}
+        onStatusChange={handleStatusChange}
+        onCategoryChange={handleCategoryChange}
+        onRefresh={handleRefresh}
         onCreate={openCreatePanel}
       />
 
@@ -499,9 +529,9 @@ export default function AdminProductsPage() {
       )}
 
       <ProductsTable
-        products={visibleProducts}
+        products={products}
         isLoading={isLoading}
-        totalCount={products.length}
+        totalCount={meta?.total ?? products.length}
         busyActionProductId={busyActionProductId}
         onEdit={openEditPanel}
         onToggleHide={(product) => {
@@ -511,6 +541,14 @@ export default function AdminProductsPage() {
           void handleDelete(product);
         }}
       />
+
+      {meta && meta.totalPages > 1 && (
+        <AdminPagination
+          meta={meta}
+          isLoading={isLoading}
+          onPageChange={setPage}
+        />
+      )}
 
       <ProductFormDrawer
         open={panelOpen}

@@ -14,6 +14,11 @@ import {
   type CheckoutPaymentMethod,
   type CheckoutPreview,
 } from "@/features/checkout/api";
+import {
+  PROMO_QUERY_PARAM,
+  buildCheckoutPath,
+  normalizePromoCode,
+} from "@/features/checkout/promo-query";
 import { ORDER_SNAPSHOT_STORAGE_KEY } from "@/features/orders/storage";
 import {
   setCartData,
@@ -85,12 +90,27 @@ function CheckoutPageInner() {
     () => (buyNowItems ? { kind: "buy-now", items: buyNowItems } : { kind: "cart" }),
     [buyNowItems],
   );
+  const checkoutCallbackPath = useMemo(
+    () =>
+      buildCheckoutPath({
+        buy: searchParams.get("buy"),
+        promoCode: searchParams.get(PROMO_QUERY_PARAM),
+      }),
+    [searchParams],
+  );
+  const initialPromoCode = normalizePromoCode(
+    searchParams.get(PROMO_QUERY_PARAM),
+  );
 
   const [form, setForm] = useState<CustomerFormState>(EMPTY_FORM);
   const [paymentMethod, setPaymentMethod] =
     useState<CheckoutPaymentMethod>("CASH_ON_DELIVERY");
-  const [promoCode, setPromoCode] = useState<string>("");
-  const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
+  const [promoCode, setPromoCode] = useState<string>(
+    () => initialPromoCode ?? "",
+  );
+  const [appliedPromo, setAppliedPromo] = useState<string | null>(
+    () => initialPromoCode,
+  );
   const [promoFeedback, setPromoFeedback] = useState<{
     tone: "success" | "error";
     message: string;
@@ -123,10 +143,10 @@ function CheckoutPageInner() {
   // post-login redirect lands them right back here.
   useEffect(() => {
     if (authStatus !== "unauthenticated") return;
-    const buy = searchParams.get("buy");
-    const target = buy ? `/checkout?buy=${encodeURIComponent(buy)}` : "/checkout";
-    router.replace(`/login?callbackUrl=${encodeURIComponent(target)}`);
-  }, [authStatus, router, searchParams]);
+    router.replace(
+      `/login?callbackUrl=${encodeURIComponent(checkoutCallbackPath)}`,
+    );
+  }, [authStatus, checkoutCallbackPath, router]);
 
   // Hydrate the form from the authenticated user's saved profile. The
   // database profile is the source of truth (not Redux/localStorage), so
@@ -378,9 +398,7 @@ function CheckoutPageInner() {
             {authStatus === "unauthenticated" && (
               <Link
                 href={`/login?callbackUrl=${encodeURIComponent(
-                  searchParams.get("buy")
-                    ? `/checkout?buy=${encodeURIComponent(searchParams.get("buy")!)}`
-                    : "/checkout",
+                  checkoutCallbackPath,
                 )}`}
                 className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
               >

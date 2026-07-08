@@ -1,47 +1,17 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-import type { OrderStatus } from "@/lib/orders/status";
-
-type PaymentStatus = "PAID" | "UNPAID";
-
-type PaymentMethod = "CASH_ON_DELIVERY" | "ONLINE";
-
-type AdminOrderUser = {
-  id: string;
-  name: string | null;
-  email: string | null;
-  phone: string | null;
-} | null;
-
-type AdminOrderRow = {
-  id: string;
-  orderNumber: string;
-  subtotal: number;
-  deliveryCharge: number;
-  discountAmount: number;
-  totalAmount: number;
-  status: OrderStatus;
-  paymentMethod: PaymentMethod;
-  paymentStatus: PaymentStatus;
-  customerName: string;
-  customerPhone: string;
-  customerAddress: string;
-  createdAt: string;
-  updatedAt: string;
-  itemsCount: number;
-  user: AdminOrderUser;
-};
+import type { AdminOrderRow, ApiMeta } from "@/features/admin-orders/api";
 
 type AdminOrdersState = {
   items: AdminOrderRow[];
-  isHydrated: boolean;
+  meta: ApiMeta | null;
   isLoading: boolean;
   error: string | null;
 };
 
 const initialState: AdminOrdersState = {
   items: [],
-  isHydrated: false,
+  meta: null,
   isLoading: false,
   error: null,
 };
@@ -50,9 +20,12 @@ const adminOrdersSlice = createSlice({
   name: "adminOrders",
   initialState,
   reducers: {
-    setAdminOrders(state, action: PayloadAction<AdminOrderRow[]>) {
-      state.items = action.payload;
-      state.isHydrated = true;
+    setAdminOrdersPage(
+      state,
+      action: PayloadAction<{ items: AdminOrderRow[]; meta: ApiMeta }>,
+    ) {
+      state.items = action.payload.items;
+      state.meta = action.payload.meta;
       state.error = null;
     },
     patchAdminOrder(
@@ -76,7 +49,7 @@ const adminOrdersSlice = createSlice({
 });
 
 export const {
-  setAdminOrders,
+  setAdminOrdersPage,
   patchAdminOrder,
   setAdminOrdersLoading,
   setAdminOrdersError,

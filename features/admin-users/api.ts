@@ -24,6 +24,9 @@ export type ApiMeta = {
   pageSize: number;
   total: number;
   totalPages: number;
+  adminCount?: number;
+  withOrdersCount?: number;
+  lifetimeRevenue?: number;
 };
 
 export type ApiEnvelope<T> = {
@@ -32,7 +35,7 @@ export type ApiEnvelope<T> = {
   meta?: ApiMeta;
 };
 
-export const API_PAGE_SIZE = 100;
+
 
 export const ROLE_VALUES: readonly Role[] = ["USER", "ADMIN"];
 
@@ -70,7 +73,7 @@ function parseRow(entry: unknown): AdminUserRow {
 
 export function parseUsersPayload(payload: unknown): {
   items: AdminUserRow[];
-  meta: ApiMeta | null;
+  meta: ApiMeta;
 } {
   const envelope = payload as ApiEnvelope<unknown>;
   if (!envelope?.success || !Array.isArray(envelope.data)) {
@@ -79,49 +82,48 @@ export function parseUsersPayload(payload: unknown): {
 
   return {
     items: envelope.data.map(parseRow),
-    meta: envelope.meta ?? null,
+    meta: envelope.meta ?? { page: 1, pageSize: 20, total: 0, totalPages: 1 },
   };
 }
 
+export type AdminUserQueryParams = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  role?: Role;
+};
+
 /**
- * Walk every page of `/api/admin/users` and return the full list.
- * Same trade-off as orders: small enough payloads to keep in memory
- * for instant client-side search/filter after the initial sync.
+ * Fetch a single page of admin users from the server.
+ *
+ * All filtering, search, and pagination happen server-side.
  */
-export async function fetchAllAdminUsersSnapshot(): Promise<AdminUserRow[]> {
-  let page = 1;
-  let totalPages = 1;
-  const merged: AdminUserRow[] = [];
+export async function fetchAdminUsersPage(
+  params: AdminUserQueryParams = {},
+): Promise<{ items: AdminUserRow[]; meta: ApiMeta }> {
+  const qs = new URLSearchParams();
+  qs.set("page", String(params.page ?? 1));
+  qs.set("pageSize", String(params.pageSize ?? 20));
+  if (params.search) qs.set("search", params.search);
+  if (params.role) qs.set("role", params.role);
 
-  while (page <= totalPages) {
-    const params = new URLSearchParams({
-      page: String(page),
-      pageSize: String(API_PAGE_SIZE),
-    });
+  const response = await fetch(`/api/admin/users?${qs.toString()}`, {
+    method: "GET",
+    cache: "no-store",
+  });
 
-    const response = await fetch(`/api/admin/users?${params.toString()}`, {
-      method: "GET",
-      cache: "no-store",
-    });
-
-    let payload: unknown;
-    try {
-      payload = (await response.json()) as unknown;
-    } catch {
-      throw new Error("Failed to parse customers response.");
-    }
-
-    if (!response.ok) {
-      throw new Error(readApiError(payload, "Failed to load customers."));
-    }
-
-    const { items, meta } = parseUsersPayload(payload);
-    merged.push(...items);
-    totalPages = meta?.totalPages ?? 1;
-    page += 1;
+  let payload: unknown;
+  try {
+    payload = (await response.json()) as unknown;
+  } catch {
+    throw new Error("Failed to parse customers response.");
   }
 
-  return merged;
+  if (!response.ok) {
+    throw new Error(readApiError(payload, "Failed to load customers."));
+  }
+
+  return parseUsersPayload(payload);
 }
 
 export async function patchUserRole(

@@ -14,7 +14,7 @@
 
 import { ORDER_STATUS_META, type OrderStatus } from "./status";
 
-export type NotificationChannel = "email" | "sms" | "log";
+type NotificationChannel = "email" | "sms" | "log";
 
 export type OrderStatusNotification = {
   channel: NotificationChannel;
@@ -38,7 +38,7 @@ export type OrderNotificationContext = {
  * Channel selection prefers email, then SMS, then a server-log fallback
  * when the order carries no contact details.
  */
-export function buildOrderStatusNotification(
+function buildOrderStatusNotification(
   ctx: OrderNotificationContext,
 ): OrderStatusNotification {
   const meta = ORDER_STATUS_META[ctx.status];

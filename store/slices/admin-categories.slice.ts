@@ -1,29 +1,17 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-type CategoryStatus = "ACTIVE" | "INACTIVE";
-
-type AdminCategoryRow = {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  image: string | null;
-  status: CategoryStatus;
-  createdAt: string;
-  updatedAt: string;
-  productCount: number;
-};
+import type { AdminCategoryRow, ApiMeta } from "@/features/admin-categories/api";
 
 type AdminCategoriesState = {
   items: AdminCategoryRow[];
-  isHydrated: boolean;
+  meta: ApiMeta | null;
   isLoading: boolean;
   error: string | null;
 };
 
 const initialState: AdminCategoriesState = {
   items: [],
-  isHydrated: false,
+  meta: null,
   isLoading: false,
   error: null,
 };
@@ -32,9 +20,12 @@ const adminCategoriesSlice = createSlice({
   name: "adminCategories",
   initialState,
   reducers: {
-    setAdminCategories(state, action: PayloadAction<AdminCategoryRow[]>) {
-      state.items = action.payload;
-      state.isHydrated = true;
+    setAdminCategoriesPage(
+      state,
+      action: PayloadAction<{ items: AdminCategoryRow[]; meta: ApiMeta }>,
+    ) {
+      state.items = action.payload.items;
+      state.meta = action.payload.meta;
       state.error = null;
     },
     upsertAdminCategory(state, action: PayloadAction<AdminCategoryRow>) {
@@ -42,8 +33,6 @@ const adminCategoriesSlice = createSlice({
         (item) => item.id === action.payload.id,
       );
       if (index >= 0) {
-        // Preserve productCount when the API returns a row that doesn't
-        // include it (e.g. update endpoint just returns the bare select).
         const existing = state.items[index];
         state.items[index] = {
           ...action.payload,
@@ -80,7 +69,7 @@ const adminCategoriesSlice = createSlice({
 });
 
 export const {
-  setAdminCategories,
+  setAdminCategoriesPage,
   upsertAdminCategory,
   patchAdminCategory,
   removeAdminCategory,

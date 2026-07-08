@@ -75,7 +75,6 @@ export function formatBDT(value: number): string {
 /** Strip control characters and trim; fall back when empty/missing. */
 export function safeText(value: string | null | undefined, fallback = ""): string {
   if (value == null) return fallback;
-  // eslint-disable-next-line no-control-regex
   const cleaned = String(value).replace(/[\u0000-\u001F\u007F]/g, " ").trim();
   return cleaned.length > 0 ? cleaned : fallback;
 }

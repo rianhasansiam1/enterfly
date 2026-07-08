@@ -355,7 +355,7 @@ export async function listOrdersForAdmin(query: AdminOrderQueryInput) {
   const where = buildAdminWhere(query);
   const skip = (query.page - 1) * query.pageSize;
 
-  const [rows, total] = await Promise.all([
+  const [rows, total, aggregates] = await Promise.all([
     prisma.order.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -381,6 +381,25 @@ export async function listOrdersForAdmin(query: AdminOrderQueryInput) {
       },
     }),
     prisma.order.count({ where }),
+    // Lightweight aggregates for the summary cards — computed alongside the
+    // list query so the client never needs to fetch all rows.
+    prisma.order.aggregate({
+      where: { ...where, status: { not: "CANCELLED" } },
+      _sum: { totalAmount: true },
+      _count: true,
+    }).then(async (agg) => {
+      const [pendingCount, unpaidCount] = await Promise.all([
+        prisma.order.count({ where: { ...where, status: "PENDING" } }),
+        prisma.order.count({
+          where: { ...where, paymentStatus: "UNPAID", status: { not: "CANCELLED" } },
+        }),
+      ]);
+      return {
+        revenue: toNumber(agg._sum.totalAmount ?? 0),
+        pendingCount,
+        unpaidCount,
+      };
+    }),
   ]);
 
   // Flatten `_count.items` and convert Decimal money fields to numbers.
@@ -403,6 +422,9 @@ export async function listOrdersForAdmin(query: AdminOrderQueryInput) {
       pageSize: query.pageSize,
       total,
       totalPages: Math.max(1, Math.ceil(total / query.pageSize)),
+      revenue: aggregates.revenue,
+      pendingCount: aggregates.pendingCount,
+      unpaidCount: aggregates.unpaidCount,
     },
   };
 }

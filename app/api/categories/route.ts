@@ -1,10 +1,13 @@
 import type { NextRequest } from "next/server";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
-import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
-import { requireAdmin } from "@/lib/api/guards";
+import { isAdminRequest, requireAdmin } from "@/lib/api/guards";
 import { created, jsonError, ok } from "@/lib/api/response";
+import {
+  CATEGORY_MUTATION_CACHE_TAGS,
+  revalidateCacheTags,
+} from "@/lib/cache/revalidation";
 import {
   createCategory,
   listCategoriesCached,
@@ -32,7 +35,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { items, meta } = await listCategoriesCached(parsed.data);
+    const publicOnly = !(await isAdminRequest());
+    const { items, meta } = await listCategoriesCached(parsed.data, {
+      publicOnly,
+    });
     return ok(items, meta);
   } catch (error) {
     console.error("[categories.GET] failed", error);
@@ -71,8 +77,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const category = await createCategory(parsed.data);
-    revalidateTag("categories", "max");
-    revalidateTag("home-categories", "max");
+    revalidateCacheTags(CATEGORY_MUTATION_CACHE_TAGS);
     return created(category);
   } catch (error) {
     // P2002 = unique constraint violation. Shouldn't normally happen

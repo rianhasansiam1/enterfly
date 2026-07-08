@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 
 import { authConfig } from "@/lib/auth/auth.config";
+import { configureLocalAuthOriginEnv } from "@/lib/config/origin";
 import { FIELD_LIMITS } from "@/lib/auth/policy";
 import { verifyPassword } from "@/lib/auth/passwords";
 import { rateLimit } from "@/lib/auth/rate-limit";
@@ -29,6 +30,8 @@ class TooManyAttemptsError extends CredentialsSignin {
  */
 const LOGIN_MAX_ATTEMPTS = 5;
 const LOGIN_WINDOW_MS = 5 * 60 * 1000;
+
+configureLocalAuthOriginEnv();
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -67,8 +70,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           request?.headers.get("x-real-ip") ??
           "unknown";
 
-        const attempt = rateLimit(
-          `login:${ip}:${email}`,
+        const attempt = await rateLimit(
+          `rate:login:${ip}:${email}`,
           LOGIN_MAX_ATTEMPTS,
           LOGIN_WINDOW_MS,
         );

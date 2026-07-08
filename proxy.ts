@@ -2,6 +2,9 @@ import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 
 import { authConfig } from "@/lib/auth/auth.config";
+import { configureLocalAuthOriginEnv } from "@/lib/config/origin";
+
+configureLocalAuthOriginEnv();
 
 const { auth } = NextAuth(authConfig);
 

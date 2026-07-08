@@ -3,6 +3,7 @@ import "server-only";
 
 import type { Prisma } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
+import { unstable_cache } from "next/cache";
 
 import { prisma } from "@/lib/db/prisma";
 import type {
@@ -119,6 +120,14 @@ export function serializeProduct(
   };
 }
 
+export function serializePublicProduct(product: ProductWithCategory) {
+  return serializeProduct(product, { includeBuyingPrice: false });
+}
+
+export function serializeAdminProduct(product: ProductWithCategory) {
+  return serializeProduct(product, { includeBuyingPrice: true });
+}
+
 /** Slugify a product name into a URL-safe, unique-ish slug. */
 function slugify(name: string): string {
   const base = name
@@ -171,8 +180,16 @@ async function nextProductCode(): Promise<string> {
   return formatProductCode(next);
 }
 
+type ProductListOptions = {
+  /** Public catalog reads must only expose active products in active categories. */
+  publicOnly?: boolean;
+};
+
 /** Build the Prisma `where` clause from validated query params. */
-function buildWhere(query: ProductQueryInput): Prisma.ProductWhereInput {
+function buildWhere(
+  query: ProductQueryInput,
+  options: ProductListOptions = {},
+): Prisma.ProductWhereInput {
   const where: Prisma.ProductWhereInput = {};
 
   if (query.search) {
@@ -188,7 +205,21 @@ function buildWhere(query: ProductQueryInput): Prisma.ProductWhereInput {
     ];
   }
   if (query.categoryId) where.categoryId = query.categoryId;
+
+  // SEO-friendly slug-based category filter.
+  if (query.category) {
+    where.category = { slug: query.category };
+  }
+
   if (query.status) where.status = query.status;
+
+  if (options.publicOnly) {
+    where.status = "ACTIVE";
+    where.category = {
+      ...(query.category ? { slug: query.category } : {}),
+      status: "ACTIVE",
+    };
+  }
 
   if (query.minPrice != null || query.maxPrice != null) {
     // Price lives on the product now — filter on the regular sale price.
@@ -196,6 +227,11 @@ function buildWhere(query: ProductQueryInput): Prisma.ProductWhereInput {
       ...(query.minPrice != null ? { gte: query.minPrice } : {}),
       ...(query.maxPrice != null ? { lte: query.maxPrice } : {}),
     };
+  }
+
+  // Only products with at least one variant that has stock > 0.
+  if (query.inStock) {
+    where.variants = { some: { stock: { gt: 0 } } };
   }
 
   return where;
@@ -210,6 +246,11 @@ function buildOrderBy(
       return { salePrice: "asc" };
     case "price-high":
       return { salePrice: "desc" };
+    // `popular` and `rating` currently fall back to newest because
+    // rating/reviewCount aren't aggregated on the product row yet.
+    case "popular":
+    case "rating":
+    case "newest":
     case "latest":
     default:
       return { createdAt: "desc" };
@@ -217,8 +258,11 @@ function buildOrderBy(
 }
 
 /** Paginated, filtered, sorted product list. */
-export async function listProducts(query: ProductQueryInput) {
-  const where = buildWhere(query);
+export async function listProducts(
+  query: ProductQueryInput,
+  options: ProductListOptions = {},
+) {
+  const where = buildWhere(query, options);
   const orderBy = buildOrderBy(query.sort);
   const skip = (query.page - 1) * query.pageSize;
 
@@ -234,13 +278,17 @@ export async function listProducts(query: ProductQueryInput) {
     prisma.product.count({ where }),
   ]);
 
+  const totalPages = Math.max(1, Math.ceil(total / query.pageSize));
+
   return {
     items,
     meta: {
       page: query.page,
-      pageSize: query.pageSize,
+      limit: query.pageSize,
       total,
-      totalPages: Math.max(1, Math.ceil(total / query.pageSize)),
+      totalPages,
+      hasNextPage: query.page < totalPages,
+      hasPreviousPage: query.page > 1,
     },
   };
 }
@@ -252,6 +300,73 @@ export function getProductById(id: string) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Cached public helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Pre-serialized (public-safe) return type for the cached product list.
+ *
+ * `buyingPrice` is intentionally absent — it never enters the cache.
+ */
+export type CachedPublicProductList = {
+  items: ReturnType<typeof serializeProduct>[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+};
+
+/**
+ * Cache layer over `listProducts` + `serializeProduct`.
+ *
+ * Stores fully serialized, public-safe product data (no `buyingPrice`,
+ * no Prisma Decimal instances) so the cached value is plain JSON.
+ * Tagged `products` so any product mutation can bust it on demand.
+ * Same 300 s TTL as categories and orders.
+ */
+const getCachedPublicProductList = unstable_cache(
+  async (query: ProductQueryInput): Promise<CachedPublicProductList> => {
+    const { items, meta } = await listProducts(query, { publicOnly: true });
+    return {
+      items: items.map(serializePublicProduct),
+      meta,
+    };
+  },
+  ["public-products-list"],
+  { revalidate: 300, tags: ["products"] },
+);
+
+export function listPublicProductsCached(
+  query: ProductQueryInput,
+): Promise<CachedPublicProductList> {
+  return getCachedPublicProductList(query);
+}
+
+/**
+ * Cached public product detail. Returns the fully serialized product
+ * (no `buyingPrice`) or `null` when not found. Tagged `product-detail`.
+ */
+const getCachedPublicProductById = unstable_cache(
+  async (id: string) => {
+    const product = await getActiveProductById(id);
+    if (!product) return null;
+    return serializePublicProduct(product);
+  },
+  ["public-product-detail"],
+  { revalidate: 300, tags: ["product-detail"] },
+);
+
+export function getPublicProductByIdCached(
+  id: string,
+): Promise<ReturnType<typeof serializeProduct> | null> {
+  return getCachedPublicProductById(id);
+}
+
 /**
  * Fetch a product only when it is publicly visible (status ACTIVE).
  *
@@ -261,7 +376,7 @@ export function getProductById(id: string) {
  */
 export function getActiveProductById(id: string) {
   return prisma.product.findFirst({
-    where: { id, status: "ACTIVE" },
+    where: { id, status: "ACTIVE", category: { status: "ACTIVE" } },
     include: productInclude,
   });
 }
@@ -283,7 +398,7 @@ export function getProductBySlug(slug: string) {
  */
 export function getActiveProductBySlug(slug: string) {
   return prisma.product.findFirst({
-    where: { slug, status: "ACTIVE" },
+    where: { slug, status: "ACTIVE", category: { status: "ACTIVE" } },
     include: productInclude,
   });
 }
@@ -292,6 +407,17 @@ export function getActiveProductBySlug(slug: string) {
 export async function getProductSlugById(id: string): Promise<string | null> {
   const row = await prisma.product.findUnique({
     where: { id },
+    select: { slug: true },
+  });
+  return row?.slug ?? null;
+}
+
+/** Resolve the canonical slug only for publicly visible products. */
+export async function getActiveProductSlugById(
+  id: string,
+): Promise<string | null> {
+  const row = await prisma.product.findFirst({
+    where: { id, status: "ACTIVE", category: { status: "ACTIVE" } },
     select: { slug: true },
   });
   return row?.slug ?? null;
@@ -468,6 +594,9 @@ export function softDeleteProduct(id: string) {
 
 /**
  * Hard delete: permanently remove the product row.
+ *
+ * Internal dangerous maintenance helper only. Do not wire this to normal
+ * admin UI/API flows; use `softDeleteProduct` for catalog removal.
  *
  * Related rows are handled by DB relations:
  * - ProductImage/ProductVariant/CartItem/Wishlist cascade delete.

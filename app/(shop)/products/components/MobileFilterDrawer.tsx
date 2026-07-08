@@ -7,35 +7,32 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import FilterSidebar from "./FilterSidebar";
-
-type Filters = {
-  categories: string[];
-  brands: string[];
-  priceRange: [number, number];
-  minRating: number;
-  inStockOnly: boolean;
-};
+import type { CategoryOption } from "@/features/products/api";
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  filters: Filters;
-  onChange: (next: Filters) => void;
+  categories: CategoryOption[];
+  selectedCategory: string;
+  onCategoryChange: (slug: string) => void;
+  maxPrice: number | undefined;
+  onMaxPriceChange: (max: number) => void;
+  inStockOnly: boolean;
+  onInStockChange: () => void;
   onReset: () => void;
-  categories: string[];
-  brands: string[];
-  priceBounds: [number, number];
 };
 
 export default function MobileFilterDrawer({
   open,
   onClose,
-  filters,
-  onChange,
-  onReset,
   categories,
-  brands,
-  priceBounds,
+  selectedCategory,
+  onCategoryChange,
+  maxPrice,
+  onMaxPriceChange,
+  inStockOnly,
+  onInStockChange,
+  onReset,
 }: Props) {
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
@@ -51,12 +48,14 @@ export default function MobileFilterDrawer({
 
         <div className="h-[calc(100%-3.25rem)] overflow-y-auto p-3">
           <FilterSidebar
-            filters={filters}
-            onChange={onChange}
-            onReset={onReset}
             categories={categories}
-            brands={brands}
-            priceBounds={priceBounds}
+            selectedCategory={selectedCategory}
+            onCategoryChange={onCategoryChange}
+            maxPrice={maxPrice}
+            onMaxPriceChange={onMaxPriceChange}
+            inStockOnly={inStockOnly}
+            onInStockChange={onInStockChange}
+            onReset={onReset}
           />
         </div>
       </SheetContent>

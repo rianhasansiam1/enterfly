@@ -45,6 +45,10 @@ export async function POST(request: NextRequest) {
     // cached surfaces that embed product/stock data. (The cart itself is
     // uncached and refetched fresh by the client.)
     revalidateTag("admin-orders", "max");
+    revalidateTag("admin-dashboard", "max");
+    revalidateTag("admin-reports", "max");
+    revalidateTag("products", "max");
+    revalidateTag("product-detail", "max");
     revalidateTag("home-categories", "max");
     revalidateTag("categories", "max");
     return created(result);

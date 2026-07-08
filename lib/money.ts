@@ -70,11 +70,6 @@ export function minDecimal(a: DecimalInput, b: DecimalInput): Prisma.Decimal {
   return da.lessThan(db) ? da : db;
 }
 
-/** True when `a` < `b`. */
-export function lessThan(a: DecimalInput, b: DecimalInput): boolean {
-  return toDecimal(a).lessThan(toDecimal(b));
-}
-
 /** True when `a` >= `b`. */
 export function greaterThanOrEqual(a: DecimalInput, b: DecimalInput): boolean {
   return toDecimal(a).greaterThanOrEqualTo(toDecimal(b));

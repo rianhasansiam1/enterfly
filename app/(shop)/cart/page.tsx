@@ -21,6 +21,7 @@ import {
   setCartMode,
 } from "@/store/slices/cart.slice";
 import type { AppDispatch, RootState } from "@/store";
+import { buildCheckoutPath } from "@/features/checkout/promo-query";
 import {
   addToCartOnServer,
   canUseServerCart,
@@ -48,24 +49,12 @@ import {
 } from "@/lib/motion/list-removal";
 import { confirm, toast } from "@/lib/feedback";
 
-type AppliedPromo = {
-  code: string;
-  discount: number;
-  description: string;
-};
-
 const FALLBACK_PRODUCT_IMAGE =
   "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400";
 
 const FREE_SHIPPING_THRESHOLD = 50000;
 const STANDARD_SHIPPING_FEE = 120;
 const TAX_RATE = 0.05;
-
-const VALID_PROMO_CODES: Record<string, { discount: number; description: string }> = {
-  ENTERFLY10: { discount: 1500, description: "10% off your first order" },
-  WELCOME500: { discount: 500, description: "BDT 500 welcome gift" },
-  FLYHIGH: { discount: 2500, description: "BDT 2500 off - flash deal" },
-};
 
 function readLocalCart(): CartItem[] {
   return readCartFromStorage({ dedupeByProductId: true });
@@ -121,7 +110,7 @@ export default function CartPage() {
   const error = useSelector((state: RootState) => state.cart.error);
 
   const [saved, setSaved] = useState<SavedItem[]>([]);
-  const [promo, setPromo] = useState<AppliedPromo | null>(null);
+  const [promoCode, setPromoCode] = useState<string | null>(null);
   const itemsRef = useRef(items);
 
   const canUseServer = canUseServerCart(session?.user?.role, status);
@@ -225,8 +214,7 @@ export default function CartPage() {
     const subtotal = mode === "server" ? summary.subtotal : localSubtotal;
     const totalSavings = mode === "server" ? summary.totalDiscount : localSavings;
 
-    const discount = promo ? Math.min(promo.discount, subtotal) : 0;
-    const afterDiscount = Math.max(0, subtotal - discount);
+    const afterDiscount = subtotal;
     const shipping =
       subtotal === 0
         ? 0
@@ -239,13 +227,12 @@ export default function CartPage() {
     return {
       itemCount,
       subtotal,
-      discount,
       shipping,
       tax,
       total,
       totalSavings,
     };
-  }, [items, mode, promo, summary]);
+  }, [items, mode, summary]);
 
   const handleQuantityChange = async (id: string, quantity: number) => {
     const target = items.find((item) => item.id === id);
@@ -450,38 +437,27 @@ export default function CartPage() {
   };
 
   const handleApplyPromo = (code: string) => {
-    const match = VALID_PROMO_CODES[code];
-    if (!match) {
-      toast.error("Invalid promo code. Please try again.");
-      return null;
-    }
-
-    const next: AppliedPromo = {
-      code,
-      discount: match.discount,
-      description: match.description,
-    };
-
-    setPromo(next);
-    toast.success(`Promo code applied — ${match.description}`);
-    return next;
+    setPromoCode(code);
+    toast.info("Promo code will be checked at checkout.");
   };
 
   const handleRemovePromo = () => {
-    setPromo(null);
+    setPromoCode(null);
     toast.info("Promo code removed");
   };
 
   const handleCheckout = () => {
+    const checkoutPath = buildCheckoutPath({ promoCode });
+
     // Checkout requires authentication so the order can be attached
     // to a real user record. Bounce unauthenticated visitors to the
     // sign-in page first, with a callbackUrl that lands them right
     // back on /checkout.
     if (status !== "authenticated") {
-      router.push(`/login?callbackUrl=${encodeURIComponent("/checkout")}`);
+      router.push(`/login?callbackUrl=${encodeURIComponent(checkoutPath)}`);
       return;
     }
-    router.push("/checkout");
+    router.push(checkoutPath);
   };
 
   const itemCards = visibleCartItems.map(toCartViewModel);
@@ -524,7 +500,7 @@ export default function CartPage() {
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-8">
             <div className="flex min-w-0 flex-col gap-4">
               <FreeShippingBar
-                subtotal={totals.subtotal - totals.discount}
+                subtotal={totals.subtotal}
                 threshold={FREE_SHIPPING_THRESHOLD}
               />
 
@@ -572,13 +548,12 @@ export default function CartPage() {
             <div className="hidden lg:block">
               <OrderSummary
                 subtotal={totals.subtotal}
-                discount={totals.discount}
                 shipping={totals.shipping}
                 tax={totals.tax}
                 total={totals.total}
                 totalSavings={totals.totalSavings}
                 itemCount={totals.itemCount}
-                promo={promo}
+                promoCode={promoCode}
                 onApplyPromo={handleApplyPromo}
                 onRemovePromo={handleRemovePromo}
                 onCheckout={handleCheckout}
@@ -588,13 +563,12 @@ export default function CartPage() {
             <div className="lg:hidden">
               <OrderSummary
                 subtotal={totals.subtotal}
-                discount={totals.discount}
                 shipping={totals.shipping}
                 tax={totals.tax}
                 total={totals.total}
                 totalSavings={totals.totalSavings}
                 itemCount={totals.itemCount}
-                promo={promo}
+                promoCode={promoCode}
                 onApplyPromo={handleApplyPromo}
                 onRemovePromo={handleRemovePromo}
                 onCheckout={handleCheckout}

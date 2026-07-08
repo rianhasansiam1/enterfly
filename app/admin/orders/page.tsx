@@ -1,20 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import {
   patchAdminOrder,
-  setAdminOrders,
+  setAdminOrdersPage,
   setAdminOrdersError,
   setAdminOrdersLoading,
 } from "@/store/slices/admin-orders.slice";
 import type { AppDispatch, RootState } from "@/store";
 import {
-  fetchAllAdminOrdersSnapshot,
+  fetchAdminOrdersPage,
   patchOrderStatus,
   patchPaymentStatus,
   type AdminOrderRow,
+  type AdminOrderQueryParams,
   type OrderStatus,
   type PaymentStatus,
 } from "@/features/admin-orders/api";
@@ -23,6 +24,7 @@ import {
   notifyActionError,
   notifyActionSuccess,
 } from "@/lib/admin-feedback";
+import { useDebounce } from "@/hooks/useDebounce";
 
 import OrderSummaryCards from "./components/OrderSummaryCards";
 import OrdersToolbar from "./components/OrdersToolbar";
@@ -31,79 +33,91 @@ import OrdersTable from "./components/OrdersTable";
 type StatusFilter = "ALL" | OrderStatus;
 type PaymentFilter = "ALL" | PaymentStatus;
 
+const PAGE_SIZE = 20;
+
 export default function AdminOrdersPage() {
   const dispatch = useDispatch<AppDispatch>();
   const orders = useSelector((state: RootState) => state.adminOrders.items);
+  const meta = useSelector((state: RootState) => state.adminOrders.meta);
   const isLoading = useSelector(
     (state: RootState) => state.adminOrders.isLoading,
   );
-  const isHydrated = useSelector(
-    (state: RootState) => state.adminOrders.isHydrated,
-  );
   const error = useSelector((state: RootState) => state.adminOrders.error);
 
-  const [query, setQuery] = useState("");
+  // --- Server-driven query params ---
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>("ALL");
+
+  const debouncedSearch = useDebounce(search, 300);
 
   const [busyOrderId, setBusyOrderId] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [successNote, setSuccessNote] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const refreshOrders = useCallback(async () => {
-    dispatch(setAdminOrdersLoading(true));
-    dispatch(setAdminOrdersError(null));
-    try {
-      const items = await fetchAllAdminOrdersSnapshot();
-      dispatch(setAdminOrders(items));
-    } catch (loadError) {
-      const message =
-        loadError instanceof Error ? loadError.message : "Failed to load orders.";
-      dispatch(setAdminOrdersError(message));
-    } finally {
-      dispatch(setAdminOrdersLoading(false));
-    }
-  }, [dispatch]);
+  // Avoid re-fetching on mount when deps haven't changed
+  const hasFetched = useRef(false);
 
-  useEffect(() => {
-    if (isHydrated) return;
-    void refreshOrders();
-  }, [isHydrated, refreshOrders]);
-
-  const visibleOrders = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return orders.filter((order) => {
-      const matchQuery =
-        !q ||
-        order.orderNumber.toLowerCase().includes(q) ||
-        order.customerName.toLowerCase().includes(q) ||
-        order.customerPhone.toLowerCase().includes(q) ||
-        (order.user?.email ?? "").toLowerCase().includes(q) ||
-        (order.user?.name ?? "").toLowerCase().includes(q);
-
-      const matchStatus =
-        statusFilter === "ALL" || order.status === statusFilter;
-      const matchPayment =
-        paymentFilter === "ALL" || order.paymentStatus === paymentFilter;
-
-      return matchQuery && matchStatus && matchPayment;
-    });
-  }, [orders, paymentFilter, query, statusFilter]);
-
-  const totals = useMemo(() => {
-    let revenue = 0;
-    let pending = 0;
-    let unpaid = 0;
-    for (const order of orders) {
-      if (order.status !== "CANCELLED") revenue += order.totalAmount;
-      if (order.status === "PENDING") pending += 1;
-      if (order.paymentStatus === "UNPAID" && order.status !== "CANCELLED") {
-        unpaid += 1;
+  const fetchPage = useCallback(
+    async (params: AdminOrderQueryParams) => {
+      dispatch(setAdminOrdersLoading(true));
+      dispatch(setAdminOrdersError(null));
+      try {
+        const result = await fetchAdminOrdersPage(params);
+        dispatch(setAdminOrdersPage(result));
+      } catch (loadError) {
+        const message =
+          loadError instanceof Error ? loadError.message : "Failed to load orders.";
+        dispatch(setAdminOrdersError(message));
+      } finally {
+        dispatch(setAdminOrdersLoading(false));
       }
-    }
-    return { revenue, pending, unpaid };
-  }, [orders]);
+    },
+    [dispatch],
+  );
+
+  // Fetch whenever server query params change
+  useEffect(() => {
+    const params: AdminOrderQueryParams = {
+      page,
+      pageSize: PAGE_SIZE,
+    };
+    if (debouncedSearch) params.search = debouncedSearch;
+    if (statusFilter !== "ALL") params.status = statusFilter;
+    if (paymentFilter !== "ALL") params.paymentStatus = paymentFilter;
+
+    hasFetched.current = true;
+    void fetchPage(params);
+  }, [page, debouncedSearch, statusFilter, paymentFilter, fetchPage]);
+
+  // Reset to page 1 when filters change
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    setPage(1);
+  }, []);
+
+  const handleStatusChange = useCallback((value: StatusFilter) => {
+    setStatusFilter(value);
+    setPage(1);
+  }, []);
+
+  const handlePaymentChange = useCallback((value: PaymentFilter) => {
+    setPaymentFilter(value);
+    setPage(1);
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    const params: AdminOrderQueryParams = {
+      page,
+      pageSize: PAGE_SIZE,
+    };
+    if (debouncedSearch) params.search = debouncedSearch;
+    if (statusFilter !== "ALL") params.status = statusFilter;
+    if (paymentFilter !== "ALL") params.paymentStatus = paymentFilter;
+    void fetchPage(params);
+  }, [page, debouncedSearch, statusFilter, paymentFilter, fetchPage]);
 
   const handleChangeStatus = async (
     order: AdminOrderRow,
@@ -192,25 +206,22 @@ export default function AdminOrdersPage() {
   return (
     <section className="space-y-4">
       <OrderSummaryCards
-        totalOrders={orders.length}
-        revenue={totals.revenue}
-        pending={totals.pending}
-        unpaid={totals.unpaid}
+        totalOrders={meta?.total ?? 0}
+        revenue={meta?.revenue ?? 0}
+        pending={meta?.pendingCount ?? 0}
+        unpaid={meta?.unpaidCount ?? 0}
       />
 
       <OrdersToolbar
-        query={query}
+        query={search}
         statusFilter={statusFilter}
         paymentFilter={paymentFilter}
-        visibleCount={visibleOrders.length}
-        totalCount={orders.length}
+        total={meta?.total ?? 0}
         isLoading={isLoading}
-        onQueryChange={setQuery}
-        onStatusChange={setStatusFilter}
-        onPaymentChange={setPaymentFilter}
-        onRefresh={() => {
-          void refreshOrders();
-        }}
+        onQueryChange={handleSearchChange}
+        onStatusChange={handleStatusChange}
+        onPaymentChange={handlePaymentChange}
+        onRefresh={handleRefresh}
       />
 
       {error && (
@@ -232,9 +243,9 @@ export default function AdminOrdersPage() {
       )}
 
       <OrdersTable
-        orders={visibleOrders}
+        orders={orders}
         isLoading={isLoading}
-        totalCount={orders.length}
+        meta={meta}
         busyOrderId={busyOrderId}
         expandedId={expandedId}
         onToggleExpand={setExpandedId}
@@ -244,6 +255,7 @@ export default function AdminOrdersPage() {
         onTogglePayment={(order) => {
           void handleTogglePayment(order);
         }}
+        onPageChange={setPage}
       />
     </section>
   );

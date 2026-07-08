@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   if (!guard.ok) return guard.response;
 
   const ip = getClientIp(request);
-  const limit = rateLimit(`upload:${ip}`, 30, 60_000);
+  const limit = await rateLimit(`rate:upload:${ip}`, 30, 60_000);
   if (!limit.allowed) {
     return tooManyRequests(limit.resetMs);
   }

@@ -1,41 +1,34 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
-import { useDispatch, useSelector } from "react-redux";
 
 import FilterSidebar from "./components/FilterSidebar";
 import MobileFilterDrawer from "./components/MobileFilterDrawer";
+import Pagination from "./components/Pagination";
 import ProductsGrid from "./components/ProductsGrid";
 import ProductToolbar from "./components/ProductToolbar";
+import { useProductFilters } from "./hooks/useProductFilters";
 import {
-  setAllProducts,
-  setAllProductsError,
-  setAllProductsLoading,
-} from "@/store/slices/all-products.slice";
-import type { AppDispatch, RootState } from "@/store";
-import { fetchAllActiveProductsFromApi } from "@/features/products/api";
-import type { Product } from "@/features/products/api";
-
-type SortOption =
-  | "popular"
-  | "price-low"
-  | "price-high"
-  | "rating"
-  | "newest";
+  fetchProductsPage,
+  fetchCategories,
+} from "@/features/products/api";
+import type {
+  ApiMeta,
+  CategoryOption,
+  Product,
+} from "@/features/products/api";
 
 type ViewMode = "grid" | "list";
 
-type Filters = {
-  categories: string[];
-  brands: string[];
-  priceRange: [number, number];
-  minRating: number;
-  inStockOnly: boolean;
+const DEFAULT_META: ApiMeta = {
+  page: 1,
+  limit: 12,
+  total: 0,
+  totalPages: 1,
+  hasNextPage: false,
+  hasPreviousPage: false,
 };
-const INITIAL_PRICE_BOUNDS: [number, number] = [0, 5000];
-const DEFAULT_PAGE_SIZE = 12;
 
 export default function AllProductsPage() {
   return (
@@ -46,242 +39,96 @@ export default function AllProductsPage() {
 }
 
 function AllProductsPageInner() {
-  const dispatch = useDispatch<AppDispatch>();
-  const searchParams = useSearchParams();
-  const searchTerm = (searchParams.get("search") ?? "").trim().toLowerCase();
-  const productsFromStore = useSelector(
-    (state: RootState) => state.allProducts.items,
-  );
-  const isLoadingFromStore = useSelector(
-    (state: RootState) => state.allProducts.isLoading,
-  );
-  const isHydrated = useSelector((state: RootState) => state.allProducts.isHydrated);
-  const errorFromStore = useSelector((state: RootState) => state.allProducts.error);
+  const filters = useProductFilters();
 
-  const [filters, setFilters] = useState<Filters>({
-    categories: [],
-    brands: [],
-    priceRange: INITIAL_PRICE_BOUNDS,
-    minRating: 0,
-    inStockOnly: false,
-  });
-  const [sort, setSort] = useState<SortOption>("popular");
+  // ── Local UI state (not in URL) ──────────────────────────────────
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(DEFAULT_PAGE_SIZE);
-  const [animateFrom, setAnimateFrom] = useState(0);
-  const [appliedPriceBoundsKey, setAppliedPriceBoundsKey] = useState(
-    `${INITIAL_PRICE_BOUNDS[0]}-${INITIAL_PRICE_BOUNDS[1]}`,
-  );
-  const [prevResetKey, setPrevResetKey] = useState("");
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // ── Server data ──────────────────────────────────────────────────
+  const [products, setProducts] = useState<Product[]>([]);
+  const [meta, setMeta] = useState<ApiMeta>(DEFAULT_META);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // ── Category options for sidebar ─────────────────────────────────
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
+
+  // Fetch categories once on mount.
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetchCategories({ signal: controller.signal }).then(setCategories);
+    return () => controller.abort();
+  }, []);
+
+  // ── Fetch products when URL params change ────────────────────────
+
+  // Serialise queryParams to a stable string so the effect only re-runs
+  // when the actual param values change (not on every render).
+  const queryKey = JSON.stringify(filters.queryParams);
 
   useEffect(() => {
-    let ignore = false;
+    const controller = new AbortController();
+    let cancelled = false;
 
-    if (isHydrated || productsFromStore.length > 0) {
-      return;
+    async function load() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const result = await fetchProductsPage(
+          JSON.parse(queryKey) as Record<string, unknown>,
+          { signal: controller.signal },
+        );
+        if (!cancelled) {
+          setProducts(result.items);
+          setMeta(result.meta);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        const message =
+          err instanceof Error ? err.message : "Failed to load products.";
+        setError(message);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
     }
 
-    const loadProducts = async () => {
-      dispatch(setAllProductsLoading(true));
-      dispatch(setAllProductsError(null));
-      try {
-        const items = await fetchAllActiveProductsFromApi();
-        if (ignore) return;
-        dispatch(setAllProducts(items));
-      } catch (error) {
-        if (ignore) return;
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Failed to load products from API.";
-        dispatch(setAllProductsError(message));
-      } finally {
-        if (!ignore) {
-          dispatch(setAllProductsLoading(false));
-        }
-      }
-    };
-
-    void loadProducts();
-
+    void load();
     return () => {
-      ignore = true;
+      cancelled = true;
+      controller.abort();
     };
-  }, [dispatch, isHydrated, productsFromStore.length]);
+  }, [queryKey]);
 
-  const products = productsFromStore;
+  // ── Handlers ─────────────────────────────────────────────────────
 
-  const categories = useMemo(() => {
-    return Array.from(new Set(products.map((product) => product.category))).sort();
-  }, [products]);
+  const handleCategoryChange = useCallback(
+    (slug: string) => {
+      // Toggle: if already selected, deselect.
+      filters.setCategory(filters.category === slug ? "" : slug);
+    },
+    [filters],
+  );
 
-  const brands = useMemo(() => {
-    return Array.from(
-      new Set(
-        products
-          .map((product) => product.brand)
-          .filter((brand): brand is string => Boolean(brand)),
-      ),
-    ).sort();
-  }, [products]);
+  const handlePriceChange = useCallback(
+    (max: number) => {
+      filters.setPriceRange(undefined, max);
+    },
+    [filters],
+  );
 
-  const priceBounds = useMemo<[number, number]>(() => {
-    if (products.length === 0) return INITIAL_PRICE_BOUNDS;
+  const handleInStockChange = useCallback(() => {
+    filters.setInStock(!filters.inStock);
+  }, [filters]);
 
-    const maxFinalPrice = Math.max(
-      ...products.map((product) => product.discountPrice ?? product.price),
-    );
-
-    const normalizedMax = Math.max(500, Math.ceil(maxFinalPrice / 50) * 50);
-    return [0, normalizedMax];
-  }, [products]);
-
-  const priceBoundsKey = `${priceBounds[0]}-${priceBounds[1]}`;
-  if (products.length > 0 && appliedPriceBoundsKey !== priceBoundsKey) {
-    setAppliedPriceBoundsKey(priceBoundsKey);
-    setFilters((prev) => {
-      const untouched =
-        prev.categories.length === 0 &&
-        prev.brands.length === 0 &&
-        prev.minRating === 0 &&
-        !prev.inStockOnly &&
-        prev.priceRange[0] === INITIAL_PRICE_BOUNDS[0] &&
-        prev.priceRange[1] === INITIAL_PRICE_BOUNDS[1];
-
-      if (untouched) {
-        return { ...prev, priceRange: priceBounds };
-      }
-
-      if (prev.priceRange[1] > priceBounds[1]) {
-        return { ...prev, priceRange: [prev.priceRange[0], priceBounds[1]] };
-      }
-
-      return prev;
-    });
-  }
-
-  const getFinalPrice = (product: Product) => product.discountPrice ?? product.price;
-
-  const filtered = useMemo(() => {
-    const list = products.filter((product) => {
-      const finalPrice = getFinalPrice(product);
-
-      const matchSearch =
-        searchTerm.length === 0 ||
-        product.name.toLowerCase().includes(searchTerm) ||
-        product.category.toLowerCase().includes(searchTerm) ||
-        (product.brand?.toLowerCase().includes(searchTerm) ?? false);
-
-      const matchCategory =
-        filters.categories.length === 0 ||
-        filters.categories.includes(product.category);
-
-      const matchBrand =
-        filters.brands.length === 0 ||
-        (product.brand && filters.brands.includes(product.brand));
-
-      const matchPrice =
-        finalPrice >= filters.priceRange[0] &&
-        finalPrice <= filters.priceRange[1];
-
-      const matchRating =
-        filters.minRating === 0 || product.rating >= filters.minRating;
-
-      const matchStock = !filters.inStockOnly || product.inStock;
-
-      return (
-        matchSearch &&
-        matchCategory &&
-        matchBrand &&
-        matchPrice &&
-        matchRating &&
-        matchStock
-      );
-    });
-
-    return [...list].sort((a, b) => {
-      const aPrice = getFinalPrice(a);
-      const bPrice = getFinalPrice(b);
-
-      switch (sort) {
-        case "price-low":
-          return aPrice - bPrice;
-        case "price-high":
-          return bPrice - aPrice;
-        case "rating":
-          return b.rating - a.rating;
-        case "newest":
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        case "popular":
-        default:
-          return b.reviewCount - a.reviewCount;
-      }
-    });
-  }, [filters, products, sort, searchTerm]);
-
-  const resetKey = [
-    sort,
-    searchTerm,
-    filters.categories.join("|"),
-    filters.brands.join("|"),
-    filters.minRating,
-    filters.inStockOnly ? "1" : "0",
-    `${filters.priceRange[0]}-${filters.priceRange[1]}`,
-    filtered.length,
-  ].join("::");
-
-  if (prevResetKey !== resetKey) {
-    setPrevResetKey(resetKey);
-    setVisibleCount(DEFAULT_PAGE_SIZE);
-    setAnimateFrom(0);
-  }
-
-  const pageItems = filtered.slice(0, visibleCount);
-  const hasMore = visibleCount < filtered.length;
-
-  useEffect(() => {
-    if (!hasMore) return;
-    const node = sentinelRef.current;
-    if (!node) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setVisibleCount((current) => {
-            if (current >= filtered.length) return current;
-            setAnimateFrom(current);
-            return Math.min(current + DEFAULT_PAGE_SIZE, filtered.length);
-          });
-        }
-      },
-      { rootMargin: "300px 0px" },
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [filtered.length, hasMore]);
-
-  const handleFiltersChange = (next: Filters) => {
-    setFilters(next);
-  };
-
-  const resetFilters = () => {
-    setFilters({
-      categories: [],
-      brands: [],
-      priceRange: priceBounds,
-      minRating: 0,
-      inStockOnly: false,
-    });
-  };
+  // ── Render ───────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-linear-to-b from-[#F5F3FF] via-white to-white">
       <div className="mx-auto max-w-7xl px-3 py-4 sm:px-4 sm:py-6 lg:px-6">
         <div className="flex gap-5">
+          {/* ── Desktop sidebar ──────────────────────────────── */}
           <div
             className={`hidden shrink-0 overflow-hidden transition-[width,opacity,margin] duration-300 ease-in-out lg:block ${
               sidebarOpen ? "w-64 opacity-100" : "-ml-5 w-0 opacity-0"
@@ -290,22 +137,24 @@ function AllProductsPageInner() {
           >
             <div className="w-64">
               <FilterSidebar
-                filters={filters}
-                onChange={handleFiltersChange}
-                onReset={resetFilters}
                 categories={categories}
-                brands={brands}
-                priceBounds={priceBounds}
+                selectedCategory={filters.category}
+                onCategoryChange={handleCategoryChange}
+                maxPrice={filters.maxPrice}
+                onMaxPriceChange={handlePriceChange}
+                inStockOnly={filters.inStock}
+                onInStockChange={handleInStockChange}
+                onReset={filters.resetFilters}
               />
             </div>
           </div>
 
+          {/* ── Main content ─────────────────────────────────── */}
           <main className="min-w-0 flex-1">
             <ProductToolbar
-              resultsCount={filtered.length}
-              totalCount={products.length}
-              sort={sort}
-              onSortChange={setSort}
+              resultsCount={meta.total}
+              sort={filters.sort}
+              onSortChange={filters.setSort}
               viewMode={viewMode}
               onViewModeChange={setViewMode}
               onOpenMobileFilter={() => setMobileFilterOpen(true)}
@@ -313,57 +162,56 @@ function AllProductsPageInner() {
               onToggleSidebar={() => setSidebarOpen((open) => !open)}
             />
 
-            {isLoadingFromStore && products.length === 0 ? (
+            {isLoading && products.length === 0 ? (
               <div className="mt-10 flex items-center justify-center gap-2 text-sm text-violet-700">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span>Loading products from server...</span>
               </div>
-            ) : errorFromStore && products.length === 0 ? (
+            ) : error && products.length === 0 ? (
               <div className="mt-10 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                {errorFromStore}
+                {error}
               </div>
             ) : (
               <>
-                <ProductsGrid
-                  products={pageItems}
-                  viewMode={viewMode}
-                  onClearFilters={resetFilters}
-                  wide={!sidebarOpen}
-                  animateFrom={animateFrom}
-                />
-
-                <div className="mt-8 flex min-h-12 flex-col items-center justify-center gap-2">
-                  {hasMore ? (
-                    <>
-                      <div ref={sentinelRef} aria-hidden className="h-1 w-full" />
-                      <div className="flex items-center gap-2 text-sm text-violet-700">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Loading more products...</span>
-                      </div>
-                    </>
-                  ) : (
-                    filtered.length > DEFAULT_PAGE_SIZE && (
-                      <p className="text-sm text-gray-500">
-                        You&apos;ve reached the end - {filtered.length} products
-                      </p>
-                    )
-                  )}
+                {/* Subtle loading overlay when changing pages/filters */}
+                <div
+                  className={`transition-opacity duration-200 ${
+                    isLoading ? "pointer-events-none opacity-60" : "opacity-100"
+                  }`}
+                >
+                  <ProductsGrid
+                    products={products}
+                    viewMode={viewMode}
+                    onClearFilters={filters.resetFilters}
+                    wide={!sidebarOpen}
+                  />
                 </div>
+
+                <Pagination
+                  page={meta.page}
+                  totalPages={meta.totalPages}
+                  hasNextPage={meta.hasNextPage}
+                  hasPreviousPage={meta.hasPreviousPage}
+                  onPageChange={filters.setPage}
+                />
               </>
             )}
           </main>
         </div>
       </div>
 
+      {/* ── Mobile filter drawer ──────────────────────────────── */}
       <MobileFilterDrawer
         open={mobileFilterOpen}
         onClose={() => setMobileFilterOpen(false)}
-        filters={filters}
-        onChange={handleFiltersChange}
-        onReset={resetFilters}
         categories={categories}
-        brands={brands}
-        priceBounds={priceBounds}
+        selectedCategory={filters.category}
+        onCategoryChange={handleCategoryChange}
+        maxPrice={filters.maxPrice}
+        onMaxPriceChange={handlePriceChange}
+        inStockOnly={filters.inStock}
+        onInStockChange={handleInStockChange}
+        onReset={filters.resetFilters}
       />
     </div>
   );

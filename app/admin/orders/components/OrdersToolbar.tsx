@@ -17,8 +17,7 @@ export default function OrdersToolbar({
   query,
   statusFilter,
   paymentFilter,
-  visibleCount,
-  totalCount,
+  total,
   isLoading,
   onQueryChange,
   onStatusChange,
@@ -28,8 +27,7 @@ export default function OrdersToolbar({
   query: string;
   statusFilter: StatusFilter;
   paymentFilter: PaymentFilter;
-  visibleCount: number;
-  totalCount: number;
+  total: number;
   isLoading: boolean;
   onQueryChange: (value: string) => void;
   onStatusChange: (value: StatusFilter) => void;
@@ -46,7 +44,7 @@ export default function OrdersToolbar({
               type="text"
               value={query}
               onChange={(event) => onQueryChange(event.target.value)}
-              placeholder="Search by order #, customer, phone, email..."
+              placeholder="Search by order #, customer, phone..."
               className="h-10 w-full rounded-xl border border-violet-200 pl-9 pr-3 text-sm outline-none transition focus:border-violet-500"
             />
           </label>
@@ -90,9 +88,9 @@ export default function OrdersToolbar({
 
       <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
         <span>
-          {visibleCount} / {totalCount} orders
+          {total.toLocaleString()} order{total === 1 ? "" : "s"} total
         </span>
-        {isLoading && <span>Syncing orders...</span>}
+        {isLoading && <span>Loading...</span>}
       </div>
     </div>
   );

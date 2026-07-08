@@ -17,7 +17,7 @@ import type { PasswordScore, RegisterForm, RegisterStep } from "../page";
  * Used purely as a UX hint for the strength meter — the server's policy
  * (in `lib/auth/policy.ts`) is the authoritative gate.
  */
-export function getPasswordScore(password: string): PasswordScore {
+function getPasswordScore(password: string): PasswordScore {
   if (!password) return 0;
 
   let score = 0;

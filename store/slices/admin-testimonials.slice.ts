@@ -1,17 +1,17 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-import type { AdminTestimonialRow } from "@/features/admin-testimonials/api";
+import type { AdminTestimonialRow, ApiMeta } from "@/features/admin-testimonials/api";
 
 type AdminTestimonialsState = {
   items: AdminTestimonialRow[];
-  isHydrated: boolean;
+  meta: ApiMeta | null;
   isLoading: boolean;
   error: string | null;
 };
 
 const initialState: AdminTestimonialsState = {
   items: [],
-  isHydrated: false,
+  meta: null,
   isLoading: false,
   error: null,
 };
@@ -20,9 +20,12 @@ const adminTestimonialsSlice = createSlice({
   name: "adminTestimonials",
   initialState,
   reducers: {
-    setAdminTestimonials(state, action: PayloadAction<AdminTestimonialRow[]>) {
-      state.items = action.payload;
-      state.isHydrated = true;
+    setAdminTestimonialsPage(
+      state,
+      action: PayloadAction<{ items: AdminTestimonialRow[]; meta: ApiMeta }>,
+    ) {
+      state.items = action.payload.items;
+      state.meta = action.payload.meta;
       state.error = null;
     },
     upsertAdminTestimonial(state, action: PayloadAction<AdminTestimonialRow>) {
@@ -48,7 +51,7 @@ const adminTestimonialsSlice = createSlice({
 });
 
 export const {
-  setAdminTestimonials,
+  setAdminTestimonialsPage,
   upsertAdminTestimonial,
   removeAdminTestimonial,
   setAdminTestimonialsLoading,

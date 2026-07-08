@@ -20,6 +20,8 @@ export type ApiMeta = {
   total: number;
   totalPages: number;
   newCount?: number;
+  readCount?: number;
+  archivedCount?: number;
 };
 
 export type ApiEnvelope<T> = {
@@ -28,7 +30,7 @@ export type ApiEnvelope<T> = {
   meta?: ApiMeta;
 };
 
-export const API_PAGE_SIZE = 100;
+
 
 export const STATUS_VALUES: readonly ContactMessageStatus[] = [
   "NEW",
@@ -66,7 +68,7 @@ function parseRow(entry: unknown): AdminMessageRow {
 
 export function parseMessagesPayload(payload: unknown): {
   items: AdminMessageRow[];
-  meta: ApiMeta | null;
+  meta: ApiMeta;
 } {
   const envelope = payload as ApiEnvelope<unknown>;
   if (!envelope?.success || !Array.isArray(envelope.data)) {
@@ -75,50 +77,46 @@ export function parseMessagesPayload(payload: unknown): {
 
   return {
     items: envelope.data.map(parseRow),
-    meta: envelope.meta ?? null,
+    meta: envelope.meta ?? { page: 1, pageSize: 20, total: 0, totalPages: 1 },
   };
 }
 
+export type AdminMessageQueryParams = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  status?: ContactMessageStatus;
+};
+
 /**
- * Walk every page of `/api/admin/messages` and return the full list.
- * Volume is small enough to keep in memory for instant client-side
- * search/filter after the initial sync — same trade-off as customers
- * and orders.
+ * Fetch a single page of admin messages from the server.
  */
-export async function fetchAllAdminMessagesSnapshot(): Promise<AdminMessageRow[]> {
-  let page = 1;
-  let totalPages = 1;
-  const merged: AdminMessageRow[] = [];
+export async function fetchAdminMessagesPage(
+  params: AdminMessageQueryParams = {},
+): Promise<{ items: AdminMessageRow[]; meta: ApiMeta }> {
+  const qs = new URLSearchParams();
+  qs.set("page", String(params.page ?? 1));
+  qs.set("pageSize", String(params.pageSize ?? 20));
+  if (params.search) qs.set("search", params.search);
+  if (params.status) qs.set("status", params.status);
 
-  while (page <= totalPages) {
-    const params = new URLSearchParams({
-      page: String(page),
-      pageSize: String(API_PAGE_SIZE),
-    });
+  const response = await fetch(`/api/admin/messages?${qs.toString()}`, {
+    method: "GET",
+    cache: "no-store",
+  });
 
-    const response = await fetch(`/api/admin/messages?${params.toString()}`, {
-      method: "GET",
-      cache: "no-store",
-    });
-
-    let payload: unknown;
-    try {
-      payload = (await response.json()) as unknown;
-    } catch {
-      throw new Error("Failed to parse messages response.");
-    }
-
-    if (!response.ok) {
-      throw new Error(readApiError(payload, "Failed to load messages."));
-    }
-
-    const { items, meta } = parseMessagesPayload(payload);
-    merged.push(...items);
-    totalPages = meta?.totalPages ?? 1;
-    page += 1;
+  let payload: unknown;
+  try {
+    payload = (await response.json()) as unknown;
+  } catch {
+    throw new Error("Failed to parse messages response.");
   }
 
-  return merged;
+  if (!response.ok) {
+    throw new Error(readApiError(payload, "Failed to load messages."));
+  }
+
+  return parseMessagesPayload(payload);
 }
 
 export async function patchMessageStatus(

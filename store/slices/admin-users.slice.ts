@@ -1,34 +1,17 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-type Role = "USER" | "ADMIN";
-
-type AdminUserRow = {
-  id: string;
-  name: string;
-  email: string;
-  phone: string | null;
-  city: string | null;
-  image: string | null;
-  role: Role;
-  termsAcceptedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  ordersCount: number;
-  liveOrdersCount: number;
-  totalSpend: number;
-  lastOrderAt: string | null;
-};
+import type { AdminUserRow, ApiMeta } from "@/features/admin-users/api";
 
 type AdminUsersState = {
   items: AdminUserRow[];
-  isHydrated: boolean;
+  meta: ApiMeta | null;
   isLoading: boolean;
   error: string | null;
 };
 
 const initialState: AdminUsersState = {
   items: [],
-  isHydrated: false,
+  meta: null,
   isLoading: false,
   error: null,
 };
@@ -37,9 +20,12 @@ const adminUsersSlice = createSlice({
   name: "adminUsers",
   initialState,
   reducers: {
-    setAdminUsers(state, action: PayloadAction<AdminUserRow[]>) {
-      state.items = action.payload;
-      state.isHydrated = true;
+    setAdminUsersPage(
+      state,
+      action: PayloadAction<{ items: AdminUserRow[]; meta: ApiMeta }>,
+    ) {
+      state.items = action.payload.items;
+      state.meta = action.payload.meta;
       state.error = null;
     },
     patchAdminUser(
@@ -63,7 +49,7 @@ const adminUsersSlice = createSlice({
 });
 
 export const {
-  setAdminUsers,
+  setAdminUsersPage,
   patchAdminUser,
   setAdminUsersLoading,
   setAdminUsersError,

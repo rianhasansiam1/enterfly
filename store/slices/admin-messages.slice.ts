@@ -1,29 +1,17 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-type ContactMessageStatus = "NEW" | "READ" | "ARCHIVED";
-
-type AdminMessageRow = {
-  id: string;
-  name: string;
-  email: string;
-  phone: string | null;
-  subject: string;
-  message: string;
-  status: ContactMessageStatus;
-  createdAt: string;
-  updatedAt: string;
-};
+import type { AdminMessageRow, ApiMeta } from "@/features/admin-messages/api";
 
 type AdminMessagesState = {
   items: AdminMessageRow[];
-  isHydrated: boolean;
+  meta: ApiMeta | null;
   isLoading: boolean;
   error: string | null;
 };
 
 const initialState: AdminMessagesState = {
   items: [],
-  isHydrated: false,
+  meta: null,
   isLoading: false,
   error: null,
 };
@@ -32,9 +20,12 @@ const adminMessagesSlice = createSlice({
   name: "adminMessages",
   initialState,
   reducers: {
-    setAdminMessages(state, action: PayloadAction<AdminMessageRow[]>) {
-      state.items = action.payload;
-      state.isHydrated = true;
+    setAdminMessagesPage(
+      state,
+      action: PayloadAction<{ items: AdminMessageRow[]; meta: ApiMeta }>,
+    ) {
+      state.items = action.payload.items;
+      state.meta = action.payload.meta;
       state.error = null;
     },
     patchAdminMessage(
@@ -67,7 +58,7 @@ const adminMessagesSlice = createSlice({
 });
 
 export const {
-  setAdminMessages,
+  setAdminMessagesPage,
   patchAdminMessage,
   removeAdminMessage,
   setAdminMessagesLoading,

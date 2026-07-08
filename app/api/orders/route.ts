@@ -49,6 +49,10 @@ export async function POST(request: NextRequest) {
     const result = await placeOrder(guard.session.user.id, parsed.data);
     // Order creation changes stock and (optionally) empties the cart.
     revalidateTag("admin-orders", "max");
+    revalidateTag("admin-dashboard", "max");
+    revalidateTag("admin-reports", "max");
+    revalidateTag("products", "max");
+    revalidateTag("product-detail", "max");
     revalidateTag("home-categories", "max");
     revalidateTag("categories", "max");
     return created(result.order);
