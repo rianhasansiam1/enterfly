@@ -41,6 +41,7 @@ import {
   upsertLocalWishlistItem,
   writeLocalWishlist,
 } from "@/features/wishlist/storage";
+import { LoadingSpinner } from "@/components/ui/loading";
 import type { CartItem } from "@/features/cart/api";
 import type { WishlistItem } from "@/features/wishlist/api";
 
@@ -252,17 +253,22 @@ export default function ProductCard({
             void handleToggleWishlist();
           }}
           disabled={isBusy}
+          aria-busy={isBusy || undefined}
           aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
           aria-pressed={isWishlisted}
           className="absolute right-2 top-2 rounded-full bg-white/90 p-1.5 shadow-sm backdrop-blur-sm transition-all duration-200 hover:scale-110 hover:bg-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <Heart
-            className={`h-3.5 w-3.5 transition-all duration-300 ${
-              isWishlisted
-                ? "scale-110 fill-red-500 text-red-500"
-                : "text-gray-500 hover:text-red-400"
-            }`}
-          />
+          {isBusy ? (
+            <LoadingSpinner size="xs" label="Updating wishlist" />
+          ) : (
+            <Heart
+              className={`h-3.5 w-3.5 transition-all duration-300 ${
+                isWishlisted
+                  ? "scale-110 fill-red-500 text-red-500"
+                  : "text-gray-500 hover:text-red-400"
+              }`}
+            />
+          )}
         </button>
 
         <button
@@ -271,11 +277,16 @@ export default function ProductCard({
             void handleAddToCart();
           }}
           disabled={isCartBusy}
+          aria-busy={isCartBusy || undefined}
           aria-label="Add to cart"
           className="absolute right-2 top-11 flex items-center gap-1.5 rounded-full bg-white/95 p-1.5 text-xs font-semibold text-violet-700 opacity-100 shadow-md backdrop-blur-sm transition-all duration-300 hover:bg-violet-600 hover:text-white sm:bottom-2 sm:left-1/2 sm:right-auto sm:top-auto sm:-translate-x-1/2 sm:px-3 sm:py-1.5 sm:can-hover:translate-y-2 sm:can-hover:opacity-0 sm:can-hover:group-hover:translate-y-0 sm:can-hover:group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <ShoppingCart className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Add</span>
+          {isCartBusy ? (
+            <LoadingSpinner size="xs" label="Adding to cart" />
+          ) : (
+            <ShoppingCart className="h-3.5 w-3.5" />
+          )}
+          <span className="hidden sm:inline">{isCartBusy ? "Adding" : "Add"}</span>
         </button>
       </div>
 

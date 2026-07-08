@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
 
 import FilterSidebar from "./components/FilterSidebar";
 import MobileFilterDrawer from "./components/MobileFilterDrawer";
@@ -18,6 +17,10 @@ import type {
   CategoryOption,
   Product,
 } from "@/features/products/api";
+import {
+  ProductGridSkeleton,
+  ProductListingPageLoader,
+} from "@/components/ui/loading";
 
 type ViewMode = "grid" | "list";
 
@@ -32,7 +35,7 @@ const DEFAULT_META: ApiMeta = {
 
 export default function AllProductsPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<ProductListingPageLoader />}>
       <AllProductsPageInner />
     </Suspense>
   );
@@ -150,7 +153,7 @@ function AllProductsPageInner() {
           </div>
 
           {/* ── Main content ─────────────────────────────────── */}
-          <main className="min-w-0 flex-1">
+          <main className="min-w-0 flex-1" aria-busy={isLoading || undefined}>
             <ProductToolbar
               resultsCount={meta.total}
               sort={filters.sort}
@@ -163,10 +166,11 @@ function AllProductsPageInner() {
             />
 
             {isLoading && products.length === 0 ? (
-              <div className="mt-10 flex items-center justify-center gap-2 text-sm text-violet-700">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Loading products from server...</span>
-              </div>
+              <ProductGridSkeleton
+                count={12}
+                wide={!sidebarOpen}
+                className="mt-6"
+              />
             ) : error && products.length === 0 ? (
               <div className="mt-10 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
                 {error}

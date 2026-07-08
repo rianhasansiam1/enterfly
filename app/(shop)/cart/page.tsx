@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Lock } from "lucide-react";
@@ -48,6 +48,7 @@ import {
   LIST_ITEM_VARIANTS,
 } from "@/lib/motion/list-removal";
 import { confirm, toast } from "@/lib/feedback";
+import { ButtonLoader, LoadingSpinner, SectionLoader } from "@/components/ui/loading";
 
 const FALLBACK_PRODUCT_IMAGE =
   "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400";
@@ -112,6 +113,7 @@ export default function CartPage() {
   const [saved, setSaved] = useState<SavedItem[]>([]);
   const [promoCode, setPromoCode] = useState<string | null>(null);
   const itemsRef = useRef(items);
+  const [isCheckoutPending, startCheckoutTransition] = useTransition();
 
   const canUseServer = canUseServerCart(session?.user?.role, status);
 
@@ -447,6 +449,8 @@ export default function CartPage() {
   };
 
   const handleCheckout = () => {
+    if (isCheckoutPending) return;
+
     const checkoutPath = buildCheckoutPath({ promoCode });
 
     // Checkout requires authentication so the order can be attached
@@ -454,10 +458,14 @@ export default function CartPage() {
     // sign-in page first, with a callbackUrl that lands them right
     // back on /checkout.
     if (status !== "authenticated") {
-      router.push(`/login?callbackUrl=${encodeURIComponent(checkoutPath)}`);
+      startCheckoutTransition(() => {
+        router.push(`/login?callbackUrl=${encodeURIComponent(checkoutPath)}`);
+      });
       return;
     }
-    router.push(checkoutPath);
+    startCheckoutTransition(() => {
+      router.push(checkoutPath);
+    });
   };
 
   const itemCards = visibleCartItems.map(toCartViewModel);
@@ -470,7 +478,12 @@ export default function CartPage() {
 
         <div className="mt-2 flex items-center justify-between px-1 text-xs text-gray-500">
           <span>Storage mode: {mode === "server" ? "Server + Local" : "Local only"}</span>
-          {isLoading && <span>Syncing cart...</span>}
+          {isLoading && (
+            <span className="inline-flex items-center gap-1.5">
+              <LoadingSpinner size="xs" />
+              Syncing cart...
+            </span>
+          )}
         </div>
 
         {error && (
@@ -480,8 +493,8 @@ export default function CartPage() {
         )}
 
         {isLoading && isEmpty ? (
-          <div className="mt-6 rounded-2xl border border-violet-100 bg-white p-6 text-center text-sm text-violet-700">
-            Loading cart...
+          <div className="mt-6">
+            <SectionLoader label="Loading cart..." />
           </div>
         ) : isEmpty ? (
           <>
@@ -557,6 +570,7 @@ export default function CartPage() {
                 onApplyPromo={handleApplyPromo}
                 onRemovePromo={handleRemovePromo}
                 onCheckout={handleCheckout}
+                isCheckingOut={isCheckoutPending}
               />
             </div>
 
@@ -572,6 +586,7 @@ export default function CartPage() {
                 onApplyPromo={handleApplyPromo}
                 onRemovePromo={handleRemovePromo}
                 onCheckout={handleCheckout}
+                isCheckingOut={isCheckoutPending}
               />
             </div>
           </div>
@@ -594,10 +609,18 @@ export default function CartPage() {
             <button
               type="button"
               onClick={handleCheckout}
-              className="inline-flex h-12 items-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
+              disabled={isCheckoutPending}
+              aria-busy={isCheckoutPending || undefined}
+              className="inline-flex h-12 items-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
             >
-              <Lock className="h-4 w-4" />
-              Checkout
+              {isCheckoutPending ? (
+                <ButtonLoader label="Opening checkout..." />
+              ) : (
+                <>
+                  <Lock className="h-4 w-4" />
+                  Checkout
+                </>
+              )}
             </button>
           </div>
         </div>

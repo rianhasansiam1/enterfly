@@ -1,7 +1,5 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
-
 import {
   DISCOUNT_TYPE_VALUES,
   PROMO_STATUS_VALUES,
@@ -10,6 +8,7 @@ import {
   type PromoFormState,
 } from "@/features/admin-settings/api";
 import { cn } from "@/lib/utils";
+import { ButtonLoader } from "@/components/ui/loading";
 
 import Field from "@/app/admin/components/Field";
 
@@ -56,7 +55,11 @@ export default function PromoFormDrawer({
             </p>
           </div>
 
-          <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
+          <form
+            onSubmit={onSubmit}
+            className="flex min-h-0 flex-1 flex-col"
+            aria-busy={isSubmitting || undefined}
+          >
             <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Field label="Code" required>
@@ -233,10 +236,18 @@ export default function PromoFormDrawer({
                 <button
                   type="submit"
                   disabled={isSubmitting}
+                  aria-busy={isSubmitting || undefined}
                   className="inline-flex h-10 items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white transition hover:from-violet-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {mode === "create" ? "Create" : "Save changes"}
+                  {isSubmitting ? (
+                    <ButtonLoader
+                      label={mode === "create" ? "Creating..." : "Saving..."}
+                    />
+                  ) : mode === "create" ? (
+                    "Create"
+                  ) : (
+                    "Save changes"
+                  )}
                 </button>
               </div>
             </div>

@@ -7,6 +7,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import PromoCodeInput from "./PromoCodeInput";
+import { ButtonLoader } from "@/components/ui/loading";
 
 type OrderSummaryProps = {
   subtotal: number;
@@ -19,6 +20,7 @@ type OrderSummaryProps = {
   onApplyPromo: (code: string) => void;
   onRemovePromo: () => void;
   onCheckout: () => void;
+  isCheckingOut?: boolean;
 };
 
 export default function OrderSummary({
@@ -32,6 +34,7 @@ export default function OrderSummary({
   onApplyPromo,
   onRemovePromo,
   onCheckout,
+  isCheckingOut = false,
 }: OrderSummaryProps) {
   const totalSaved = totalSavings;
 
@@ -78,11 +81,19 @@ export default function OrderSummary({
       <button
         type="button"
         onClick={onCheckout}
-        className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 text-base font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
+        disabled={isCheckingOut}
+        aria-busy={isCheckingOut || undefined}
+        className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 text-base font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
       >
-        <Lock className="h-4 w-4" />
-        Secure Checkout
-        <ChevronRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+        {isCheckingOut ? (
+          <ButtonLoader label="Opening checkout..." />
+        ) : (
+          <>
+            <Lock className="h-4 w-4" />
+            Secure Checkout
+            <ChevronRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+          </>
+        )}
       </button>
 
       <div className="flex items-center justify-center gap-1.5 text-[11px] text-gray-500">

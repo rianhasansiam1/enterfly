@@ -27,6 +27,7 @@ import {
 import { computeCartSummary } from "@/features/cart/summary";
 import type { AppDispatch, RootState } from "@/store";
 import { toast } from "@/lib/feedback";
+import { CheckoutPageLoader } from "@/components/ui/loading";
 
 import CheckoutHeader from "./components/CheckoutHeader";
 import CheckoutItemsCard from "./components/CheckoutItemsCard";
@@ -380,20 +381,21 @@ function CheckoutPageInner() {
   // Show a friendly gate while auth resolves or while we bounce
   // unauthenticated visitors to /login. Without this the customer
   // sees an empty form for a flash before the redirect kicks in.
+  if (authStatus === "loading") {
+    return <CheckoutPageLoader />;
+  }
+
   if (authStatus !== "authenticated") {
     return (
       <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
         <div className="mx-auto w-full max-w-2xl px-4 py-16 sm:px-6">
           <div className="rounded-3xl border border-violet-100 bg-white p-10 text-center shadow-sm">
             <p className="text-lg font-semibold text-gray-900">
-              {authStatus === "loading"
-                ? "Loading checkout..."
-                : "Please sign in to checkout"}
+              Please sign in to checkout
             </p>
             <p className="mt-2 text-sm text-gray-600">
-              {authStatus === "loading"
-                ? "One moment while we load your account."
-                : "Redirecting you to the sign-in page so we can attach this order to your account."}
+              Redirecting you to the sign-in page so we can attach this order
+              to your account.
             </p>
             {authStatus === "unauthenticated" && (
               <Link
@@ -502,17 +504,7 @@ function CheckoutPageInner() {
 
 export default function CheckoutPage() {
   return (
-    <Suspense
-      fallback={
-        <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
-          <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-            <div className="rounded-3xl border border-violet-100 bg-white p-6 text-center text-sm text-violet-700 shadow-sm">
-              Loading checkout...
-            </div>
-          </div>
-        </main>
-      }
-    >
+    <Suspense fallback={<CheckoutPageLoader />}>
       <CheckoutPageInner />
     </Suspense>
   );

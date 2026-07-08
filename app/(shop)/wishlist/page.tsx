@@ -53,6 +53,7 @@ import {
   LIST_ITEM_VARIANTS,
 } from "@/lib/motion/list-removal";
 import { confirm, toast } from "@/lib/feedback";
+import { LoadingSpinner, SectionLoader } from "@/components/ui/loading";
 
 type WishlistView = "grid" | "list";
 
@@ -562,7 +563,12 @@ export default function WishlistPage() {
 
         <div className="mt-2 flex items-center justify-between px-1 text-xs text-gray-500">
           <span>Storage mode: {mode === "server" ? "Server + Local" : "Local only"}</span>
-          {isLoading && <span>Syncing wishlist...</span>}
+          {isLoading && (
+            <span className="inline-flex items-center gap-1.5">
+              <LoadingSpinner size="xs" />
+              Syncing wishlist...
+            </span>
+          )}
         </div>
 
         {error && (
@@ -591,9 +597,7 @@ export default function WishlistPage() {
 
         <section className="mt-6 pb-24">
           {isLoading && items.length === 0 ? (
-            <div className="rounded-2xl border border-violet-100 bg-white p-6 text-center text-sm text-violet-700">
-              Loading wishlist...
-            </div>
+            <SectionLoader label="Loading wishlist..." />
           ) : items.length === 0 ? (
             <EmptyWishlist />
           ) : visibleItems.length === 0 ? (

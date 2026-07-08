@@ -7,6 +7,7 @@ import store from "@/store";
 import Toaster from "@/components/ui/Toaster";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import StoreHydrator from "@/components/layout/StoreHydrator";
+import NavigationLoadingScreen from "@/components/layout/NavigationLoadingScreen";
 
 /**
  * Single client-side provider tree mounted by the root layout.
@@ -33,6 +34,7 @@ export default function Providers({
       <ReduxProvider store={store}>
         <StoreHydrator />
         {children}
+        <NavigationLoadingScreen />
         <Toaster />
         <ConfirmDialog />
       </ReduxProvider>

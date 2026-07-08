@@ -18,6 +18,7 @@ import { FIELD_LIMITS, meetsPasswordPolicy } from "@/lib/auth/policy";
 
 import FloatField from "@/app/(auth)/_components/FloatField";
 import PasswordVisibilityButton from "@/app/(auth)/_components/PasswordVisibilityButton";
+import { ButtonLoader } from "@/components/ui/loading";
 
 type SecurityTabProps = {
   user: ProfileUser;
@@ -154,7 +155,11 @@ export default function SecurityTab({ user }: SecurityTabProps) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="grid gap-4">
+        <form
+          onSubmit={handleSubmit}
+          className="grid gap-4"
+          aria-busy={submitState.status === "saving" || undefined}
+        >
           {hasPassword && (
             <FloatField
               icon={<Lock className="h-4 w-4" />}
@@ -165,6 +170,7 @@ export default function SecurityTab({ user }: SecurityTabProps) {
               autoComplete="current-password"
               maxLength={FIELD_LIMITS.PASSWORD_MAX}
               valid={currentValid}
+              disabled={submitState.status === "saving"}
               trailing={
                 <PasswordVisibilityButton
                   visible={show.current}
@@ -184,6 +190,7 @@ export default function SecurityTab({ user }: SecurityTabProps) {
             autoComplete="new-password"
             maxLength={FIELD_LIMITS.PASSWORD_MAX}
             valid={newPasswordValid}
+            disabled={submitState.status === "saving"}
             trailing={
               <PasswordVisibilityButton
                 visible={show.next}
@@ -202,6 +209,7 @@ export default function SecurityTab({ user }: SecurityTabProps) {
             autoComplete="new-password"
             maxLength={FIELD_LIMITS.PASSWORD_MAX}
             valid={confirmValid}
+            disabled={submitState.status === "saving"}
             trailing={
               <PasswordVisibilityButton
                 visible={show.confirm}
@@ -234,14 +242,17 @@ export default function SecurityTab({ user }: SecurityTabProps) {
             <button
               type="submit"
               disabled={!canSubmit}
+              aria-busy={submitState.status === "saving" || undefined}
               className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:from-gray-300 disabled:via-gray-300 disabled:to-gray-300 disabled:hover:translate-y-0 sm:w-auto"
             >
-              <KeyRound className="h-4 w-4" />
-              {submitState.status === "saving"
-                ? "Saving..."
-                : hasPassword
-                  ? "Update password"
-                  : "Set password"}
+              {submitState.status === "saving" ? (
+                <ButtonLoader label="Saving..." />
+              ) : (
+                <>
+                  <KeyRound className="h-4 w-4" />
+                  {hasPassword ? "Update password" : "Set password"}
+                </>
+              )}
             </button>
           </div>
         </form>

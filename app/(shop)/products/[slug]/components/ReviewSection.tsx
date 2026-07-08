@@ -7,7 +7,6 @@ import {
   CheckCircle,
   Filter,
   ChevronDown,
-  Loader2,
   PenLine,
   X,
 } from 'lucide-react'
@@ -19,6 +18,7 @@ import {
   type Review,
   type ReviewSummary,
 } from '@/features/reviews/api'
+import { ButtonLoader, SectionLoader } from '@/components/ui/loading'
 
 function avatarFor(review: Review): string {
   if (review.authorImage) return review.authorImage
@@ -218,12 +218,7 @@ export default function ReviewSection({ productId }: { productId: string }) {
 
       {/* States */}
       {loading ? (
-        <div className="rounded-xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700">
-          <span className="inline-flex items-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Loading reviews...
-          </span>
-        </div>
+        <SectionLoader label="Loading reviews..." />
       ) : loadError ? (
         <div className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">
           {loadError}
@@ -416,10 +411,10 @@ function WriteReviewForm({
         <button
           type="submit"
           disabled={submitting}
+          aria-busy={submitting || undefined}
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-violet-600 to-indigo-600 text-white text-sm font-medium rounded-xl hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg shadow-violet-200 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-          Submit review
+          {submitting ? <ButtonLoader label="Submitting..." /> : "Submit review"}
         </button>
       </div>
     </form>

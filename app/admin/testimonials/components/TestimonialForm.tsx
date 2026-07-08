@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, X } from "lucide-react";
+import { X } from "lucide-react";
 
 import {
   STATUS_VALUES,
@@ -8,6 +8,7 @@ import {
   type TestimonialStatus,
 } from "@/features/admin-testimonials/api";
 import ImageUploader from "@/components/ui/ImageUploader";
+import { ButtonLoader } from "@/components/ui/loading";
 
 export default function TestimonialForm({
   mode,
@@ -32,6 +33,7 @@ export default function TestimonialForm({
   return (
     <form
       onSubmit={onSubmit}
+      aria-busy={saving || undefined}
       className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5"
     >
       <div className="flex items-center justify-between">
@@ -150,10 +152,18 @@ export default function TestimonialForm({
         <button
           type="submit"
           disabled={saving}
+          aria-busy={saving || undefined}
           className="inline-flex h-10 items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:from-violet-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-          {mode === "create" ? "Add testimonial" : "Save changes"}
+          {saving ? (
+            <ButtonLoader
+              label={mode === "create" ? "Adding..." : "Saving..."}
+            />
+          ) : mode === "create" ? (
+            "Add testimonial"
+          ) : (
+            "Save changes"
+          )}
         </button>
       </div>
     </form>

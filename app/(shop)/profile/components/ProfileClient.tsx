@@ -11,6 +11,7 @@ import {
   type ProfileOverview,
   type ProfileUser,
 } from "@/features/profile/api";
+import { ProfilePageLoader } from "@/components/ui/loading";
 
 import CartTab from "./CartTab";
 import OrdersTab from "./OrdersTab";
@@ -126,15 +127,7 @@ export default function ProfileClient() {
     authStatus === "loading" ||
     (authStatus === "authenticated" && state.status === "loading")
   ) {
-    return (
-      <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
-        <div className="mx-auto w-full max-w-6xl px-3 py-8 sm:px-6 sm:py-12">
-          <div className="rounded-2xl border border-violet-100 bg-white p-6 text-center text-sm text-violet-700 shadow-sm sm:rounded-3xl sm:p-10">
-            Loading your profile...
-          </div>
-        </div>
-      </main>
-    );
+    return <ProfilePageLoader />;
   }
 
   if (authStatus !== "authenticated" || state.status === "error") {
@@ -181,15 +174,7 @@ export default function ProfileClient() {
   }
 
   if (state.status !== "ready") {
-    return (
-      <main className="min-h-screen bg-linear-to-b from-violet-50/60 via-white to-white">
-        <div className="mx-auto w-full max-w-6xl px-3 py-8 sm:px-6 sm:py-12">
-          <div className="rounded-2xl border border-violet-100 bg-white p-6 text-center text-sm text-violet-700 shadow-sm sm:rounded-3xl sm:p-10">
-            Loading your profile...
-          </div>
-        </div>
-      </main>
-    );
+    return <ProfilePageLoader />;
   }
 
   const { user, stats } = state.overview;

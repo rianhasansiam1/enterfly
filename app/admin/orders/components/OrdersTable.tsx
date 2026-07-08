@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
-import { ChevronDown, Loader2, Package2 } from "lucide-react";
+import { ChevronDown, Package2 } from "lucide-react";
 
 import {
   formatCurrency,
@@ -15,6 +15,7 @@ import {
 import { ORDER_STATUS_META } from "@/lib/orders/status";
 import { cn } from "@/lib/utils";
 import AdminPagination from "@/components/admin/AdminPagination";
+import { LoadingSpinner, TableSkeleton } from "@/components/ui/loading";
 
 const PAYMENT_BADGE: Record<PaymentStatus, string> = {
   PAID: "bg-emerald-50 text-emerald-700 ring-emerald-200",
@@ -60,14 +61,7 @@ export default function OrdersTable({
   onPageChange: (page: number) => void;
 }) {
   if (isLoading && orders.length === 0) {
-    return (
-      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700 shadow-sm">
-        <span className="inline-flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Loading orders...
-        </span>
-      </div>
-    );
+    return <TableSkeleton rows={6} columns={8} caption="Loading orders" />;
   }
 
   if (orders.length === 0) {
@@ -206,9 +200,10 @@ export default function OrdersTable({
                           type="button"
                           onClick={() => onTogglePayment(order)}
                           disabled={isBusy || order.status === "CANCELLED"}
+                          aria-busy={isBusy || undefined}
                           className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 px-2.5 py-1 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                          {isBusy && <Loader2 className="h-3 w-3 animate-spin" />}
+                          {isBusy && <LoadingSpinner size="xs" />}
                           Mark{" "}
                           {order.paymentStatus === "PAID" ? "unpaid" : "paid"}
                         </button>

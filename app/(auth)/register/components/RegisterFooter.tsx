@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 
 import { REGISTER_STEPS } from "./constants";
 import type { RegisterStatus, RegisterStep } from "../page";
+import { ButtonLoader } from "@/components/ui/loading";
 
 type RegisterFooterProps = {
   currentStep: RegisterStep;
@@ -44,10 +45,7 @@ export default function RegisterFooter({
         <span className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
 
         {isSubmitting ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Creating account...
-          </>
+          <ButtonLoader label="Creating account..." />
         ) : isLastStep ? (
           <>
             Create account

@@ -1,10 +1,11 @@
 "use client";
 
-import { CircleDollarSign, Loader2, Percent, RotateCcw, Truck } from "lucide-react";
+import { CircleDollarSign, Percent, RotateCcw, Truck } from "lucide-react";
 
 import type { SettingsFormState } from "@/features/admin-settings/api";
 
 import Field from "@/app/admin/components/Field";
+import { ButtonLoader, SectionLoader } from "@/components/ui/loading";
 
 export default function StorePricingForm({
   form,
@@ -44,7 +45,9 @@ export default function StorePricingForm({
         <button
           type="button"
           onClick={onRefresh}
-          className="inline-flex h-9 items-center gap-2 rounded-xl border border-violet-200 px-3 text-xs font-semibold text-violet-700 transition hover:bg-violet-50"
+          disabled={isLoading}
+          aria-busy={isLoading || undefined}
+          className="inline-flex h-9 items-center gap-2 rounded-xl border border-violet-200 px-3 text-xs font-semibold text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <RotateCcw className="h-3.5 w-3.5" />
           Refresh
@@ -63,14 +66,13 @@ export default function StorePricingForm({
       )}
 
       {isLoading && !hasSettings ? (
-        <div className="rounded-xl border border-violet-100 bg-violet-50/40 p-6 text-center text-sm text-violet-700">
-          <span className="inline-flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Loading settings...
-          </span>
-        </div>
+        <SectionLoader label="Loading settings..." />
       ) : (
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form
+          onSubmit={onSubmit}
+          className="space-y-4"
+          aria-busy={isSaving || undefined}
+        >
           <div className="grid gap-3 md:grid-cols-2">
             <Field
               label="Tax rate (%)"
@@ -84,10 +86,11 @@ export default function StorePricingForm({
                 min="0"
                 max="100"
                 value={form.taxRatePercent}
+                disabled={isSaving}
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, taxRatePercent: e.target.value }))
                 }
-                className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
+                className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
                 placeholder="5"
               />
             </Field>
@@ -100,10 +103,11 @@ export default function StorePricingForm({
               <input
                 type="text"
                 value={form.currency}
+                disabled={isSaving}
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, currency: e.target.value }))
                 }
-                className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm uppercase outline-none transition focus:border-violet-500"
+                className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm uppercase outline-none transition focus:border-violet-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
                 placeholder="BDT"
               />
             </Field>
@@ -120,13 +124,14 @@ export default function StorePricingForm({
                 step="0.01"
                 min="0"
                 value={form.standardShippingFee}
+                disabled={isSaving}
                 onChange={(e) =>
                   setForm((prev) => ({
                     ...prev,
                     standardShippingFee: e.target.value,
                   }))
                 }
-                className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
+                className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
                 placeholder="120"
               />
             </Field>
@@ -141,13 +146,14 @@ export default function StorePricingForm({
                 step="0.01"
                 min="0"
                 value={form.expressShippingFee}
+                disabled={isSaving}
                 onChange={(e) =>
                   setForm((prev) => ({
                     ...prev,
                     expressShippingFee: e.target.value,
                   }))
                 }
-                className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
+                className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
                 placeholder="250"
               />
             </Field>
@@ -162,13 +168,14 @@ export default function StorePricingForm({
                 step="1"
                 min="0"
                 value={form.freeShippingThreshold}
+                disabled={isSaving}
                 onChange={(e) =>
                   setForm((prev) => ({
                     ...prev,
                     freeShippingThreshold: e.target.value,
                   }))
                 }
-                className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500"
+                className="h-10 w-full rounded-xl border border-violet-200 px-3 text-sm outline-none transition focus:border-violet-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
                 placeholder="50000"
               />
             </Field>
@@ -178,10 +185,10 @@ export default function StorePricingForm({
             <button
               type="submit"
               disabled={isSaving || !hasSettings}
+              aria-busy={isSaving || undefined}
               className="inline-flex h-10 items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white transition hover:from-violet-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Save settings
+              {isSaving ? <ButtonLoader label="Saving..." /> : "Save settings"}
             </button>
           </div>
         </form>

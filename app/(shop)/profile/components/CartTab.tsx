@@ -38,6 +38,7 @@ import {
   LIST_ITEM_TRANSITION,
   LIST_ITEM_VARIANTS,
 } from "@/lib/motion/list-removal";
+import { SectionLoader } from "@/components/ui/loading";
 
 import { FALLBACK_PRODUCT_IMAGE } from "./constants";
 
@@ -237,9 +238,7 @@ export default function CartTab() {
       )}
 
       {isLoading && items.length === 0 ? (
-        <div className="rounded-2xl border border-violet-100 bg-white p-6 text-center text-sm text-violet-700 shadow-sm sm:rounded-3xl sm:p-10">
-          Loading cart...
-        </div>
+        <SectionLoader label="Loading cart..." />
       ) : items.length === 0 ? (
         <div className="rounded-2xl border border-violet-100 bg-white p-6 text-center shadow-sm sm:rounded-3xl sm:p-10">
           <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-violet-100 text-violet-700">

@@ -15,6 +15,7 @@ type FloatFieldProps = {
   maxLength?: number;
   trailing?: ReactNode;
   valid?: boolean | null;
+  disabled?: boolean;
 };
 
 export default function FloatField({
@@ -27,6 +28,7 @@ export default function FloatField({
   maxLength,
   trailing,
   valid = null,
+  disabled = false,
 }: FloatFieldProps) {
   const [focused, setFocused] = useState(false);
   const float = focused || value.length > 0;
@@ -49,6 +51,7 @@ export default function FloatField({
     <div
       className={cn(
         "group relative rounded-xl border border-violet-200 bg-white shadow-sm transition-all duration-300 focus-within:ring-4",
+        disabled && "opacity-70",
         validationClass,
       )}
     >
@@ -66,11 +69,12 @@ export default function FloatField({
         value={value}
         autoComplete={autoComplete}
         maxLength={maxLength}
+        disabled={disabled}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         onChange={(event) => onChange(event.target.value)}
         placeholder=" "
-        className="h-12 w-full rounded-xl bg-transparent pl-9 pr-10 text-sm text-gray-900 outline-none placeholder:text-transparent"
+        className="h-12 w-full rounded-xl bg-transparent pl-9 pr-10 text-sm text-gray-900 outline-none placeholder:text-transparent disabled:cursor-not-allowed disabled:text-gray-500"
       />
 
       <label

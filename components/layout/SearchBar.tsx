@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, X, Loader2, PackageSearch } from "lucide-react";
+import { Search, X, PackageSearch } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
@@ -8,6 +8,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { searchProductsFromApi, type Product } from "@/features/products/api";
+import { LoadingSpinner } from "@/components/ui/loading";
 
 /** Debounce window (ms) before a keystroke triggers a network search. */
 const SEARCH_DEBOUNCE_MS = 300;
@@ -211,12 +212,12 @@ export default function SearchBar({
         <div
           id={listboxId}
           role="listbox"
+          aria-busy={isLoading || undefined}
           className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-violet-100 bg-white shadow-xl"
         >
           {isLoading && (
             <div className="flex items-center justify-center gap-2 px-4 py-6 text-sm text-violet-700">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Searching...</span>
+              <LoadingSpinner label="Searching..." showLabel />
             </div>
           )}
 

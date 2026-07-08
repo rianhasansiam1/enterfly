@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Loader2, Lock, LogIn, Mail, ShieldAlert } from "lucide-react";
+import { ArrowRight, Lock, LogIn, Mail, ShieldAlert } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { FIELD_LIMITS } from "@/lib/auth/policy";
@@ -12,6 +12,7 @@ import {
   SocialDivider,
 } from "@/app/(auth)/_components/GoogleSignInButton";
 import PasswordVisibilityButton from "@/app/(auth)/_components/PasswordVisibilityButton";
+import { ButtonLoader } from "@/components/ui/loading";
 
 import type { LoginFieldUpdater, LoginForm, LoginStatus } from "../page";
 
@@ -110,10 +111,7 @@ export default function LoginFormView({
         <span className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
 
         {isSubmitting ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Signing you in...
-          </>
+          <ButtonLoader label="Signing you in..." />
         ) : (
           <>
             <LogIn className="h-4 w-4" />

@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
 
 import { createAdminReview } from "@/features/admin-reviews/api";
 import {
   fetchAllActiveProductsFromApi,
   type Product,
 } from "@/features/products/api";
+import { ButtonLoader } from "@/components/ui/loading";
 
 export default function AddReviewForm({
   onCancel,
@@ -85,6 +85,7 @@ export default function AddReviewForm({
   return (
     <form
       onSubmit={handleSubmit}
+      aria-busy={submitting || undefined}
       className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5"
     >
       <h2 className="text-sm font-bold text-gray-900">Add a review</h2>
@@ -173,10 +174,10 @@ export default function AddReviewForm({
         <button
           type="submit"
           disabled={submitting}
+          aria-busy={submitting || undefined}
           className="inline-flex h-10 items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:from-violet-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-          Add review
+          {submitting ? <ButtonLoader label="Adding..." /> : "Add review"}
         </button>
       </div>
     </form>

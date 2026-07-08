@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { Eye, EyeOff, Loader2, Pencil, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { FALLBACK_IMAGE, type AdminProduct } from "@/features/admin-products/api";
@@ -11,6 +11,7 @@ import {
   LIST_ITEM_VARIANTS,
 } from "@/lib/motion/list-removal";
 import { cn } from "@/lib/utils";
+import { LoadingSpinner, TableSkeleton } from "@/components/ui/loading";
 
 /** Consistent BDT currency formatting for the admin table. */
 function formatBDT(value: number): string {
@@ -35,14 +36,7 @@ export default function ProductsTable({
   onDelete: (product: AdminProduct) => void;
 }) {
   if (isLoading && totalCount === 0) {
-    return (
-      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700 shadow-sm">
-        <span className="inline-flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Loading products...
-        </span>
-      </div>
-    );
+    return <TableSkeleton rows={6} columns={9} caption="Loading products" />;
   }
 
   if (products.length === 0) {
@@ -146,6 +140,7 @@ export default function ProductsTable({
                         type="button"
                         onClick={() => onEdit(product)}
                         disabled={isBusy}
+                        aria-busy={isBusy || undefined}
                         className="inline-flex items-center gap-1 rounded-lg border border-violet-200 px-2.5 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <Pencil className="h-3.5 w-3.5" />
@@ -156,6 +151,7 @@ export default function ProductsTable({
                         type="button"
                         onClick={() => onToggleHide(product)}
                         disabled={isBusy}
+                        aria-busy={isBusy || undefined}
                         className="inline-flex items-center gap-1 rounded-lg border border-amber-200 px-2.5 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {product.status === "ACTIVE" ? (
@@ -173,9 +169,15 @@ export default function ProductsTable({
                         type="button"
                         onClick={() => onDelete(product)}
                         disabled={isBusy}
+                        aria-busy={isBusy || undefined}
                         className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                        <Trash2 className="h-3.5 w-3.5" /> Remove
+                        {isBusy ? (
+                          <LoadingSpinner size="xs" label="Updating product" />
+                        ) : (
+                          <Trash2 className="h-3.5 w-3.5" />
+                        )}
+                        Remove
                       </button>
                     </div>
                   </td>

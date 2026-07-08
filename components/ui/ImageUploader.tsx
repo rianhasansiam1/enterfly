@@ -3,10 +3,11 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useCallback, useId, useRef, useState } from "react";
-import { ImagePlus, Loader2, Trash2, UploadCloud } from "lucide-react";
+import { ImagePlus, Trash2, UploadCloud } from "lucide-react";
 
 import { ACCEPTED_IMAGE_TYPES, uploadImage } from "@/features/upload/api";
 import { cn } from "@/lib/utils";
+import { LoadingSpinner } from "@/components/ui/loading";
 
 type ImageUploaderProps = {
   /** Current hosted image URL (empty string when none). */
@@ -80,7 +81,10 @@ export default function ImageUploader({
   };
 
   return (
-    <div className={cn("space-y-1.5", className)}>
+    <div
+      className={cn("space-y-1.5", className)}
+      aria-busy={isUploading || undefined}
+    >
       {label && (
         <span className="text-xs font-semibold uppercase tracking-wide text-gray-600">
           {label}
@@ -119,7 +123,7 @@ export default function ImageUploader({
           <>
             <span className="grid h-11 w-11 place-items-center rounded-full bg-violet-100 text-violet-600">
               {isUploading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <LoadingSpinner size="md" label="Uploading image" />
               ) : (
                 <ImagePlus className="h-5 w-5" />
               )}
@@ -159,7 +163,7 @@ export default function ImageUploader({
 
       {isUploading && (
         <p className="flex items-center gap-1 text-xs text-violet-600">
-          <Loader2 className="h-3 w-3 animate-spin" />
+          <LoadingSpinner size="xs" label="Uploading to image host" />
           Uploading to image host...
         </p>
       )}

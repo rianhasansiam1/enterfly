@@ -4,6 +4,7 @@ import { Package } from "lucide-react";
 
 import type { CheckoutItemPriced } from "@/features/checkout/api";
 import ColorBadge from "@/components/ui/ColorBadge";
+import { SkeletonBlock } from "@/components/ui/loading";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400";
@@ -32,8 +33,23 @@ export default function CheckoutItemsCard({
       </header>
 
       {isLoading ? (
-        <div className="rounded-2xl border border-dashed border-violet-200 bg-violet-50/40 p-6 text-center text-sm text-violet-700">
-          Loading items...
+        <div
+          role="status"
+          aria-busy="true"
+          aria-label="Loading checkout items"
+          className="space-y-3 rounded-2xl border border-dashed border-violet-200 bg-violet-50/40 p-4"
+        >
+          {Array.from({ length: 3 }, (_, index) => (
+            <div key={index} className="flex items-center gap-3">
+              <SkeletonBlock className="h-16 w-16 shrink-0 rounded-xl" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <SkeletonBlock className="h-4 w-3/4" />
+                <SkeletonBlock className="h-3 w-1/2" />
+                <SkeletonBlock className="h-3 w-1/3" />
+              </div>
+              <SkeletonBlock className="h-4 w-20" />
+            </div>
+          ))}
         </div>
       ) : items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-violet-200 bg-violet-50/40 p-6 text-center text-sm text-gray-600">

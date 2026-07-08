@@ -2,6 +2,7 @@
 
 import { Download, Plus, RotateCcw, Search } from "lucide-react";
 
+import { LoadingSpinner } from "@/components/ui/loading";
 import {
   STATUS_VALUES,
   type TestimonialStatus,
@@ -93,7 +94,12 @@ export default function TestimonialsToolbar({
         <span>
           {visibleCount} / {totalCount} testimonials
         </span>
-        {isLoading && <span>Syncing...</span>}
+        {isLoading && (
+          <span className="inline-flex items-center gap-1.5">
+            <LoadingSpinner size="xs" />
+            Syncing...
+          </span>
+        )}
       </div>
     </div>
   );

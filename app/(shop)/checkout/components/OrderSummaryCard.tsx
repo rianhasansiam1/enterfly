@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
+import { ButtonLoader, LoadingSpinner } from "@/components/ui/loading";
 import type {
   CheckoutPaymentMethod,
   CheckoutSummary,
@@ -86,7 +87,11 @@ export default function OrderSummaryCard({
                 <span className="rounded-md bg-white px-1.5 py-0.5 font-mono text-xs text-emerald-700">
                   {appliedPromo}
                 </span>
-                {isCheckingPromo ? "checking" : "applied"}
+                {isCheckingPromo ? (
+                  <LoadingSpinner size="xs" label="Checking promo" />
+                ) : (
+                  "applied"
+                )}
               </p>
               {isCheckingPromo ? (
                 <p className="truncate text-xs text-emerald-700">
@@ -129,10 +134,11 @@ export default function OrderSummaryCard({
             </div>
             <button
               type="submit"
-              disabled={!promoCode.trim()}
+              disabled={!promoCode.trim() || isCheckingPromo}
+              aria-busy={isCheckingPromo || undefined}
               className="rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:from-violet-700 hover:to-indigo-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
             >
-              Apply
+              {isCheckingPromo ? <ButtonLoader label="Checking..." /> : "Apply"}
             </button>
           </form>
           {promoFeedback && (
@@ -153,7 +159,9 @@ export default function OrderSummaryCard({
       {/* Totals */}
       <div className="space-y-2.5 border-t border-dashed border-violet-100 pt-4 text-sm">
         {isLoading || !summary ? (
-          <p className="text-sm text-gray-500">Calculating...</p>
+          <p className="text-sm text-gray-500">
+            <LoadingSpinner label="Calculating totals..." showLabel />
+          </p>
         ) : (
           <>
             <SummaryRow label="Subtotal" value={summary.subtotal} />
@@ -213,9 +221,15 @@ export default function OrderSummaryCard({
         }
         className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 text-base font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:from-gray-300 disabled:via-gray-300 disabled:to-gray-300 disabled:shadow-none disabled:hover:translate-y-0"
       >
-        <Lock className="h-4 w-4" />
-        {buttonLabel}
-        <ChevronRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+        {isPlacing ? (
+          <ButtonLoader label={buttonLabel} />
+        ) : (
+          <>
+            <Lock className="h-4 w-4" />
+            {buttonLabel}
+            <ChevronRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+          </>
+        )}
       </button>
       {onlineDisabled && (
         <p className="-mt-1 text-center text-[11px] font-medium text-amber-700">

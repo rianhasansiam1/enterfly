@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 
 import {
@@ -70,6 +69,7 @@ import {
   notifyActionSuccess,
 } from "@/lib/admin-feedback";
 import { useAnimatedRemoval } from "@/hooks/useAnimatedRemoval";
+import { SectionLoader } from "@/components/ui/loading";
 
 import BannerSummaryCards from "./components/BannerSummaryCards";
 import BannerTabsBar from "./components/BannerTabsBar";
@@ -612,12 +612,7 @@ export default function AdminBannersPage() {
       )}
 
       {isLoading && !isHydrated ? (
-        <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700 shadow-sm">
-          <span className="inline-flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Loading banners...
-          </span>
-        </div>
+        <SectionLoader label="Loading banners..." />
       ) : activeTab === "carousel" ? (
         <CarouselList
           rows={visibleCarousel}

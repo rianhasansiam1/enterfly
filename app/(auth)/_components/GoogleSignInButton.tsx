@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { Loader2 } from "lucide-react";
 
 import GoogleIcon from "./GoogleIcon";
+import { LoadingSpinner } from "@/components/ui/loading";
 
 type GoogleSignInButtonProps = {
   /**
@@ -53,7 +53,7 @@ export function GoogleSignInButton({
       >
         <span className="transition-transform duration-300 group-hover:scale-110">
           {isRedirecting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <LoadingSpinner size="sm" label="Redirecting to Google" />
           ) : (
             <GoogleIcon />
           )}

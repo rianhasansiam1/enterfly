@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { Loader2, ShieldCheck, Users } from "lucide-react";
+import { ShieldCheck, Users } from "lucide-react";
 
 import {
   formatCurrency,
@@ -12,6 +12,7 @@ import {
   type Role,
 } from "@/features/admin-users/api";
 import { cn } from "@/lib/utils";
+import { LoadingSpinner, TableSkeleton } from "@/components/ui/loading";
 
 const ROLE_BADGE: Record<Role, string> = {
   USER: "bg-violet-50 text-violet-700 ring-violet-200",
@@ -34,14 +35,7 @@ export default function UsersTable({
   onToggleRole: (user: AdminUserRow) => void;
 }) {
   if (isLoading && totalCount === 0) {
-    return (
-      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700 shadow-sm">
-        <span className="inline-flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Loading customers...
-        </span>
-      </div>
-    );
+    return <TableSkeleton rows={6} columns={7} caption="Loading customers" />;
   }
 
   if (users.length === 0) {
@@ -150,6 +144,7 @@ export default function UsersTable({
                         type="button"
                         onClick={() => onToggleRole(user)}
                         disabled={isBusy || isSelf}
+                        aria-busy={isBusy || undefined}
                         className={cn(
                           "inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60",
                           user.role === "ADMIN"
@@ -158,7 +153,7 @@ export default function UsersTable({
                         )}
                       >
                         {isBusy ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          <LoadingSpinner size="xs" />
                         ) : (
                           <ShieldCheck className="h-3.5 w-3.5" />
                         )}

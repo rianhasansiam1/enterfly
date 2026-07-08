@@ -1,7 +1,5 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
-
 import type {
   CarouselFormState,
   CategoryBannerFormState,
@@ -11,6 +9,7 @@ import type {
 } from "@/features/admin-banners/api";
 import type { CategoryOption } from "@/features/admin-products/api";
 import { cn } from "@/lib/utils";
+import { ButtonLoader } from "@/components/ui/loading";
 
 import { TABS, type EditingState } from "./constants";
 import {
@@ -83,7 +82,11 @@ export default function BannerFormDrawer({
             </p>
           </div>
 
-          <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
+          <form
+            onSubmit={onSubmit}
+            className="flex min-h-0 flex-1 flex-col"
+            aria-busy={isSubmitting || undefined}
+          >
             <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
               {editing?.kind === "carousel" && (
                 <CarouselFormFields form={carouselForm} setForm={setCarouselForm} />
@@ -118,10 +121,18 @@ export default function BannerFormDrawer({
                 <button
                   type="submit"
                   disabled={isSubmitting || !editing}
+                  aria-busy={isSubmitting || undefined}
                   className="inline-flex h-10 items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white transition hover:from-violet-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {editing?.mode === "create" ? "Create" : "Save changes"}
+                  {isSubmitting ? (
+                    <ButtonLoader
+                      label={editing?.mode === "create" ? "Creating..." : "Saving..."}
+                    />
+                  ) : editing?.mode === "create" ? (
+                    "Create"
+                  ) : (
+                    "Save changes"
+                  )}
                 </button>
               </div>
             </div>

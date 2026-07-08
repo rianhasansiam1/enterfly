@@ -25,6 +25,7 @@ import {
 
 import FloatField from "@/app/(auth)/_components/FloatField";
 import ImageUploader from "@/components/ui/ImageUploader";
+import { ButtonLoader } from "@/components/ui/loading";
 
 type SettingsTabProps = {
   user: ProfileUser;
@@ -168,6 +169,7 @@ export default function SettingsTab({ user, onUpdated }: SettingsTabProps) {
   return (
     <form
       onSubmit={handleSubmit}
+      aria-busy={submitState.status === "saving" || undefined}
       className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6"
     >
       <header className="mb-5 flex items-center gap-3">
@@ -193,6 +195,7 @@ export default function SettingsTab({ user, onUpdated }: SettingsTabProps) {
           autoComplete="name"
           maxLength={FIELD_LIMITS.NAME_MAX}
           valid={validity.name}
+          disabled={submitState.status === "saving"}
         />
         <ReadOnlyField
           icon={<Mail className="h-4 w-4" />}
@@ -209,6 +212,7 @@ export default function SettingsTab({ user, onUpdated }: SettingsTabProps) {
           autoComplete="tel"
           maxLength={FIELD_LIMITS.PHONE_MAX}
           valid={validity.phone}
+          disabled={submitState.status === "saving"}
         />
         <FloatField
           icon={<MapPin className="h-4 w-4" />}
@@ -218,6 +222,7 @@ export default function SettingsTab({ user, onUpdated }: SettingsTabProps) {
           autoComplete="address-level2"
           maxLength={FIELD_LIMITS.CITY_MAX}
           valid={validity.city}
+          disabled={submitState.status === "saving"}
         />
         <div className="sm:col-span-2">
           <ImageUploader
@@ -272,10 +277,16 @@ export default function SettingsTab({ user, onUpdated }: SettingsTabProps) {
             disabled={
               !dirty || submitState.status === "saving" || Boolean(blockingError)
             }
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:from-gray-300 disabled:via-gray-300 disabled:to-gray-300 disabled:hover:translate-y-0 sm:w-auto"
-          >
-            <Save className="h-4 w-4" />
-            {submitState.status === "saving" ? "Saving..." : "Save changes"}
+          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-violet-600 via-indigo-600 to-fuchsia-600 px-5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:from-gray-300 disabled:via-gray-300 disabled:to-gray-300 disabled:hover:translate-y-0 sm:w-auto"
+        >
+            {submitState.status === "saving" ? (
+              <ButtonLoader label="Saving..." />
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Save changes
+              </>
+            )}
           </button>
         </div>
       </div>

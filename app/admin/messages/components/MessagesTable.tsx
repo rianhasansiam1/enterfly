@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Mail, MailOpen, Archive, Trash2 } from "lucide-react";
+import { Mail, MailOpen, Archive, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import {
@@ -14,6 +14,7 @@ import {
   LIST_ITEM_VARIANTS,
 } from "@/lib/motion/list-removal";
 import { cn } from "@/lib/utils";
+import { TableSkeleton } from "@/components/ui/loading";
 
 import MessageActionButton from "./MessageActionButton";
 import { STATUS_BADGE } from "./constants";
@@ -36,14 +37,7 @@ export default function MessagesTable({
   onDelete: (row: AdminMessageRow) => void;
 }) {
   if (isLoading && totalCount === 0) {
-    return (
-      <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700 shadow-sm">
-        <span className="inline-flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Loading messages...
-        </span>
-      </div>
-    );
+    return <TableSkeleton rows={6} columns={5} caption="Loading messages" />;
   }
 
   if (messages.length === 0) {

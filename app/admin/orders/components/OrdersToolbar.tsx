@@ -2,6 +2,7 @@
 
 import { RotateCcw, Search } from "lucide-react";
 
+import { LoadingSpinner } from "@/components/ui/loading";
 import {
   ORDER_STATUS_VALUES,
   PAYMENT_STATUS_VALUES,
@@ -90,7 +91,12 @@ export default function OrdersToolbar({
         <span>
           {total.toLocaleString()} order{total === 1 ? "" : "s"} total
         </span>
-        {isLoading && <span>Loading...</span>}
+        {isLoading && (
+          <span className="inline-flex items-center gap-1.5">
+            <LoadingSpinner size="xs" />
+            Loading...
+          </span>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle, Download, Loader2, Search, X } from "lucide-react";
+import { CheckCircle, Download, Search, X } from "lucide-react";
 
 import {
   createTestimonialFromReview,
@@ -13,6 +13,7 @@ import {
 } from "@/features/admin-reviews/api";
 
 import Stars from "@/app/admin/components/Stars";
+import { ButtonLoader, SectionLoader } from "@/components/ui/loading";
 
 /**
  * Import-from-reviews panel.
@@ -146,12 +147,7 @@ export default function ImportReviewsPanel({
 
       <div className="mt-4 max-h-96 space-y-3 overflow-y-auto pr-1">
         {loading ? (
-          <div className="rounded-xl border border-violet-100 bg-violet-50/40 p-8 text-center text-sm text-violet-700">
-            <span className="inline-flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading reviews...
-            </span>
-          </div>
+          <SectionLoader label="Loading reviews..." />
         ) : candidates.length === 0 ? (
           <div className="rounded-xl border border-violet-100 bg-violet-50/40 p-8 text-center text-sm text-gray-600">
             No reviews available to import.
@@ -204,14 +200,17 @@ export default function ImportReviewsPanel({
                       void handleImport(review);
                     }}
                     disabled={isBusy}
+                    aria-busy={isBusy}
                     className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-linear-to-r from-violet-600 to-indigo-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:from-violet-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isBusy ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <ButtonLoader label="Adding..." />
                     ) : (
-                      <Download className="h-3.5 w-3.5" />
+                      <>
+                        <Download className="h-3.5 w-3.5" />
+                        Add to testimonials
+                      </>
                     )}
-                    Add to testimonials
                   </button>
                 </div>
               </div>

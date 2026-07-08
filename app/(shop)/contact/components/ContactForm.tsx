@@ -10,10 +10,10 @@ import {
   MessageSquare,
   Tag,
   CheckCircle2,
-  Loader2,
   AlertCircle,
 } from "lucide-react";
 import { toast } from "@/lib/feedback";
+import { ButtonLoader } from "@/components/ui/loading";
 
 const SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID ?? "";
 const TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID ?? "";
@@ -38,6 +38,7 @@ export default function ContactForm() {
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const isSending = status === "sending";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,7 +192,11 @@ export default function ContactForm() {
 
           <div className="my-5 h-0.5 w-full bg-linear-to-r from-violet-500 via-purple-400 to-transparent rounded-full" />
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4"
+            aria-busy={isSending || undefined}
+          >
             <div className="grid gap-4 sm:grid-cols-2">
               <Field
                 label="Full Name"
@@ -199,6 +204,7 @@ export default function ContactForm() {
                 value={name}
                 onChange={setName}
                 placeholder="Your name"
+                disabled={isSending}
                 required
               />
               <Field
@@ -208,6 +214,7 @@ export default function ContactForm() {
                 onChange={setEmail}
                 placeholder="you@example.com"
                 type="email"
+                disabled={isSending}
                 required
               />
             </div>
@@ -220,6 +227,7 @@ export default function ContactForm() {
                 onChange={setPhone}
                 placeholder="+91 ..."
                 type="tel"
+                disabled={isSending}
               />
 
               <div>
@@ -231,6 +239,7 @@ export default function ContactForm() {
                   <select
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
+                    disabled={isSending}
                     className="h-11 w-full appearance-none rounded-xl border border-violet-200 bg-white pl-9 pr-9 text-sm text-gray-800 shadow-sm transition-colors focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
                   >
                     {subjects.map((s) => (
@@ -256,7 +265,8 @@ export default function ContactForm() {
                 placeholder="Tell us how we can help..."
                 rows={5}
                 required
-                className="w-full resize-none rounded-xl border border-violet-200 bg-white p-3 text-sm text-gray-800 shadow-sm transition-colors placeholder:text-gray-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                disabled={isSending}
+                className="w-full resize-none rounded-xl border border-violet-200 bg-white p-3 text-sm text-gray-800 shadow-sm transition-colors placeholder:text-gray-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
               />
             </div>
 
@@ -271,15 +281,11 @@ export default function ContactForm() {
 
               <button
                 type="submit"
-                disabled={status === "sending" || status === "sent"}
+                disabled={isSending || status === "sent"}
+                aria-busy={isSending || undefined}
                 className="group inline-flex items-center gap-2 rounded-full bg-linear-to-r from-violet-600 to-purple-600 px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:from-violet-700 hover:to-purple-700 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-80"
               >
-                {status === "sending" && (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Sending...
-                  </>
-                )}
+                {isSending && <ButtonLoader label="Sending..." />}
                 {status === "sent" && (
                   <>
                     <CheckCircle2 className="h-4 w-4" />
@@ -316,6 +322,7 @@ type FieldProps = {
   placeholder?: string;
   type?: string;
   required?: boolean;
+  disabled?: boolean;
 };
 
 function Field({
@@ -326,6 +333,7 @@ function Field({
   placeholder,
   type = "text",
   required,
+  disabled,
 }: FieldProps) {
   return (
     <div>
@@ -340,9 +348,10 @@ function Field({
           type={type}
           value={value}
           required={required}
+          disabled={disabled}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="h-11 w-full rounded-xl border border-violet-200 bg-white pl-9 pr-3 text-sm text-gray-800 shadow-sm transition-colors placeholder:text-gray-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+          className="h-11 w-full rounded-xl border border-violet-200 bg-white pl-9 pr-3 text-sm text-gray-800 shadow-sm transition-colors placeholder:text-gray-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
         />
       </div>
     </div>

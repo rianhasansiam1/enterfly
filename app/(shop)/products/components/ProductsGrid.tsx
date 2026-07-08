@@ -16,6 +16,7 @@ import {
   fetchServerCartSnapshot,
 } from "@/features/cart/api";
 import { computeCartSummary } from "@/features/cart/summary";
+import { LoadingSpinner } from "@/components/ui/loading";
 import {
   DEFAULT_CART_STOCK,
   readLocalCart,
@@ -261,10 +262,15 @@ function ListItem({ product }: { product: Product }) {
                 void handleAddToCart();
               }}
               disabled={isCartBusy}
+              aria-busy={isCartBusy || undefined}
               className="hidden items-center gap-1.5 rounded-full bg-linear-to-r from-violet-600 to-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:from-violet-700 hover:to-indigo-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 sm:flex"
             >
-              <ShoppingCart className="h-3.5 w-3.5" />
-              Add to Cart
+              {isCartBusy ? (
+                <LoadingSpinner size="xs" label="Adding to cart" />
+              ) : (
+                <ShoppingCart className="h-3.5 w-3.5" />
+              )}
+              {isCartBusy ? "Adding..." : "Add to Cart"}
             </button>
           ) : (
             <span className="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-600">

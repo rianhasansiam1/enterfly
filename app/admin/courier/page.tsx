@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Loader2,
   Package2,
   RotateCcw,
   Search,
@@ -20,6 +19,7 @@ import {
   type CourierReport,
 } from "@/features/admin-courier/api";
 import { cn } from "@/lib/utils";
+import { ButtonLoader, LoadingSpinner, SectionLoader } from "@/components/ui/loading";
 import CourierReportPanel from "./components/CourierReportPanel";
 
 /**
@@ -196,6 +196,7 @@ export default function AdminCourierPage() {
             event.preventDefault();
             void runCheck(manualPhone);
           }}
+          aria-busy={checking}
           className="flex flex-col gap-3 sm:flex-row"
         >
           <label className="relative flex flex-1 items-center">
@@ -206,20 +207,24 @@ export default function AdminCourierPage() {
               value={manualPhone}
               onChange={(event) => setManualPhone(event.target.value)}
               placeholder="Enter customer phone, e.g. 017XXXXXXXX"
+              disabled={checking}
               className="h-10 w-full rounded-xl border border-violet-200 pl-9 pr-3 text-sm outline-none transition focus:border-violet-500"
             />
           </label>
           <button
             type="submit"
             disabled={checking || !manualPhone.trim()}
+            aria-busy={checking}
             className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-5 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {checking ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <ButtonLoader label="Checking..." />
             ) : (
-              <Search className="h-4 w-4" />
+              <>
+                <Search className="h-4 w-4" />
+                Check
+              </>
             )}
-            Check
           </button>
         </form>
       </div>
@@ -232,12 +237,7 @@ export default function AdminCourierPage() {
 
       {/* Report */}
       {checking && !report ? (
-        <div className="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-violet-700 shadow-sm">
-          <span className="inline-flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Checking courier history for {activePhone}...
-          </span>
-        </div>
+        <SectionLoader label={`Checking courier history for ${activePhone}...`} />
       ) : report ? (
         <CourierReportPanel report={report} />
       ) : null}
@@ -258,10 +258,18 @@ export default function AdminCourierPage() {
             onClick={() => {
               void refreshOrders();
             }}
-            className="inline-flex h-9 items-center gap-2 self-start rounded-xl border border-violet-200 px-3 text-sm font-semibold text-violet-700 transition hover:bg-violet-50 sm:self-auto"
+            disabled={ordersLoading}
+            aria-busy={ordersLoading}
+            className="inline-flex h-9 items-center gap-2 self-start rounded-xl border border-violet-200 px-3 text-sm font-semibold text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-60 sm:self-auto"
           >
-            <RotateCcw className="h-4 w-4" />
-            Refresh
+            {ordersLoading ? (
+              <ButtonLoader label="Refreshing..." />
+            ) : (
+              <>
+                <RotateCcw className="h-4 w-4" />
+                Refresh
+              </>
+            )}
           </button>
         </div>
 
@@ -284,12 +292,7 @@ export default function AdminCourierPage() {
 
         <div className="mt-3 overflow-hidden rounded-xl border border-violet-100">
           {ordersLoading && orders.length === 0 ? (
-            <div className="p-8 text-center text-sm text-violet-700">
-              <span className="inline-flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading orders...
-              </span>
-            </div>
+            <SectionLoader label="Loading orders..." />
           ) : customers.length === 0 ? (
             <div className="p-8 text-center text-sm text-gray-600">
               <Package2 className="mx-auto mb-2 h-8 w-8 text-violet-300" />
@@ -344,10 +347,13 @@ export default function AdminCourierPage() {
                               void runCheck(customer.phone);
                             }}
                             disabled={checking}
+                            aria-busy={
+                              checking && activePhone === customer.phone.trim()
+                            }
                             className="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 px-3 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {checking && activePhone === customer.phone.trim() ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              <LoadingSpinner size="xs" />
                             ) : (
                               <ShieldCheck className="h-3.5 w-3.5" />
                             )}

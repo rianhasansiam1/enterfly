@@ -2,6 +2,7 @@
 
 import { RotateCcw, Search } from "lucide-react";
 
+import { LoadingSpinner } from "@/components/ui/loading";
 import { ROLE_VALUES, type Role } from "@/features/admin-users/api";
 
 type RoleFilter = "ALL" | Role;
@@ -68,7 +69,12 @@ export default function UsersToolbar({
         <span>
           {visibleCount} / {totalCount} customers
         </span>
-        {isLoading && <span>Syncing customers...</span>}
+        {isLoading && (
+          <span className="inline-flex items-center gap-1.5">
+            <LoadingSpinner size="xs" />
+            Syncing customers...
+          </span>
+        )}
       </div>
     </div>
   );

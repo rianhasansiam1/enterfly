@@ -1,8 +1,9 @@
 "use client";
 
-import { Loader2, Pencil, Ticket, Trash2 } from "lucide-react";
+import { Pencil, Ticket, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
+import { LoadingSpinner } from "@/components/ui/loading";
 import {
   formatCurrency,
   formatDate,
@@ -155,6 +156,7 @@ export default function PromoCodesTable({
                         type="button"
                         onClick={() => onEdit(promo)}
                         disabled={isBusy}
+                        aria-busy={isBusy}
                         className="inline-flex items-center gap-1 rounded-lg border border-violet-200 px-2.5 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <Pencil className="h-3.5 w-3.5" /> Edit
@@ -163,10 +165,11 @@ export default function PromoCodesTable({
                         type="button"
                         onClick={() => onDelete(promo)}
                         disabled={isBusy}
+                        aria-busy={isBusy}
                         className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {isBusy ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          <LoadingSpinner size="xs" />
                         ) : (
                           <Trash2 className="h-3.5 w-3.5" />
                         )}

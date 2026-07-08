@@ -2,6 +2,7 @@
 
 import { Plus, RotateCcw } from "lucide-react";
 
+import { LoadingSpinner } from "@/components/ui/loading";
 import type { ProductStatus } from "@/features/admin-products/api";
 
 type CategoryChoice = { id: string; name: string };
@@ -96,7 +97,12 @@ export default function ProductsToolbar({
         <span>
           {visibleCount} / {totalCount} products
         </span>
-        {isLoading && <span>Syncing products...</span>}
+        {isLoading && (
+          <span className="inline-flex items-center gap-1.5">
+            <LoadingSpinner size="xs" />
+            Syncing products...
+          </span>
+        )}
       </div>
     </div>
   );

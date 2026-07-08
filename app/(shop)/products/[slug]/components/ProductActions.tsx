@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Minus, Plus, ShoppingCart, Zap, Ruler } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -24,6 +24,7 @@ import {
 } from "@/features/cart/storage";
 import type { CartItem } from "@/features/cart/api";
 import { toast } from "@/lib/feedback";
+import { ButtonLoader } from "@/components/ui/loading";
 
 const FALLBACK_PRODUCT_IMAGE =
   "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400";
@@ -191,6 +192,7 @@ const ProductActions = ({
   );
   const [quantity, setQuantity] = useState(1);
   const [isCartBusy, setIsCartBusy] = useState(false);
+  const [isCheckoutPending, startCheckoutTransition] = useTransition();
 
   /* ---------- resolve variant from color + size ------------------- */
 
@@ -336,15 +338,19 @@ const ProductActions = ({
   };
 
   const handleBuyNow = () => {
-    if (!inStock || !selectedVariant) return;
+    if (!inStock || !selectedVariant || isCheckoutPending) return;
     const target = `/checkout?buy=${encodeURIComponent(
       `${productId}:${quantity}:${selectedVariant.id}`,
     )}`;
     if (status !== "authenticated") {
-      router.push(`/login?callbackUrl=${encodeURIComponent(target)}`);
+      startCheckoutTransition(() => {
+        router.push(`/login?callbackUrl=${encodeURIComponent(target)}`);
+      });
       return;
     }
-    router.push(target);
+    startCheckoutTransition(() => {
+      router.push(target);
+    });
   };
 
   /* ---------- render ---------------------------------------------- */
@@ -594,29 +600,43 @@ const ProductActions = ({
             void handleAddToCart();
           }}
           disabled={!inStock || isCartBusy}
+          aria-busy={isCartBusy || undefined}
           className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-all ${
             inStock
               ? "bg-violet-600 text-white hover:bg-violet-700"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
           }`}
         >
-          <ShoppingCart className="w-4 h-4" />
-          {isCartBusy ? "Adding…" : "Add to cart"}
+          {isCartBusy ? (
+            <ButtonLoader label="Adding..." />
+          ) : (
+            <>
+              <ShoppingCart className="w-4 h-4" />
+              Add to cart
+            </>
+          )}
         </button>
       </div>
 
       <button
         type="button"
         onClick={handleBuyNow}
-        disabled={!inStock}
+        disabled={!inStock || isCheckoutPending}
+        aria-busy={isCheckoutPending || undefined}
         className={`flex w-full items-center justify-center gap-2 rounded-lg px-6 py-2.5 text-sm font-bold transition-all ${
           inStock
             ? "bg-linear-to-r from-amber-500 via-orange-500 to-rose-500 text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg"
             : "bg-gray-200 text-gray-500 cursor-not-allowed"
         }`}
       >
-        <Zap className="h-4 w-4" />
-        Buy now
+        {isCheckoutPending ? (
+          <ButtonLoader label="Opening checkout..." />
+        ) : (
+          <>
+            <Zap className="h-4 w-4" />
+            Buy now
+          </>
+        )}
       </button>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { Plus, RotateCcw, Search, X } from "lucide-react";
 
+import { LoadingSpinner } from "@/components/ui/loading";
 import {
   REVIEW_SOURCE_VALUES,
   type ReviewSource,
@@ -108,7 +109,12 @@ export default function ReviewsToolbar({
         <span>
           {visibleCount} / {totalCount} reviews
         </span>
-        {isLoading && <span>Syncing reviews...</span>}
+        {isLoading && (
+          <span className="inline-flex items-center gap-1.5">
+            <LoadingSpinner size="xs" />
+            Syncing reviews...
+          </span>
+        )}
       </div>
     </div>
   );

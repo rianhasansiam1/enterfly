@@ -2,6 +2,7 @@
 
 import { Plus, RotateCcw, Search } from "lucide-react";
 
+import { LoadingSpinner } from "@/components/ui/loading";
 import {
   STATUS_VALUES,
   type CategoryStatus,
@@ -84,7 +85,12 @@ export default function CategoriesToolbar({
         <span>
           {visibleCount} / {totalCount} categories
         </span>
-        {isLoading && <span>Syncing categories...</span>}
+        {isLoading && (
+          <span className="inline-flex items-center gap-1.5">
+            <LoadingSpinner size="xs" />
+            Syncing categories...
+          </span>
+        )}
       </div>
     </div>
   );

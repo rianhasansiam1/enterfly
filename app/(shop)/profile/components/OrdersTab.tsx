@@ -30,6 +30,7 @@ import {
   LIST_ITEM_TRANSITION,
   LIST_ITEM_VARIANTS,
 } from "@/lib/motion/list-removal";
+import { ButtonLoader, SectionLoader } from "@/components/ui/loading";
 
 import { FALLBACK_PRODUCT_IMAGE, ORDER_STATUS_TONE } from "./constants";
 
@@ -223,9 +224,10 @@ export default function OrdersTab() {
       )}
 
       {state.status === "loading" && (
-        <div className="rounded-2xl border border-violet-100 bg-white p-6 text-center text-sm text-violet-700 shadow-sm sm:rounded-3xl sm:p-10">
-          Loading orders...
-        </div>
+        <SectionLoader
+          label="Loading orders..."
+          className="sm:rounded-3xl sm:p-10"
+        />
       )}
 
       {state.status === "error" && (
@@ -392,10 +394,17 @@ function OrderRow({
                 type="button"
                 onClick={() => onCancel(order.id)}
                 disabled={cancelling}
+                aria-busy={cancelling || undefined}
                 className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 text-xs font-bold text-rose-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
               >
-                <XCircle className="h-3.5 w-3.5" />
-                {cancelling ? "Cancelling..." : "Cancel"}
+                {cancelling ? (
+                  <ButtonLoader label="Cancelling..." size="xs" />
+                ) : (
+                  <>
+                    <XCircle className="h-3.5 w-3.5" />
+                    Cancel
+                  </>
+                )}
               </button>
             ) : reviewableProductId ? (
               <Link

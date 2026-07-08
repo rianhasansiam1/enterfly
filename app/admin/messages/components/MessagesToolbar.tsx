@@ -2,6 +2,7 @@
 
 import { RotateCcw, Search } from "lucide-react";
 
+import { LoadingSpinner } from "@/components/ui/loading";
 import {
   STATUS_VALUES,
   type ContactMessageStatus,
@@ -71,7 +72,12 @@ export default function MessagesToolbar({
         <span>
           {visibleCount} / {totalCount} messages
         </span>
-        {isLoading && <span>Syncing messages...</span>}
+        {isLoading && (
+          <span className="inline-flex items-center gap-1.5">
+            <LoadingSpinner size="xs" />
+            Syncing messages...
+          </span>
+        )}
       </div>
     </div>
   );
