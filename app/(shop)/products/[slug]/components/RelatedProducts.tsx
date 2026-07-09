@@ -138,7 +138,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
             className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-violet-200 transition-all"
           >
             {/* Image Container */}
-            <div className="relative aspect-square bg-gray-50 p-2">
+            <div className="relative aspect-4/5 bg-gray-50 p-2">
               <Image
                 src={product.image}
                 alt={product.name}

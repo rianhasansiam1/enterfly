@@ -15,7 +15,7 @@ const ProductGallery = ({
   return (
     <div className="space-y-3">
       {/* Main Image */}
-      <div className="relative aspect-square bg-white rounded-2xl overflow-hidden border border-gray-100">
+      <div className="relative aspect-4/5 bg-white rounded-2xl overflow-hidden border border-gray-100">
         <Image
           src={images[selectedImage]}
           alt={`${productName} - Image ${selectedImage + 1}`}
@@ -30,7 +30,7 @@ const ProductGallery = ({
           <button
             key={index}
             onClick={() => setSelectedImage(index)}
-            className={`relative w-14 h-14 rounded-lg overflow-hidden border-2 transition-all shrink-0 ${
+            className={`relative aspect-4/5 w-14 rounded-lg overflow-hidden border-2 transition-all shrink-0 ${
               selectedImage === index
                 ? 'border-violet-500'
                 : 'border-gray-200 hover:border-violet-300'

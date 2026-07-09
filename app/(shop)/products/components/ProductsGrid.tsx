@@ -180,7 +180,7 @@ function ListItem({ product }: { product: Product }) {
     <div className="group flex gap-3 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:border-violet-200 hover:shadow-md sm:gap-4">
       <Link
         href={`/products/${product.slug}`}
-        className="relative aspect-square w-28 shrink-0 overflow-hidden bg-gray-50 sm:w-40 md:w-48"
+        className="relative aspect-4/5 w-28 shrink-0 overflow-hidden bg-gray-50 sm:w-40 md:w-48"
       >
         <Image
           src={product.image}

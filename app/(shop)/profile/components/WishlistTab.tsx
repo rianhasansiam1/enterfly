@@ -218,7 +218,7 @@ export default function WishlistTab() {
                 >
                 <Link
                   href={`/products/${item.id}`}
-                  className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-violet-50 min-[380px]:h-20 min-[380px]:w-20"
+                  className="relative aspect-4/5 w-16 shrink-0 overflow-hidden rounded-xl bg-violet-50 min-[380px]:w-20"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img

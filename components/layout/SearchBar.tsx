@@ -259,7 +259,7 @@ export default function SearchBar({
                             : "hover:bg-violet-50/60",
                         )}
                       >
-                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
+                        <div className="relative aspect-4/5 w-12 shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
                           <Image
                             src={product.image}
                             alt={product.name}

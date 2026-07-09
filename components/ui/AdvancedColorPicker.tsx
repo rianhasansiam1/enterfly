@@ -178,7 +178,7 @@ export function AdvancedColorPicker({
           role="dialog"
           aria-label={`${label} picker`}
           className={cn(
-            "absolute z-50  mt-2 w-[min(20rem,calc(100vw-3rem))] rounded-2xl border border-violet-100 bg-white p-3 shadow-xl ring-1 ring-black/5", popoverClassName,
+            "absolute z-50 right-24 mt-2 w-[min(20rem,calc(100vw-3rem))] rounded-2xl border border-violet-100 bg-white p-3 shadow-xl ring-1 ring-black/5", popoverClassName,
            
           )}
         >

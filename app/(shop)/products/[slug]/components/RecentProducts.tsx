@@ -39,7 +39,7 @@ const RecentProducts: React.FC<RecentProductsProps> = ({
             className="flex gap-3 p-2 rounded-xl hover:bg-violet-50 transition-colors group"
           >
             {/* Thumbnail */}
-            <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+            <div className="relative aspect-4/5 w-16 rounded-lg overflow-hidden bg-gray-100 shrink-0">
               <Image
                 src={product.image}
                 alt={product.name}

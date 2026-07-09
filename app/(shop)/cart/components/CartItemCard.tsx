@@ -59,7 +59,7 @@ export default function CartItemCard({
       <div className="flex gap-3 sm:gap-4">
         <Link
           href={`/products/${item.slug}`}
-          className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-xl bg-gray-50 sm:w-32"
+          className="relative aspect-4/5 w-24 shrink-0 overflow-hidden rounded-xl bg-gray-50 sm:w-32"
         >
           <Image
             src={item.image}

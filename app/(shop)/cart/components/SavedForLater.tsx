@@ -64,7 +64,7 @@ export default function SavedForLater({
             >
               <Link
                 href={`/products/${item.slug}`}
-                className="relative block aspect-square overflow-hidden bg-gray-50"
+                className="relative block aspect-4/5 overflow-hidden bg-gray-50"
               >
                 <Image
                   src={item.image}

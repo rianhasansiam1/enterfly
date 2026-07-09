@@ -41,7 +41,7 @@ export default function CheckoutItemsCard({
         >
           {Array.from({ length: 3 }, (_, index) => (
             <div key={index} className="flex items-center gap-3">
-              <SkeletonBlock className="h-16 w-16 shrink-0 rounded-xl" />
+              <SkeletonBlock className="aspect-4/5 w-16 shrink-0 rounded-xl" />
               <div className="min-w-0 flex-1 space-y-2">
                 <SkeletonBlock className="h-4 w-3/4" />
                 <SkeletonBlock className="h-3 w-1/2" />
@@ -65,7 +65,7 @@ export default function CheckoutItemsCard({
                 key={item.variantId || item.productId}
                 className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
               >
-                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-violet-100 bg-violet-50">
+                <div className="aspect-4/5 w-16 shrink-0 overflow-hidden rounded-xl border border-violet-100 bg-violet-50">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={item.image || FALLBACK_IMAGE}

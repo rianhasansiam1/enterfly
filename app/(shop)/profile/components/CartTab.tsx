@@ -273,7 +273,7 @@ export default function CartTab() {
                   transition={LIST_ITEM_TRANSITION}
                   className="grid grid-cols-[56px_minmax(0,1fr)] items-start gap-3 overflow-hidden rounded-2xl border border-violet-100 bg-white p-3 shadow-sm sm:grid-cols-[64px_minmax(0,1fr)_auto] sm:items-center sm:p-4"
                 >
-                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-violet-100 bg-violet-50 sm:h-16 sm:w-16">
+                <div className="aspect-4/5 w-14 shrink-0 overflow-hidden rounded-xl border border-violet-100 bg-violet-50 sm:w-16">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={item.image || FALLBACK_PRODUCT_IMAGE}

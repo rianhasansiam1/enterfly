@@ -224,7 +224,7 @@ export default function ProductCard({
 
   return (
     <div className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg">
-      <div className="relative aspect-4/3 overflow-hidden bg-gray-50">
+      <div className="relative aspect-4/5 overflow-hidden bg-gray-50">
         <Link href={productHref}>
           <Image
             src={image}

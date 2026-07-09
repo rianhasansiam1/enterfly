@@ -156,7 +156,7 @@ export function CardSkeleton({
 export function ProductCardSkeleton({ className }: { className?: string }) {
   return (
     <div className={cn("overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm", className)}>
-      <SkeletonBlock className="aspect-4/3 w-full rounded-none" />
+      <SkeletonBlock className="aspect-4/5 w-full rounded-none" />
       <div className="space-y-2 p-2.5">
         <div className="flex gap-1">
           {Array.from({ length: 5 }, (_, index) => (
@@ -372,10 +372,10 @@ export function ProductDetailPageLoader() {
     <PageLoader>
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px]">
         <section className="space-y-4">
-          <SkeletonBlock className="aspect-square w-full rounded-3xl" />
+          <SkeletonBlock className="aspect-4/5 w-full rounded-3xl" />
           <div className="grid grid-cols-4 gap-3">
             {Array.from({ length: 4 }, (_, index) => (
-              <SkeletonBlock key={index} className="aspect-square rounded-2xl" />
+              <SkeletonBlock key={index} className="aspect-4/5 rounded-2xl" />
             ))}
           </div>
         </section>

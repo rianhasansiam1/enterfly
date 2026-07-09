@@ -330,11 +330,11 @@ function OrderRow({
                 key={item.id}
                 src={item.productImage || FALLBACK_PRODUCT_IMAGE}
                 alt={item.productName}
-                className="h-12 w-12 rounded-xl border-2 border-white object-cover shadow-sm sm:h-16 sm:w-16"
+                className="aspect-4/5 w-12 rounded-xl border-2 border-white object-cover shadow-sm sm:w-16"
               />
             ))}
             {moreItems > 0 && (
-              <span className="grid h-12 w-12 place-items-center rounded-xl border-2 border-white bg-violet-100 text-xs font-bold text-violet-700 shadow-sm sm:h-16 sm:w-16">
+              <span className="grid aspect-4/5 w-12 place-items-center rounded-xl border-2 border-white bg-violet-100 text-xs font-bold text-violet-700 shadow-sm sm:w-16">
                 +{moreItems}
               </span>
             )}

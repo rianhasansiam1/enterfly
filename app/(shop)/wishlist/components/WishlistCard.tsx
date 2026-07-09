@@ -69,7 +69,7 @@ export default function WishlistCard({
 
         <Link
           href={`/products/${item.slug ?? item.id}`}
-          className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-xl bg-gray-50 sm:w-32"
+          className="relative aspect-4/5 w-24 shrink-0 overflow-hidden rounded-xl bg-gray-50 sm:w-32"
         >
           <Image
             src={item.image}

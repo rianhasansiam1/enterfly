@@ -405,7 +405,7 @@ export default function OrderSummaryClient({ orderId }: OrderSummaryClientProps)
                       key={item.id}
                       className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
                     >
-                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-violet-100 bg-violet-50">
+                      <div className="aspect-4/5 w-16 shrink-0 overflow-hidden rounded-xl border border-violet-100 bg-violet-50">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={item.productImage || FALLBACK_IMAGE}

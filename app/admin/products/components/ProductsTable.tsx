@@ -84,7 +84,7 @@ export default function ProductsTable({
                       <img
                         src={product.image ?? FALLBACK_IMAGE}
                         alt={product.name}
-                        className="h-12 w-12 rounded-lg border border-violet-100 object-cover"
+                        className="aspect-4/5 w-12 rounded-lg border border-violet-100 object-cover"
                       />
                       <div className="min-w-0">
                         <p className="truncate font-semibold text-gray-900">
