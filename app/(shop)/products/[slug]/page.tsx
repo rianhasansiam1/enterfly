@@ -19,9 +19,7 @@ import { siteConfig } from "@/lib/seo/site";
 import Breadcrumbs from "./components/Breadcrumbs";
 import DealsCarousel from "./components/DealsCarousel";
 
-import ProductActions from "./components/ProductActions";
-import ProductGallery from "./components/ProductGallery";
-import ProductInfo from "./components/ProductInfo";
+import ProductPurchaseSection from "./components/ProductPurchaseSection";
 import ProductTabs from "./components/ProductTabs";
 import PromoBanners from "./components/PromoBanners";
 import RecentProducts from "./components/RecentProducts";
@@ -200,41 +198,24 @@ export default async function ProductDetailsPage({ params }: Props) {
         <Breadcrumbs items={breadcrumbItems} />
 
         <div className="mt-6 grid grid-cols-1 md:grid-cols-12 gap-6">
-          <div className="md:col-span-6 lg:col-span-4">
-            <ProductGallery images={galleryImages} productName={product.name} />
-
-           
-          </div>
-
-          <div className="md:col-span-6 lg:col-span-5">
-            <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100">
-              <ProductInfo
-                name={product.name}
-                specs={[]}
-                deliveryTime="2 Hours"
-                productCode={product.productCode}
-              />
-
-              <ProductActions
-                productId={product.id}
-                productName={product.name}
-                image={galleryImages[0]}
-                salePrice={product.salePrice.toNumber()}
-                discountPrice={
-                  product.discountPrice != null
-                    ? product.discountPrice.toNumber()
-                    : null
-                }
-                variants={product.variants.map((v: ProductVariant) => ({
-                  id: v.id,
-                  sku: v.sku,
-                  color: v.color,
-                  size: v.size,
-                  stock: v.stock,
-                }))}
-              />
-            </div>
-          </div>
+          <ProductPurchaseSection
+            productId={product.id}
+            productName={product.name}
+            productCode={product.productCode}
+            galleryImages={galleryImages}
+            salePrice={product.salePrice.toNumber()}
+            discountPrice={
+              product.discountPrice != null ? product.discountPrice.toNumber() : null
+            }
+            variants={product.variants.map((v: ProductVariant) => ({
+              id: v.id,
+              sku: v.sku,
+              color: v.color,
+              size: v.size,
+              stock: v.stock,
+              image: v.image,
+            }))}
+          />
 
           <div className="md:col-span-12 lg:col-span-3">
             <RecentProducts products={recentProducts} title="Recent Product" />

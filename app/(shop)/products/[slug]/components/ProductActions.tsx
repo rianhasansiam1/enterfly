@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback, useTransition } from "react";
+import { useMemo, useState, useCallback, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Minus, Plus, ShoppingCart, Zap, Ruler } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -42,6 +42,7 @@ export type ProductVariantOption = {
   color: string | null;
   size: string | null;
   stock: number;
+  image: string | null;
 };
 
 /* ------------------------------------------------------------------ */
@@ -130,6 +131,7 @@ const ProductActions = ({
   variants,
   salePrice,
   discountPrice,
+  onVariantChange,
 }: {
   productId: string;
   productName: string;
@@ -139,6 +141,7 @@ const ProductActions = ({
   salePrice: number;
   /** Optional discounted price; when set it's the price the customer pays. */
   discountPrice: number | null;
+  onVariantChange?: (variant: ProductVariantOption | null) => void;
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
@@ -217,6 +220,10 @@ const ProductActions = ({
 
   const selectedVariant = resolveVariant(selectedColor, selectedSize);
 
+  useEffect(() => {
+    onVariantChange?.(selectedVariant);
+  }, [onVariantChange, selectedVariant]);
+
   /** Which sizes are available for the currently-selected color? */
   const sizesForColor = useMemo(() => {
     if (!hasColors || !selectedColor) return new Set(uniqueSizes);
@@ -243,6 +250,7 @@ const ProductActions = ({
   const currentListPrice = salePrice;
   const unitPrice =
     discountPrice != null && discountPrice < salePrice ? discountPrice : salePrice;
+  const selectedImage = selectedVariant?.image ?? image ?? FALLBACK_PRODUCT_IMAGE;
   const discount =
     currentListPrice > unitPrice
       ? Math.round(((currentListPrice - unitPrice) / currentListPrice) * 100)
@@ -322,7 +330,7 @@ const ProductActions = ({
       color: selectedVariant.color,
       size: selectedVariant.size,
       name: productName,
-      image: image ?? FALLBACK_PRODUCT_IMAGE,
+      image: selectedImage,
       quantity,
       unitPrice,
       originalPrice: currentListPrice,
