@@ -36,6 +36,13 @@ function money(value: Parameters<typeof toNumber>[0]): number {
   return round2(value);
 }
 
+function netMerchandiseRevenue(source: {
+  subtotal?: Parameters<typeof toNumber>[0];
+  discountAmount?: Parameters<typeof toNumber>[0];
+}): number {
+  return money(toNumber(source.subtotal) - toNumber(source.discountAmount));
+}
+
 /**
  * Resolve the [from, to] window the report should cover.
  *
@@ -84,8 +91,9 @@ function orderDateWhere(window: Window): Prisma.OrderWhereInput {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Sales overview: revenue, AOV, refund/cancel impact, payment-status
- * split, plus a daily series for the chart in the preview.
+ * Sales overview: merchandise revenue, delivery fees, AOV,
+ * refund/cancel impact, payment-status split, plus a daily series for
+ * the chart in the preview.
  *
  * Cancelled orders are excluded from the revenue figures but are
  * tracked separately so admins can see how much was at-risk vs. lost.
@@ -117,13 +125,13 @@ async function buildSalesReport(window: Window, limit: number) {
       by: ["status"],
       where,
       _count: { _all: true },
-      _sum: { totalAmount: true },
+      _sum: { totalAmount: true, subtotal: true, discountAmount: true },
     }),
     prisma.order.groupBy({
       by: ["paymentStatus"],
       where: { ...where, status: { not: "CANCELLED" } },
       _count: { _all: true },
-      _sum: { totalAmount: true },
+      _sum: { totalAmount: true, subtotal: true, discountAmount: true },
     }),
     prisma.order.aggregate({
       where,
@@ -141,7 +149,7 @@ async function buildSalesReport(window: Window, limit: number) {
     }),
     prisma.order.aggregate({
       where: { ...where, status: "CANCELLED" },
-      _sum: { totalAmount: true },
+      _sum: { totalAmount: true, subtotal: true, discountAmount: true },
       _count: { _all: true },
     }),
   ]);
@@ -164,11 +172,11 @@ async function buildSalesReport(window: Window, limit: number) {
     const key = new Date(order.createdAt).toISOString().slice(0, 10);
     const bucket = dailyMap.get(key);
     if (!bucket) continue;
-    bucket.revenue = money(bucket.revenue + toNumber(order.totalAmount));
+    bucket.revenue = money(bucket.revenue + netMerchandiseRevenue(order));
     bucket.orders += 1;
   }
 
-  const totalRevenue = money(liveAggregate._sum.totalAmount ?? 0);
+  const totalRevenue = netMerchandiseRevenue(liveAggregate._sum);
   const totalOrders = liveAggregate._count._all;
   const avgOrderValue = totalOrders > 0 ? money(totalRevenue / totalOrders) : 0;
 
@@ -180,19 +188,19 @@ async function buildSalesReport(window: Window, limit: number) {
       grossSubtotal: money(liveAggregate._sum.subtotal ?? 0),
       totalDeliveryCharges: money(liveAggregate._sum.deliveryCharge ?? 0),
       totalDiscounts: money(liveAggregate._sum.discountAmount ?? 0),
-      cancelledRevenue: money(cancelledAggregate._sum.totalAmount ?? 0),
+      cancelledRevenue: netMerchandiseRevenue(cancelledAggregate._sum),
       cancelledOrders: cancelledAggregate._count._all,
       ordersInWindow: totals._count._all,
     },
     byStatus: statusGroups.map((group) => ({
       status: group.status,
       orders: group._count._all,
-      revenue: money(group._sum.totalAmount ?? 0),
+      revenue: netMerchandiseRevenue(group._sum),
     })),
     byPaymentStatus: paymentGroups.map((group) => ({
       paymentStatus: group.paymentStatus,
       orders: group._count._all,
-      revenue: money(group._sum.totalAmount ?? 0),
+      revenue: netMerchandiseRevenue(group._sum),
     })),
     dailySeries: Array.from(dailyMap.values()),
     recentOrders: orders.map((order) => ({
@@ -621,7 +629,7 @@ async function buildCustomersReport(window: Window, limit: number) {
         createdAt: { gte: window.from, lte: window.to },
         status: { not: "CANCELLED" },
       },
-      _sum: { totalAmount: true },
+      _sum: { totalAmount: true, subtotal: true, discountAmount: true },
       _count: { _all: true },
       _max: { createdAt: true },
     }),
@@ -661,7 +669,7 @@ async function buildCustomersReport(window: Window, limit: number) {
         city: user?.city ?? null,
         role: user?.role ?? "USER",
         ordersCount: row._count._all,
-        totalSpend: money(row._sum.totalAmount ?? 0),
+        totalSpend: netMerchandiseRevenue(row._sum),
         lastOrderAt: row._max.createdAt
           ? row._max.createdAt.toISOString()
           : null,
@@ -671,7 +679,10 @@ async function buildCustomersReport(window: Window, limit: number) {
     .slice(0, limit);
 
   const totalRevenue = money(
-    orderAggregates.reduce((sum, row) => sum + toNumber(row._sum.totalAmount), 0),
+    orderAggregates.reduce(
+      (sum, row) => sum + netMerchandiseRevenue(row._sum),
+      0,
+    ),
   );
 
   return {

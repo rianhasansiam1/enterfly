@@ -58,6 +58,8 @@ export default function OrderSummaryCard({
     ? summary.totalSavings + summary.discount
     : 0;
   const isCheckingPromo = Boolean(appliedPromo && isLoading);
+  const shippingLabel =
+    summary?.deliveryMethod === "EXPRESS" ? "Express delivery" : "Standard delivery";
 
   const buttonLabel = isPlacing
     ? "Placing order..."
@@ -173,7 +175,7 @@ export default function OrderSummaryCard({
               />
             )}
             <SummaryRow
-              label="Shipping"
+              label={shippingLabel}
               value={summary.shipping}
               freeLabel={summary.isFreeShippingApplied ? "FREE" : undefined}
             />

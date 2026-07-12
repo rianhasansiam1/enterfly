@@ -214,7 +214,7 @@ function SalesPreview({ report }: { report: SalesReport }) {
           <StatGrid
             items={[
               {
-                label: "Revenue",
+                label: "Merchandise revenue",
                 value: formatCurrency(report.summary.totalRevenue),
               },
               {
@@ -249,7 +249,7 @@ function SalesPreview({ report }: { report: SalesReport }) {
         <SectionHeading>Orders by status</SectionHeading>
         <div className="mt-2">
           <DataTable
-            headers={["Status", "Orders", "Revenue"]}
+            headers={["Status", "Orders", "Merch. revenue"]}
             rows={report.byStatus.map((row) => [
               row.status,
               row.orders,
@@ -263,7 +263,7 @@ function SalesPreview({ report }: { report: SalesReport }) {
         <SectionHeading>Payment status (live orders)</SectionHeading>
         <div className="mt-2">
           <DataTable
-            headers={["Payment status", "Orders", "Revenue"]}
+            headers={["Payment status", "Orders", "Merch. revenue"]}
             rows={report.byPaymentStatus.map((row) => [
               row.paymentStatus,
               row.orders,
@@ -274,10 +274,10 @@ function SalesPreview({ report }: { report: SalesReport }) {
       </div>
 
       <div>
-        <SectionHeading>Daily revenue</SectionHeading>
+        <SectionHeading>Daily merchandise revenue</SectionHeading>
         <div className="mt-2">
           <DataTable
-            headers={["Date", "Orders", "Revenue"]}
+            headers={["Date", "Orders", "Merch. revenue"]}
             rows={report.dailySeries.map((row) => [
               formatDate(row.day),
               row.orders,
@@ -595,11 +595,11 @@ function CustomersPreview({ report }: { report: CustomersReport }) {
                 value: String(report.summary.activeBuyers),
               },
               {
-                label: "Revenue",
+                label: "Merchandise revenue",
                 value: formatCurrency(report.summary.totalRevenue),
               },
               {
-                label: "Avg per buyer",
+                label: "Avg revenue / buyer",
                 value: formatCurrency(report.summary.avgRevenuePerBuyer),
               },
             ]}
@@ -618,7 +618,7 @@ function CustomersPreview({ report }: { report: CustomersReport }) {
               "City",
               "Role",
               "Orders",
-              "Spend",
+              "Revenue",
               "Last order",
             ]}
             rows={report.rows.map((row) => [

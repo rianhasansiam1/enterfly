@@ -56,7 +56,7 @@ export default function OrderSummaryCards({
         accent="violet"
       />
       <SummaryCard
-        label="Revenue (excl. cancelled)"
+        label="Merchandise revenue"
         value={formatCurrency(revenue)}
         accent="emerald"
       />

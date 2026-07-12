@@ -65,8 +65,8 @@ function formatCount(value: number): string {
 const CARDS: readonly CardConfig[] = [
   {
     id: "revenue",
-    label: "Revenue (all time)",
-    hint: "growth this month",
+    label: "Merchandise revenue",
+    hint: "excl. delivery/tax",
     accent: "violet",
     icon: "",
     format: formatBdt,
@@ -75,7 +75,7 @@ const CARDS: readonly CardConfig[] = [
   {
     id: "profit",
     label: "Profit (all time)",
-    hint: "revenue − cost",
+    hint: "merch revenue - cost",
     accent: "emerald",
     icon: TrendingUp,
     format: formatBdt,

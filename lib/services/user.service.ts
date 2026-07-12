@@ -5,6 +5,7 @@ import { unstable_cache } from "next/cache";
 
 import { hashPassword, verifyPassword } from "@/lib/auth/passwords";
 import { prisma } from "@/lib/db/prisma";
+import { round2, toNumber } from "@/lib/money";
 import { ServiceError } from "@/lib/services/service-error";
 import type {
   AdminUserQueryInput,
@@ -55,6 +56,13 @@ function buildAdminWhere(query: AdminUserQueryInput): Prisma.UserWhereInput {
   return where;
 }
 
+function netMerchandiseRevenue(source: {
+  subtotal?: Parameters<typeof toNumber>[0];
+  discountAmount?: Parameters<typeof toNumber>[0];
+}): number {
+  return round2(toNumber(source.subtotal) - toNumber(source.discountAmount));
+}
+
 /**
  * Paginated list of users for the admin panel. Each row includes
  * lightweight aggregates (order count, total spend, last order date)
@@ -85,18 +93,18 @@ export async function listUsersForAdmin(query: AdminUserQueryInput) {
       },
     }),
     prisma.user.count({ where }),
-    // Global aggregates (unfiltered) for summary cards
+    // Global aggregates (unfiltered) for summary cards.
     prisma.user.count({ where: { role: "ADMIN" } }),
     prisma.user.count({ where: { orders: { some: {} } } }),
     prisma.order.aggregate({
       where: { status: { not: "CANCELLED" } },
-      _sum: { totalAmount: true },
+      _sum: { totalAmount: true, subtotal: true, discountAmount: true },
     }),
   ]);
 
   // Pull per-user spend / last order date in one round trip.
   // We aggregate by `userId` and exclude cancelled orders so the
-  // numbers reflect actual revenue earned from each customer.
+  // table shows live customer spend without counting cancelled orders.
   const userIds = rows.map((row) => row.id);
   const aggregates =
     userIds.length === 0
@@ -144,7 +152,7 @@ export async function listUsersForAdmin(query: AdminUserQueryInput) {
       totalPages: Math.max(1, Math.ceil(total / query.pageSize)),
       adminCount,
       withOrdersCount,
-      lifetimeRevenue: revenueAgg._sum.totalAmount ?? 0,
+      lifetimeRevenue: netMerchandiseRevenue(revenueAgg._sum),
     },
   };
 }

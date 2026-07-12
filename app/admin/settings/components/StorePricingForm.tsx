@@ -160,7 +160,7 @@ export default function StorePricingForm({
 
             <Field
               label="Free shipping above"
-              hint="Subtotal at which delivery is free."
+              hint="Subtotal at which delivery is free. Use 0 to disable."
               required
             >
               <input

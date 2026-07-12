@@ -42,7 +42,7 @@ export type ApiMeta = {
   pageSize: number;
   total: number;
   totalPages: number;
-  /** Revenue (excl. cancelled) — populated for the orders list. */
+  /** Merchandise revenue (excl. cancelled, delivery, and tax). */
   revenue?: number;
   /** Count of orders with PENDING status — populated for the orders list. */
   pendingCount?: number;

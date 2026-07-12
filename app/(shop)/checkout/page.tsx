@@ -10,6 +10,7 @@ import {
   fetchCheckoutPreview,
   fetchCheckoutProfile,
   placeCheckoutOrder,
+  type CheckoutDeliveryMethod,
   type CheckoutItemInput,
   type CheckoutPaymentMethod,
   type CheckoutPreview,
@@ -34,6 +35,7 @@ import CheckoutItemsCard from "./components/CheckoutItemsCard";
 import CustomerForm, {
   type CustomerFormState,
 } from "./components/CustomerForm";
+import DeliveryMethodPicker from "./components/DeliveryMethodPicker";
 import PaymentMethodPicker from "./components/PaymentMethodPicker";
 import OrderSummaryCard from "./components/OrderSummaryCard";
 
@@ -106,6 +108,8 @@ function CheckoutPageInner() {
   const [form, setForm] = useState<CustomerFormState>(EMPTY_FORM);
   const [paymentMethod, setPaymentMethod] =
     useState<CheckoutPaymentMethod>("CASH_ON_DELIVERY");
+  const [deliveryMethod, setDeliveryMethod] =
+    useState<CheckoutDeliveryMethod>("STANDARD");
   const [promoCode, setPromoCode] = useState<string>(
     () => initialPromoCode ?? "",
   );
@@ -228,6 +232,7 @@ function CheckoutPageInner() {
       try {
         const next = await fetchCheckoutPreview({
           items: buildItemsPayload(),
+          deliveryMethod,
           promoCode: appliedPromo,
         });
         if (ignore) return;
@@ -263,7 +268,14 @@ function CheckoutPageInner() {
     return () => {
       ignore = true;
     };
-  }, [authStatus, source, appliedPromo, previewToken, buildItemsPayload]);
+  }, [
+    authStatus,
+    source,
+    deliveryMethod,
+    appliedPromo,
+    previewToken,
+    buildItemsPayload,
+  ]);
 
   const handleApplyPromo = () => {
     const trimmed = promoCode.trim().toUpperCase();
@@ -339,6 +351,7 @@ function CheckoutPageInner() {
         customerPostalCode: form.customerPostalCode.trim() || undefined,
         customerNote: form.customerNote.trim() || undefined,
         paymentMethod,
+        deliveryMethod,
         promoCode: appliedPromo,
         clearCart: source.kind === "cart",
       });
@@ -465,6 +478,13 @@ function CheckoutPageInner() {
                 isAuthenticated={isAuthenticated}
                 profileStatus={profileStatus}
                 onRetryProfile={handleRetryProfile}
+              />
+
+              <DeliveryMethodPicker
+                value={deliveryMethod}
+                onChange={setDeliveryMethod}
+                summary={preview?.summary ?? null}
+                isLoading={previewLoading && !preview}
               />
 
               <PaymentMethodPicker

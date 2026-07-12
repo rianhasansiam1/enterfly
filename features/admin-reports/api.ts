@@ -210,7 +210,7 @@ export const REPORT_DEFS: Record<
   sales: {
     label: "Sales overview",
     description:
-      "Revenue, average order value, payment status split, and daily sales trend.",
+      "Merchandise revenue, delivery fees, payment status split, and daily sales trend.",
     subject: "Sales Overview",
   },
   orders: {
@@ -240,7 +240,7 @@ export const REPORT_DEFS: Record<
   customers: {
     label: "Customers",
     description:
-      "Top spenders, new sign-ups, and active buyers in the window.",
+      "Top customers by merchandise revenue, new sign-ups, and active buyers.",
     subject: "Customers",
   },
   categories: {

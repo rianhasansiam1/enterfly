@@ -44,6 +44,11 @@ import StorePricingForm from "./components/StorePricingForm";
 import PromoCodesTable from "./components/PromoCodesTable";
 import PromoFormDrawer from "./components/PromoFormDrawer";
 
+function requireNumberField(value: string, label: string): number {
+  if (!value.trim()) throw new Error(`${label} is required.`);
+  return parseNumberField(value, label);
+}
+
 export default function AdminSettingsPage() {
   const dispatch = useDispatch<AppDispatch>();
   const settings = useSelector((s: RootState) => s.adminSettings.settings);
@@ -114,23 +119,23 @@ export default function AdminSettingsPage() {
     setSettingsNote(null);
 
     try {
-      const taxPercent = parseNumberField(
-        settingsForm.taxRatePercent || "0",
+      const taxPercent = requireNumberField(
+        settingsForm.taxRatePercent,
         "Tax rate",
       );
       if (taxPercent > 100) {
         throw new Error("Tax rate cannot exceed 100%.");
       }
-      const standardShippingFee = parseNumberField(
-        settingsForm.standardShippingFee || "0",
+      const standardShippingFee = requireNumberField(
+        settingsForm.standardShippingFee,
         "Standard delivery fee",
       );
-      const expressShippingFee = parseNumberField(
-        settingsForm.expressShippingFee || "0",
+      const expressShippingFee = requireNumberField(
+        settingsForm.expressShippingFee,
         "Express delivery fee",
       );
-      const freeShippingThreshold = parseNumberField(
-        settingsForm.freeShippingThreshold || "0",
+      const freeShippingThreshold = requireNumberField(
+        settingsForm.freeShippingThreshold,
         "Free shipping threshold",
       );
       const currency = settingsForm.currency.trim().toUpperCase() || "BDT";

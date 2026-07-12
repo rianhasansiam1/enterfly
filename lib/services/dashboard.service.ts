@@ -30,6 +30,13 @@ function money(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+function netMerchandiseRevenue(source: {
+  subtotal?: Parameters<typeof toNumber>[0];
+  discountAmount?: Parameters<typeof toNumber>[0];
+}): number {
+  return money(toNumber(source.subtotal) - toNumber(source.discountAmount));
+}
+
 function startOfMonth(date: Date): Date {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
 }
@@ -170,12 +177,12 @@ async function loadStats(now: Date): Promise<DashboardStats> {
   ] = await Promise.all([
     prisma.order.aggregate({
       where: liveOrderWhere(),
-      _sum: { totalAmount: true },
+      _sum: { totalAmount: true, subtotal: true, discountAmount: true },
       _count: { _all: true },
     }),
     prisma.order.aggregate({
       where: liveOrderWhere({ lt: thisMonthStart }),
-      _sum: { totalAmount: true },
+      _sum: { totalAmount: true, subtotal: true, discountAmount: true },
       _count: { _all: true },
     }),
     prisma.order.count({
@@ -186,12 +193,12 @@ async function loadStats(now: Date): Promise<DashboardStats> {
     }),
     prisma.order.aggregate({
       where: cancelledWhere(),
-      _sum: { totalAmount: true },
+      _sum: { totalAmount: true, subtotal: true, discountAmount: true },
       _count: { _all: true },
     }),
     prisma.order.aggregate({
       where: cancelledWhere({ lt: thisMonthStart }),
-      _sum: { totalAmount: true },
+      _sum: { totalAmount: true, subtotal: true, discountAmount: true },
       _count: { _all: true },
     }),
     prisma.user.count(),
@@ -225,15 +232,18 @@ async function loadStats(now: Date): Promise<DashboardStats> {
     return { current, previous, delta, trend };
   };
 
-  // Revenue: rounded BDT amounts.
+  // Revenue is merchandise value only. Delivery fees and tax are separate
+  // order charges and must not inflate revenue/profit.
   const revenue = buildStat(
-    money(toNumber(revenueAll._sum.totalAmount)),
-    money(toNumber(revenueBefore._sum.totalAmount)),
+    netMerchandiseRevenue(revenueAll._sum),
+    netMerchandiseRevenue(revenueBefore._sum),
   );
 
   const orders = buildStat(ordersAll, ordersBefore);
 
-  // Profit = revenue - cost of goods sold for the same window.
+  // Profit = merchandise net revenue after order-level discounts minus
+  // cost of goods sold. Delivery fees and tax are order charges, not
+  // product margin.
   const sumCost = (
     rows: { quantity: number; buyingPrice: Prisma.Decimal | null }[],
   ): number =>
@@ -243,15 +253,15 @@ async function loadStats(now: Date): Promise<DashboardStats> {
     );
 
   const profit = buildStat(
-    money(money(toNumber(revenueAll._sum.totalAmount)) - sumCost(costItemsAll)),
-    money(money(toNumber(revenueBefore._sum.totalAmount)) - sumCost(costItemsBefore)),
+    money(netMerchandiseRevenue(revenueAll._sum) - sumCost(costItemsAll)),
+    money(netMerchandiseRevenue(revenueBefore._sum) - sumCost(costItemsBefore)),
   );
 
   const customers = buildStat(customersTotal, customersBefore);
 
   const cancellations = buildStat(
-    money(toNumber(cancelledAll._sum.totalAmount)),
-    money(toNumber(cancelledBefore._sum.totalAmount)),
+    netMerchandiseRevenue(cancelledAll._sum),
+    netMerchandiseRevenue(cancelledBefore._sum),
   );
   // For cancellations, "down" is good; the stat object stays signed
   // and the UI can decide which colour to use.
@@ -284,7 +294,8 @@ async function loadSalesSeries(now: Date) {
     },
     select: {
       createdAt: true,
-      totalAmount: true,
+      subtotal: true,
+      discountAmount: true,
     },
   });
 
@@ -305,7 +316,7 @@ async function loadSalesSeries(now: Date) {
     const key = row.createdAt.toISOString().slice(0, 10);
     const bucket = buckets.get(key);
     if (!bucket) continue;
-    bucket.revenue = money(bucket.revenue + toNumber(row.totalAmount));
+    bucket.revenue = money(bucket.revenue + netMerchandiseRevenue(row));
     bucket.orders += 1;
   }
 
@@ -401,8 +412,6 @@ async function loadTopProducts(now: Date): Promise<DashboardTopProduct[]> {
       status: true,
       category: { select: { name: true } },
       variants: {
-        orderBy: { createdAt: "asc" },
-        take: 1,
         select: { stock: true },
       },
     },
@@ -418,7 +427,9 @@ async function loadTopProducts(now: Date): Promise<DashboardTopProduct[]> {
         category: product?.category?.name ?? "—",
         unitsSold: bucket.units,
         revenue: money(bucket.revenue),
-        stock: product?.variants[0]?.stock ?? 0,
+        stock:
+          product?.variants.reduce((total, variant) => total + variant.stock, 0) ??
+          0,
         status: product?.status ?? "INACTIVE",
       } satisfies DashboardTopProduct;
     })

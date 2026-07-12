@@ -2,6 +2,7 @@ import { readApiData } from "@/features/http/api-envelope";
 import type { OrderDetail } from "@/features/orders/api";
 
 export type CheckoutPaymentMethod = "CASH_ON_DELIVERY" | "ONLINE";
+export type CheckoutDeliveryMethod = "STANDARD" | "EXPRESS";
 
 export type CheckoutItemInput = {
   productId: string;
@@ -32,8 +33,13 @@ export type CheckoutSummary = {
   tax: number;
   total: number;
   taxRate: number;
+  deliveryMethod: CheckoutDeliveryMethod;
   freeShippingThreshold: number;
   shippingFee: number;
+  standardShippingFee: number;
+  expressShippingFee: number;
+  standardDeliveryCharge: number;
+  expressDeliveryCharge: number;
   isFreeShippingApplied: boolean;
   currency: string;
 };
@@ -60,6 +66,7 @@ export type CheckoutPreview = {
 
 export type PreviewRequest = {
   items?: CheckoutItemInput[];
+  deliveryMethod?: CheckoutDeliveryMethod;
   promoCode?: string | null;
 };
 
@@ -91,6 +98,7 @@ export type PlaceOrderRequest = {
   customerPostalCode?: string;
   customerNote?: string;
   paymentMethod: CheckoutPaymentMethod;
+  deliveryMethod: CheckoutDeliveryMethod;
   promoCode?: string | null;
   clearCart?: boolean;
 };

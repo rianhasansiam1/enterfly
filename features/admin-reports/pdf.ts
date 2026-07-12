@@ -213,14 +213,14 @@ function drawDataTable(
 
 function renderSales(doc: Doc, report: SalesReport, startY: number): void {
   let y = drawKpiCards(doc, startY, [
-    { label: "Total revenue", value: formatCurrency(report.summary.totalRevenue) },
+    { label: "Merchandise revenue", value: formatCurrency(report.summary.totalRevenue) },
     { label: "Orders (live)", value: formatNumber(report.summary.totalOrders) },
     { label: "Avg order value", value: formatCurrency(report.summary.avgOrderValue) },
     { label: "Gross subtotal", value: formatCurrency(report.summary.grossSubtotal) },
     { label: "Delivery fees", value: formatCurrency(report.summary.totalDeliveryCharges) },
     { label: "Discounts applied", value: formatCurrency(report.summary.totalDiscounts) },
     { label: "Cancelled orders", value: formatNumber(report.summary.cancelledOrders) },
-    { label: "Cancelled revenue", value: formatCurrency(report.summary.cancelledRevenue) },
+    { label: "Cancelled merchandise", value: formatCurrency(report.summary.cancelledRevenue) },
   ]);
 
   if (report.byStatus.length > 0) {
@@ -231,7 +231,7 @@ function renderSales(doc: Doc, report: SalesReport, startY: number): void {
       [
         { header: "Status" },
         { header: "Orders", align: "right", width: 28 },
-        { header: "Revenue", align: "right", width: 40, bold: true },
+        { header: "Merch. revenue", align: "right", width: 40, bold: true },
       ],
       report.byStatus.map((row) => [
         titleCase(row.status),
@@ -249,7 +249,7 @@ function renderSales(doc: Doc, report: SalesReport, startY: number): void {
       [
         { header: "Payment status" },
         { header: "Orders", align: "right", width: 28 },
-        { header: "Revenue", align: "right", width: 40, bold: true },
+        { header: "Merch. revenue", align: "right", width: 40, bold: true },
       ],
       report.byPaymentStatus.map((row) => [
         titleCase(row.paymentStatus),
@@ -260,14 +260,14 @@ function renderSales(doc: Doc, report: SalesReport, startY: number): void {
   }
 
   if (report.dailySeries.length > 0) {
-    y = drawSection(doc, y, "Daily revenue");
+    y = drawSection(doc, y, "Daily merchandise revenue");
     y = drawDataTable(
       doc,
       y,
       [
         { header: "Date" },
         { header: "Orders", align: "right", width: 28 },
-        { header: "Revenue", align: "right", width: 40, bold: true },
+        { header: "Merch. revenue", align: "right", width: 40, bold: true },
       ],
       report.dailySeries.map((row) => [
         formatDate(row.day),
@@ -471,7 +471,7 @@ function renderCustomers(doc: Doc, report: CustomersReport, startY: number): voi
     { label: "Total registered users", value: formatNumber(report.summary.totalUsers) },
     { label: "New sign-ups", value: formatNumber(report.summary.newSignupsInWindow) },
     { label: "Active buyers", value: formatNumber(report.summary.activeBuyers) },
-    { label: "Total revenue", value: formatCurrency(report.summary.totalRevenue) },
+    { label: "Merchandise revenue", value: formatCurrency(report.summary.totalRevenue) },
     { label: "Avg revenue / buyer", value: formatCurrency(report.summary.avgRevenuePerBuyer) },
   ]);
 
@@ -486,7 +486,7 @@ function renderCustomers(doc: Doc, report: CustomersReport, startY: number): voi
       { header: "City", width: 22 },
       { header: "Role", width: 16 },
       { header: "Orders", align: "right", width: 16 },
-      { header: "Spend", align: "right", width: 28, bold: true },
+      { header: "Revenue", align: "right", width: 28, bold: true },
       { header: "Last order", width: 24 },
     ],
     report.rows.map((row) => [

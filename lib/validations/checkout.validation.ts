@@ -13,6 +13,7 @@ import { z } from "zod";
  */
 
 const PAYMENT_METHOD = ["CASH_ON_DELIVERY", "ONLINE"] as const;
+const DELIVERY_METHOD = ["STANDARD", "EXPRESS"] as const;
 
 const checkoutItem = z.object({
   productId: z.string().trim().min(1, "Product is required."),
@@ -33,6 +34,7 @@ const checkoutItem = z.object({
  */
 export const checkoutPreviewSchema = z.object({
   items: z.array(checkoutItem).max(100).optional(),
+  deliveryMethod: z.enum(DELIVERY_METHOD).default("STANDARD"),
   promoCode: z
     .string()
     .trim()
@@ -95,6 +97,7 @@ export const checkoutSchema = z.object({
     .optional()
     .or(z.literal("")),
   paymentMethod: z.enum(PAYMENT_METHOD).default("CASH_ON_DELIVERY"),
+  deliveryMethod: z.enum(DELIVERY_METHOD).default("STANDARD"),
   promoCode: z
     .string()
     .trim()

@@ -451,6 +451,8 @@ type StoreSettingsSnapshot = {
   currency: string;
 };
 
+type CheckoutDeliveryMethod = CheckoutPreviewInput["deliveryMethod"];
+
 type CheckoutSummary = {
   subtotal: number;
   totalSavings: number;
@@ -459,8 +461,13 @@ type CheckoutSummary = {
   tax: number;
   total: number;
   taxRate: number;
+  deliveryMethod: CheckoutDeliveryMethod;
   freeShippingThreshold: number;
   shippingFee: number;
+  standardShippingFee: number;
+  expressShippingFee: number;
+  standardDeliveryCharge: number;
+  expressDeliveryCharge: number;
   isFreeShippingApplied: boolean;
   currency: string;
 };
@@ -469,6 +476,7 @@ function summarize(
   lines: PricedLine[],
   promo: PromoApplication,
   settings: StoreSettingsSnapshot,
+  deliveryMethod: CheckoutDeliveryMethod,
 ): CheckoutSummary {
   const subtotal = sumDecimals(lines.map((line) => line.lineTotal));
   const totalSavings = sumDecimals(
@@ -483,12 +491,20 @@ function summarize(
   const discount = promo?.ok ? promo.discount : toDecimal(0);
   const afterDiscount = subtractClamped(subtotal, discount);
 
+  const hasFreeShippingThreshold =
+    greaterThanOrEqual(settings.freeShippingThreshold, 0.01);
   const isFreeShipping =
     subtotal.isZero() ||
-    greaterThanOrEqual(afterDiscount, settings.freeShippingThreshold);
-  const shipping = isFreeShipping
+    (hasFreeShippingThreshold &&
+      greaterThanOrEqual(afterDiscount, settings.freeShippingThreshold));
+  const standardDeliveryCharge = isFreeShipping
     ? toDecimal(0)
     : toDecimal(settings.standardShippingFee);
+  const expressDeliveryCharge = subtotal.isZero()
+    ? toDecimal(0)
+    : toDecimal(settings.expressShippingFee);
+  const shipping =
+    deliveryMethod === "EXPRESS" ? expressDeliveryCharge : standardDeliveryCharge;
 
   const tax = percentOf(afterDiscount, multiply(settings.taxRate, 100));
   const total = toDecimal(round2(afterDiscount)).plus(shipping).plus(
@@ -503,9 +519,18 @@ function summarize(
     tax: round2(tax),
     total: round2(total),
     taxRate: settings.taxRate,
+    deliveryMethod,
     freeShippingThreshold: settings.freeShippingThreshold,
-    shippingFee: settings.standardShippingFee,
-    isFreeShippingApplied: isFreeShipping,
+    shippingFee:
+      deliveryMethod === "EXPRESS"
+        ? settings.expressShippingFee
+        : settings.standardShippingFee,
+    standardShippingFee: settings.standardShippingFee,
+    expressShippingFee: settings.expressShippingFee,
+    standardDeliveryCharge: round2(standardDeliveryCharge),
+    expressDeliveryCharge: round2(expressDeliveryCharge),
+    isFreeShippingApplied:
+      deliveryMethod === "STANDARD" && isFreeShipping,
     currency: settings.currency,
   };
 }
@@ -541,7 +566,7 @@ export async function previewCheckout(
   const settings = settingsToSnapshot(await getStoreSettings());
   const subtotal = sumDecimals(lines.map((line) => line.lineTotal));
   const promo = await applyPromoCode(input.promoCode, subtotal);
-  const summary = summarize(lines, promo, settings);
+  const summary = summarize(lines, promo, settings, input.deliveryMethod);
 
   return {
     items: lines.map((line) => ({
@@ -632,7 +657,7 @@ export async function placeOrder(userId: string, input: CheckoutInput) {
         throw new CheckoutError(409, promo.reason);
       }
 
-      const summary = summarize(lines, promo, settings);
+      const summary = summarize(lines, promo, settings, input.deliveryMethod);
 
       // Atomic stock decrement on the variant: the WHERE clause guards
       // against the last unit being sold twice.

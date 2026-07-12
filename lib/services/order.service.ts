@@ -5,7 +5,7 @@ import type { OrderStatus } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 
 import { prisma } from "@/lib/db/prisma";
-import { toNumber } from "@/lib/money";
+import { round2, toNumber } from "@/lib/money";
 import {
   CUSTOMER_CANCELLABLE_STATUSES,
   STATUS_TRANSITIONS,
@@ -137,6 +137,13 @@ export function serializeOrderOrNull<T extends OrderWithItems>(
   order: T | null,
 ) {
   return order == null ? null : serializeOrder(order);
+}
+
+function netMerchandiseRevenue(source: {
+  subtotal?: Parameters<typeof toNumber>[0];
+  discountAmount?: Parameters<typeof toNumber>[0];
+}): number {
+  return round2(toNumber(source.subtotal) - toNumber(source.discountAmount));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -385,7 +392,7 @@ export async function listOrdersForAdmin(query: AdminOrderQueryInput) {
     // list query so the client never needs to fetch all rows.
     prisma.order.aggregate({
       where: { ...where, status: { not: "CANCELLED" } },
-      _sum: { totalAmount: true },
+      _sum: { totalAmount: true, subtotal: true, discountAmount: true },
       _count: true,
     }).then(async (agg) => {
       const [pendingCount, unpaidCount] = await Promise.all([
@@ -395,7 +402,7 @@ export async function listOrdersForAdmin(query: AdminOrderQueryInput) {
         }),
       ]);
       return {
-        revenue: toNumber(agg._sum.totalAmount ?? 0),
+        revenue: netMerchandiseRevenue(agg._sum),
         pendingCount,
         unpaidCount,
       };
