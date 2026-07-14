@@ -94,10 +94,10 @@ export function AdvancedColorPicker({
   const { base, alpha: currentAlpha } = splitColor(value);
   const opacityPct = Math.round(currentAlpha * 100);
 
-  // Close on outside click + Escape.
+  // Pointer interactions should only close the picker from outside the control.
   React.useEffect(() => {
     if (!open) return;
-    function onPointerDown(event: MouseEvent) {
+    function onPointerDown(event: PointerEvent) {
       if (
         containerRef.current &&
         !containerRef.current.contains(event.target as Node)
@@ -108,10 +108,10 @@ export function AdvancedColorPicker({
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") setOpen(false);
     }
-    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [open]);
@@ -142,7 +142,7 @@ export function AdvancedColorPicker({
       <button
         type="button"
         disabled={disabled}
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={`${label}: ${value || "none"}. Click to edit.`}
