@@ -57,7 +57,6 @@ export default function BannerFormDrawer({
     <>
       <div
         aria-hidden
-        onClick={onClose}
         className={cn(
           "fixed inset-0 z-60 bg-gray-900/35 backdrop-blur-[1px] transition-opacity duration-300",
           editing ? "opacity-100" : "pointer-events-none opacity-0",

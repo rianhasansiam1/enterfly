@@ -21,6 +21,7 @@ export type DashboardStat = {
 export type DashboardStats = {
   revenue: DashboardStat;
   profit: DashboardStat;
+  loss: DashboardStat;
   orders: DashboardStat;
   customers: DashboardStat;
   cancellations: DashboardStat;

@@ -5,6 +5,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   ShoppingBag,
+  TrendingDown,
   TrendingUp,
   Undo2,
   Users,
@@ -14,7 +15,7 @@ import {
 import type { DashboardStats, DashboardTrend } from "@/features/admin-dashboard/api";
 import { cn } from "@/lib/utils";
 
-type Accent = "violet" | "emerald" | "amber" | "indigo";
+type Accent = "violet" | "emerald" | "amber" | "indigo" | "rose";
 
 const ACCENT_STYLES: Record<Accent, { ring: string; tile: string; icon: string }> = {
   violet: {
@@ -36,6 +37,11 @@ const ACCENT_STYLES: Record<Accent, { ring: string; tile: string; icon: string }
     ring: "from-amber-500/30 to-orange-500/20",
     tile: "bg-amber-100 text-amber-700",
     icon: "text-amber-700",
+  },
+  rose: {
+    ring: "from-rose-500/30 to-red-500/20",
+    tile: "bg-rose-100 text-rose-700",
+    icon: "text-rose-700",
   },
 };
 
@@ -75,11 +81,20 @@ const CARDS: readonly CardConfig[] = [
   {
     id: "profit",
     label: "Profit (all time)",
-    hint: "merch revenue - cost",
+    hint: "positive margin only",
     accent: "emerald",
     icon: TrendingUp,
     format: formatBdt,
     positiveTrend: "up",
+  },
+  {
+    id: "loss",
+    label: "Loss (all time)",
+    hint: "negative margin only",
+    accent: "rose",
+    icon: TrendingDown,
+    format: formatBdt,
+    positiveTrend: "down",
   },
   {
     id: "orders",
@@ -117,7 +132,7 @@ type StatCardsProps = {
 
 export default function StatCards({ stats, loading }: StatCardsProps) {
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
       {CARDS.map((card) => {
         const stat = stats?.[card.id] ?? null;
         return (

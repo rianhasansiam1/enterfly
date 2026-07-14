@@ -64,7 +64,7 @@ export default function CaroselBanner({ slides }: { slides: CarouselSlide[] }) {
       setActiveIndex((prevIndex) =>
         prevIndex === slides.length - 1 ? 0 : prevIndex + 1,
       );
-    }, 3500);
+    }, 10000);
 
     return () => clearInterval(timer);
   }, [slides.length]);

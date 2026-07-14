@@ -41,15 +41,15 @@ export default function DeliveryMethodPicker({
       free: Boolean(summary && summary.standardDeliveryCharge === 0),
       badge: summary?.standardDeliveryCharge === 0 ? "Free" : undefined,
     },
-    {
-      value: "EXPRESS",
-      label: "Express delivery",
-      description: "Priority delivery when the order needs faster handling.",
-      icon: <Zap className="h-5 w-5" />,
-      charge: summary?.expressDeliveryCharge ?? null,
-      free: Boolean(summary && summary.expressDeliveryCharge === 0),
-      badge: "Fastest",
-    },
+    // {
+    //   value: "EXPRESS",
+    //   label: "Express delivery",
+    //   description: "Priority delivery when the order needs faster handling.",
+    //   icon: <Zap className="h-5 w-5" />,
+    //   charge: summary?.expressDeliveryCharge ?? null,
+    //   free: Boolean(summary && summary.expressDeliveryCharge === 0),
+    //   badge: "Fastest",
+    // },
   ];
 
   return (

@@ -76,6 +76,7 @@ export type DashboardStat = {
 export type DashboardStats = {
   revenue: DashboardStat;
   profit: DashboardStat;
+  loss: DashboardStat;
   orders: DashboardStat;
   customers: DashboardStat;
   cancellations: DashboardStat;
@@ -172,8 +173,8 @@ async function loadStats(now: Date): Promise<DashboardStats> {
     cancelledBefore,
     customersTotal,
     customersBefore,
-    costItemsAll,
-    costItemsBefore,
+    marginItemsAll,
+    marginItemsBefore,
   ] = await Promise.all([
     prisma.order.aggregate({
       where: liveOrderWhere(),
@@ -205,23 +206,30 @@ async function loadStats(now: Date): Promise<DashboardStats> {
     prisma.user.count({
       where: { createdAt: { lt: thisMonthStart } },
     }),
-    // Cost of goods sold = sum(buyingPrice * quantity) over live order
-    // items. Prisma can't aggregate a product of two columns, so we
-    // pull the snapshots and fold them in JS. buyingPrice is nullable
-    // for legacy rows; those contribute 0 cost.
+    // Profit/loss needs per-line margin because profitable and losing
+    // items must be reported separately. Order-level discounts are
+    // allocated proportionally by line subtotal.
     prisma.orderItem.findMany({
       where: {
-        buyingPrice: { not: null },
         order: liveOrderWhere(),
       },
-      select: { quantity: true, buyingPrice: true },
+      select: {
+        quantity: true,
+        totalPrice: true,
+        buyingPrice: true,
+        order: { select: { subtotal: true, discountAmount: true } },
+      },
     }),
     prisma.orderItem.findMany({
       where: {
-        buyingPrice: { not: null },
         order: liveOrderWhere({ lt: thisMonthStart }),
       },
-      select: { quantity: true, buyingPrice: true },
+      select: {
+        quantity: true,
+        totalPrice: true,
+        buyingPrice: true,
+        order: { select: { subtotal: true, discountAmount: true } },
+      },
     }),
   ]);
 
@@ -241,21 +249,48 @@ async function loadStats(now: Date): Promise<DashboardStats> {
 
   const orders = buildStat(ordersAll, ordersBefore);
 
-  // Profit = merchandise net revenue after order-level discounts minus
-  // cost of goods sold. Delivery fees and tax are order charges, not
-  // product margin.
-  const sumCost = (
-    rows: { quantity: number; buyingPrice: Prisma.Decimal | null }[],
-  ): number =>
-    rows.reduce(
-      (total, row) => total + toNumber(row.buyingPrice) * row.quantity,
-      0,
-    );
+  type MarginItemRow = {
+    quantity: number;
+    totalPrice: Prisma.Decimal;
+    buyingPrice: Prisma.Decimal | null;
+    order: {
+      subtotal: Prisma.Decimal;
+      discountAmount: Prisma.Decimal;
+    };
+  };
 
-  const profit = buildStat(
-    money(netMerchandiseRevenue(revenueAll._sum) - sumCost(costItemsAll)),
-    money(netMerchandiseRevenue(revenueBefore._sum) - sumCost(costItemsBefore)),
-  );
+  const summarizeMargins = (
+    rows: MarginItemRow[],
+  ): { profit: number; loss: number } => {
+    let profit = 0;
+    let loss = 0;
+
+    for (const row of rows) {
+      const lineGrossRevenue = toNumber(row.totalPrice);
+      const orderSubtotal = toNumber(row.order.subtotal);
+      const orderDiscount = toNumber(row.order.discountAmount);
+      const discountShare =
+        orderSubtotal > 0 ? (lineGrossRevenue / orderSubtotal) * orderDiscount : 0;
+      const lineNetRevenue = lineGrossRevenue - discountShare;
+      const lineCost = toNumber(row.buyingPrice) * row.quantity;
+      const margin = lineNetRevenue - lineCost;
+
+      if (margin >= 0) {
+        profit += margin;
+      } else {
+        loss += Math.abs(margin);
+      }
+    }
+
+    return { profit: money(profit), loss: money(loss) };
+  };
+
+  // Profit and loss are intentionally not netted together:
+  // profit = sum of positive item margins, loss = absolute sum of negative margins.
+  const marginAll = summarizeMargins(marginItemsAll);
+  const marginBefore = summarizeMargins(marginItemsBefore);
+  const profit = buildStat(marginAll.profit, marginBefore.profit);
+  const loss = buildStat(marginAll.loss, marginBefore.loss);
 
   const customers = buildStat(customersTotal, customersBefore);
 
@@ -266,7 +301,7 @@ async function loadStats(now: Date): Promise<DashboardStats> {
   // For cancellations, "down" is good; the stat object stays signed
   // and the UI can decide which colour to use.
 
-  return { revenue, profit, orders, customers, cancellations };
+  return { revenue, profit, loss, orders, customers, cancellations };
 }
 
 /* -------------------------------------------------------------------------- */
