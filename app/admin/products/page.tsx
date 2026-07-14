@@ -185,6 +185,11 @@ export default function AdminProductsPage() {
     setMutationError(null);
   };
 
+  const showSubmitError = (message: string) => {
+    setMutationError(message);
+    notifyActionError(message, message);
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setMutationError(null);
@@ -192,11 +197,11 @@ export default function AdminProductsPage() {
 
     const name = form.name.trim();
     if (!name) {
-      setMutationError("Product name is required.");
+      showSubmitError("Product name is required.");
       return;
     }
     if (!form.categoryId) {
-      setMutationError("Category is required.");
+      showSubmitError("Category is required.");
       return;
     }
 
@@ -206,16 +211,16 @@ export default function AdminProductsPage() {
       buyingPrice = parseNumericField(form.buyingPrice, "Buying price");
       salePrice = parseNumericField(form.salePrice, "Sale price");
     } catch (parseError) {
-      setMutationError(parseError instanceof Error ? parseError.message : "Invalid number.");
+      showSubmitError(parseError instanceof Error ? parseError.message : "Invalid number.");
       return;
     }
 
     if (buyingPrice < 0) {
-      setMutationError("Buying price cannot be negative.");
+      showSubmitError("Buying price cannot be negative.");
       return;
     }
     if (salePrice < 0) {
-      setMutationError("Sale price cannot be negative.");
+      showSubmitError("Sale price cannot be negative.");
       return;
     }
 
@@ -224,22 +229,22 @@ export default function AdminProductsPage() {
       try {
         discountPrice = parseNumericField(form.discountPrice, "Discount price");
       } catch (parseError) {
-        setMutationError(parseError instanceof Error ? parseError.message : "Invalid discount.");
+        showSubmitError(parseError instanceof Error ? parseError.message : "Invalid discount.");
         return;
       }
       if (discountPrice < 0) {
-        setMutationError("Discount price cannot be negative.");
+        showSubmitError("Discount price cannot be negative.");
         return;
       }
       if (discountPrice > salePrice) {
-        setMutationError("Discount price cannot exceed the sale price.");
+        showSubmitError("Discount price cannot exceed the sale price.");
         return;
       }
     }
 
     // Build + validate the variant rows.
     if (form.variants.length === 0) {
-      setMutationError("Add at least one variant (size + color).");
+      showSubmitError("Add at least one variant (size + color).");
       return;
     }
 
@@ -259,12 +264,12 @@ export default function AdminProductsPage() {
       const size = row.size.trim();
       const color = row.color.trim();
       if (!size || !color) {
-        setMutationError(`Variant ${index + 1}: size and color are required.`);
+        showSubmitError(`Variant ${index + 1}: size and color are required.`);
         return;
       }
       const comboKey = `${size.toLowerCase()}|${color.toLowerCase()}`;
       if (comboSeen.has(comboKey)) {
-        setMutationError(
+        showSubmitError(
           `Duplicate size + color combination: "${size} / ${color}".`,
         );
         return;
@@ -275,11 +280,11 @@ export default function AdminProductsPage() {
       try {
         stock = parseNumericField(row.stock, `Variant ${index + 1} stock`);
       } catch (parseError) {
-        setMutationError(parseError instanceof Error ? parseError.message : "Invalid stock.");
+        showSubmitError(parseError instanceof Error ? parseError.message : "Invalid stock.");
         return;
       }
       if (!Number.isInteger(stock) || stock < 0) {
-        setMutationError(`Variant ${index + 1}: stock must be a non-negative whole number.`);
+        showSubmitError(`Variant ${index + 1}: stock must be a non-negative whole number.`);
         return;
       }
 
@@ -287,7 +292,7 @@ export default function AdminProductsPage() {
       if (sku) {
         const skuKey = sku.toLowerCase();
         if (skuSeen.has(skuKey)) {
-          setMutationError(`Duplicate SKU: "${sku}".`);
+          showSubmitError(`Duplicate SKU: "${sku}".`);
           return;
         }
         skuSeen.add(skuKey);
@@ -383,7 +388,7 @@ export default function AdminProductsPage() {
         if (variantsChanged) patch.variants = variantPayload;
 
         if (Object.keys(patch).length === 0) {
-          setMutationError("No changes to save.");
+          showSubmitError("No changes to save.");
           return;
         }
 
@@ -405,9 +410,8 @@ export default function AdminProductsPage() {
         closePanel();
       }
     } catch (mutation) {
-      const message = mutation instanceof Error ? mutation.message : "Product mutation failed.";
+      const message = notifyActionError(mutation, "Product mutation failed.");
       setMutationError(message);
-      notifyActionError(mutation, "Product mutation failed.");
     } finally {
       setIsSubmitting(false);
     }
